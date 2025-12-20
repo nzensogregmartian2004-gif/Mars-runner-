@@ -1,5 +1,5 @@
 // ===========================================
-// controllers/authController.js - COMPLET & CORRIGÉ
+// controllers/authController.js - CORRIGÉ ET DURCI
 // ============================================
 
 const User = require("../models/user");
@@ -13,7 +13,12 @@ const {
   getClientIp,
   getUserAgent,
 } = require("../utils/helpers");
-const { ERROR_CODES, ERROR_MESSAGES, BONUS } = require("../utils/constants");
+
+const constants = require("../utils/constants") || {};
+const ERROR_CODES = constants.ERROR_CODES || {};
+const ERROR_MESSAGES = constants.ERROR_MESSAGES || {};
+const BONUS = constants.BONUS || { NEW_PLAYER: 5, SPONSOR: 1 };
+
 const { query, transaction } = require("../config/database");
 
 class AuthController {
@@ -24,7 +29,17 @@ class AuthController {
     try {
       const { nom, prenom, email, telephone, password, age, referralCode } =
         req.body;
-      const normalizedEmail = email.toLowerCase();
+
+      if (!email || !password) {
+        return errorResponse(
+          res,
+          "Email et mot de passe requis",
+          ERROR_CODES.AUTH_INVALID_PAYLOAD,
+          400
+        );
+      }
+
+      const normalizedEmail = String(email).toLowerCase();
 
       // 1. Vérifications d'existence AVANT la transaction
       const existingEmail = await User.findByEmail(normalizedEmail);
@@ -37,7 +52,9 @@ class AuthController {
         );
       }
 
-      const existingPhone = await User.findByPhone(telephone);
+      const existingPhone = telephone
+        ? await User.findByPhone(telephone)
+        : null;
       if (existingPhone) {
         return errorResponse(
           res,
@@ -64,7 +81,9 @@ class AuthController {
           conn
         );
 
-        console.log("✅ Utilisateur créé:", newUser.id);
+        if (!newUser || !newUser.id) {
+          throw new Error("Impossible de créer l'utilisateur");
+        }
 
         // B. Créer la transaction de bonus (log)
         await Transaction.createNewPlayerBonus(
@@ -79,14 +98,10 @@ class AuthController {
           [BONUS.NEW_PLAYER, newUser.id]
         );
 
-        console.log("✅ Bonus crédité:", BONUS.NEW_PLAYER, "MZ");
-
         // D. Gérer le parrainage si code fourni
         if (referralCode && referralCode.trim()) {
           const sponsor = await User.findByReferralCode(referralCode, conn);
           if (sponsor && sponsor.id !== newUser.id) {
-            console.log("✅ Sponsor trouvé:", sponsor.id);
-
             // Créer enregistrement parrainage
             const referralId = await Referral.create(
               sponsor.id,
@@ -110,27 +125,27 @@ class AuthController {
             );
 
             // Marquer bonus gagné dans referrals
-            await conn.execute(
-              `UPDATE referrals SET bonus_earned_mz = ?, status = 'active' WHERE id = ?`,
-              [BONUS.SPONSOR, referralId]
-            );
-
-            console.log(
-              "✅ Bonus sponsor crédité:",
-              BONUS.SPONSOR,
-              "MZ à l'utilisateur",
-              sponsor.id
-            );
+            if (referralId) {
+              await conn.execute(
+                `UPDATE referrals SET bonus_earned_mz = ?, status = 'active' WHERE id = ?`,
+                [BONUS.SPONSOR, referralId]
+              );
+            }
           }
         }
       }); // fin transaction
 
       // 3. Logs & Email (après transaction réussie)
-      await query(
-        `INSERT INTO activity_logs (user_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)`,
-        [newUser.id, "register", getClientIp(req), getUserAgent(req)]
-      );
+      try {
+        await query(
+          `INSERT INTO activity_logs (user_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)`,
+          [newUser.id, "register", getClientIp(req), getUserAgent(req)]
+        );
+      } catch (logErr) {
+        console.warn("Impossible d'enregistrer activity_log:", logErr);
+      }
 
+      // send welcome async
       EmailService.sendWelcome(newUser).catch((err) =>
         console.error("Email Error:", err)
       );
@@ -147,12 +162,21 @@ class AuthController {
           balance_mz: parseFloat(persistedUser.balance_mz || 0),
           referral_code: persistedUser.referral_code,
         },
-        "Inscription réussie.  Bonus crédité.",
+        "Inscription réussie. Bonus crédité.",
         201
       );
     } catch (error) {
-      console.error("❌ Erreur register:", error);
-      next(error);
+      console.error(
+        "❌ Erreur register:",
+        error && error.stack ? error.stack : error
+      );
+      // envoyer une réponse claire
+      return errorResponse(
+        res,
+        error.message || "Erreur interne serveur lors de l'inscription",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -162,10 +186,19 @@ class AuthController {
   static async login(req, res, next) {
     try {
       const { email, password } = req.body;
-      const normalizedEmail = email.toLowerCase();
+      if (!email || !password) {
+        return errorResponse(
+          res,
+          "Email et mot de passe requis",
+          ERROR_CODES.AUTH_INVALID_PAYLOAD,
+          400
+        );
+      }
+
+      const normalizedEmail = String(email).toLowerCase();
 
       const user = await User.findByEmail(normalizedEmail);
-      if (!user || !(await User.verifyPassword(password, user.password))) {
+      if (!user) {
         return errorResponse(
           res,
           ERROR_MESSAGES[ERROR_CODES.AUTH_INVALID_CREDENTIALS] ||
@@ -175,7 +208,22 @@ class AuthController {
         );
       }
 
-      if (!user.is_active) {
+      const isPasswordOk =
+        typeof User.verifyPassword === "function"
+          ? await User.verifyPassword(password, user.password)
+          : false;
+
+      if (!isPasswordOk) {
+        return errorResponse(
+          res,
+          ERROR_MESSAGES[ERROR_CODES.AUTH_INVALID_CREDENTIALS] ||
+            "Email ou mot de passe incorrect",
+          ERROR_CODES.AUTH_INVALID_CREDENTIALS,
+          401
+        );
+      }
+
+      if (user.is_active === 0 || user.is_active === false) {
         return errorResponse(
           res,
           ERROR_MESSAGES[ERROR_CODES.AUTH_ACCOUNT_DISABLED] ||
@@ -185,13 +233,17 @@ class AuthController {
         );
       }
 
-      await query("UPDATE users SET last_login = NOW() WHERE id = ?", [
-        user.id,
-      ]);
-      await query(
-        `INSERT INTO activity_logs (user_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)`,
-        [user.id, "login", getClientIp(req), getUserAgent(req)]
-      );
+      try {
+        await query("UPDATE users SET last_login = NOW() WHERE id = ?", [
+          user.id,
+        ]);
+        await query(
+          `INSERT INTO activity_logs (user_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)`,
+          [user.id, "login", getClientIp(req), getUserAgent(req)]
+        );
+      } catch (logErr) {
+        console.warn("Impossible d'enregistrer activity_log login:", logErr);
+      }
 
       const token = generateToken({ userId: user.id });
 
@@ -206,7 +258,16 @@ class AuthController {
         "Connexion réussie"
       );
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur login:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        error.message || "Erreur interne serveur lors de la connexion",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -263,7 +324,16 @@ class AuthController {
         "Profil mis à jour"
       );
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur updateProfile:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        "Erreur serveur",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -299,7 +369,16 @@ class AuthController {
 
       return successResponse(res, null, "Mot de passe changé");
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur changePassword:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        "Erreur serveur",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -323,7 +402,16 @@ class AuthController {
 
       return successResponse(res, { user });
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur getProfile:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        "Erreur serveur",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -341,7 +429,16 @@ class AuthController {
 
       return successResponse(res, null, "Déconnexion réussie");
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur logout:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        "Erreur serveur",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -351,7 +448,7 @@ class AuthController {
   static async forgotPassword(req, res, next) {
     try {
       const { email } = req.body;
-      const normalizedEmail = email.toLowerCase();
+      const normalizedEmail = String(email).toLowerCase();
 
       const user = await User.findByEmail(normalizedEmail);
       if (!user) {
@@ -381,7 +478,16 @@ class AuthController {
         "Si l'email existe, un lien a été envoyé"
       );
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur forgotPassword:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        "Erreur serveur",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 
@@ -416,7 +522,16 @@ class AuthController {
 
       return successResponse(res, null, "Mot de passe réinitialisé");
     } catch (error) {
-      next(error);
+      console.error(
+        "❌ Erreur resetPassword:",
+        error && error.stack ? error.stack : error
+      );
+      return errorResponse(
+        res,
+        "Erreur serveur",
+        ERROR_CODES.GENERAL || "GENERAL_ERROR",
+        500
+      );
     }
   }
 }
