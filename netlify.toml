@@ -1,0 +1,16 @@
+[build]
+  base = "frontend/public"
+  publish = "."
+  command = "echo 'Frontend statique, pas de build nécessaire'"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"

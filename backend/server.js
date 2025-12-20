@@ -1,5 +1,5 @@
 // =============================================
-// server.js - VERSION CORRIGÉE & FINALE
+// server.js - VERSION PRODUCTION POUR RENDER
 // =============================================
 
 const express = require("express");
@@ -8,10 +8,9 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const path = require("path");
 require("dotenv").config();
 
-// ✅ IMPORTS - ORGANISATION CLAIRE
+// ✅ IMPORTS
 const authRoutes = require("./routes/auth");
 const gameRoutes = require("./routes/game");
 const walletRoutes = require("./routes/wallet");
@@ -26,24 +25,34 @@ const server = http.createServer(app);
 // ============================================
 // SOCKET.IO CONFIGURATION
 // ============================================
-const socket = io("https://mars-runner-backend.onrender.com", {
-  transports: ["websocket", "polling"],
+const io = new Server(server, {
   cors: {
-    origin: "https://marsrunner.netlify.app",
+    origin: ["https://marsrunner.netlify.app", "http://localhost:5000"],
     methods: ["GET", "POST"],
+    credentials: true,
   },
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
+
+console.log("✅ Socket.IO initialisé avec CORS pour Netlify");
 
 // ============================================
 // MIDDLEWARE GLOBAL
 // ============================================
 
-// CORS - Une seule déclaration
+// CORS
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "https://marsrunner.netlify.app",
+      "http://localhost:3000",
+      "http://localhost:5173",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
@@ -58,10 +67,6 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
-
-// Fichiers statiques
-// Utilise '..' pour remonter d'un niveau (sortir de backend)
-app.use(express.static(path.join(__dirname, "..", "frontend", "public")));
 
 // ============================================
 // ROUTES API
@@ -79,12 +84,31 @@ app.use("/api/admin", adminRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date() });
+  res.json({
+    status: "OK",
+    timestamp: new Date(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "production",
+  });
 });
 
-// Page d'accueil
+// Route racine (API info)
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "frontend", "public", "index.html"));
+  res.json({
+    name: "Mars Runner API",
+    version: "1.0.0",
+    status: "active",
+    socketIO: "enabled",
+    endpoints: {
+      auth: "/api/auth",
+      game: "/api/game",
+      wallet: "/api/wallet",
+      referral: "/api/referral",
+      payment: "/api/manualpayment",
+      admin: "/api/admin",
+    },
+    documentation: "Contact admin for API docs",
+  });
 });
 
 // ============================================
@@ -102,6 +126,25 @@ app.set("io", io);
 const { errorHandler } = require("./middleware/errorHandler");
 app.use(errorHandler);
 
+// 404 Handler
+app.use("*", (req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    path: req.originalUrl,
+    method: req.method,
+    availableEndpoints: [
+      "/",
+      "/health",
+      "/api/auth",
+      "/api/game",
+      "/api/wallet",
+      "/api/referral",
+      "/api/manualpayment",
+      "/api/admin",
+    ],
+  });
+});
+
 // ============================================
 // DÉMARRAGE DU SERVEUR
 // ============================================
@@ -109,15 +152,36 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`
-╔════════════════════════════════════════╗
-║  🚀 SERVEUR MARS RUNNER EN LIGNE  🚀  ║
-╚════════════════════════════════════════╝
+╔═══════════════════════════════════════════╗
+║  🚀 SERVEUR MARS RUNNER EN LIGNE 🚀      ║
+╚═══════════════════════════════════════════╝
 
-📍 Local:       http://localhost:${PORT}
-📱 Mobile:     http://TON_IP_LOCALE:${PORT}
+🌐 URL:        https://mars-runner-backend.onrender.com
+📍 Port:       ${PORT}
 🔌 Socket.IO:  ✅ Actif
-🛡️  Sécurité:    ✅ Helmet activé
-🌐 CORS:       ✅ Activé
+🛡️  Sécurité:   ✅ Helmet + CORS
+📊 Logs:       ✅ Morgan activé
+🌍 CORS:       ✅ Netlify autorisé
+
+Environment:   ${process.env.NODE_ENV || "development"}
+Database:      ${process.env.DB_HOST ? "✅ Connecté" : "⚠️  Non configuré"}
 
   `);
+});
+
+// Gestion propre de l'arrêt
+process.on("SIGTERM", () => {
+  console.log("🛑 SIGTERM reçu, fermeture du serveur...");
+  server.close(() => {
+    console.log("✅ Serveur fermé proprement");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  console.log("🛑 SIGINT reçu, fermeture du serveur...");
+  server.close(() => {
+    console.log("✅ Serveur fermé proprement");
+    process.exit(0);
+  });
 });
