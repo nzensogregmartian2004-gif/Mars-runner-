@@ -6,8 +6,8 @@
 // 1. CONFIGURATION GLOBALE
 // ========================================
 
-const API_BASE_URL = "http://192.168.1.75:5000/api";
-const SOCKET_URL = "http://192.168.1.75:5000";
+const API_BASE_URL = "https://mars-runner-backend.onrender.com/api";
+const SOCKET_URL = "https://mars-runner-backend.onrender.com";
 const USE_BACKEND = true;
 
 // ========================================

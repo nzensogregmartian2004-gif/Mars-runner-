@@ -2,7 +2,7 @@
 // public/admin.js - FRONTEND ADMIN AVEC BACKEND
 // ============================================
 
-const API_BASE = "http://192.168.1.75:5000/api/admin";
+const API_BASE = "https://mars-runner-backend.onrender.com/api/admin";
 let adminToken = null;
 
 // ============================================

@@ -367,7 +367,8 @@ class AuthController {
 
       await User.setResetToken(user.id, resetToken, expiryDate);
 
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const frontendUrl =
+        process.env.FRONTEND_URL || "https://marsrunner.netlify.app";
       const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
       EmailService.sendPasswordReset(user, resetLink).catch((err) =>
