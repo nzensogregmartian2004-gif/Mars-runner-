@@ -206,8 +206,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (typeof io === "undefined") {
     console.error("❌ Socket.IO n'est pas chargé !");
-    alert("Erreur: Socket.IO non disponible.");
-    return;
+  } else {
+    console.log("✅ Socket.IO chargé");
   }
 
   authToken = localStorage.getItem("authToken");
