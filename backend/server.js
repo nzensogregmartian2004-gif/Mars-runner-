@@ -12,12 +12,12 @@ const path = require("path");
 require("dotenv").config();
 
 // ✅ IMPORTS - ORGANISATION CLAIRE
-const authRoutes = require("./backend/routes/auth");
-const gameRoutes = require("./backend/routes/game");
-const walletRoutes = require("./backend/routes/wallet");
-const referralRoutes = require("./backend/routes/referral");
-const paymentRoutes = require("./backend/routes/manualpayment");
-const adminRoutes = require("./backend/routes/admin");
+const authRoutes = require("./routes/auth");
+const gameRoutes = require("./routes/game");
+const walletRoutes = require("./routes/wallet");
+const referralRoutes = require("./routes/referral");
+const paymentRoutes = require("./routes/manualpayment");
+const adminRoutes = require("./routes/admin");
 
 // Initialisation serveur
 const app = express();
@@ -59,7 +59,8 @@ app.use(
 );
 
 // Fichiers statiques
-app.use(express.static(path.join(__dirname, "frontend", "public")));
+// Utilise '..' pour remonter d'un niveau (sortir de backend)
+app.use(express.static(path.join(__dirname, "..", "frontend", "public")));
 
 // ============================================
 // ROUTES API
@@ -82,13 +83,13 @@ app.get("/health", (req, res) => {
 
 // Page d'accueil
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "public", "index.html"));
+  res.sendFile(path.join(__dirname, "..", "frontend", "public", "index.html"));
 });
 
 // ============================================
 // SOCKET.IO HANDLER
 // ============================================
-const socketHandler = require("./backend/socket/socketHandler");
+const socketHandler = require("./socket/socketHandler");
 socketHandler(io);
 
 // Rendre io disponible aux routes (si nécessaire)
@@ -97,7 +98,7 @@ app.set("io", io);
 // ============================================
 // ERROR HANDLING
 // ============================================
-const { errorHandler } = require("./backend/middleware/errorHandler");
+const { errorHandler } = require("./middleware/errorHandler");
 app.use(errorHandler);
 
 // ============================================
