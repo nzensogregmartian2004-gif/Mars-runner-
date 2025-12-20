@@ -1,6 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { MZ_TO_FCFA, REGEX, TRANSACTION_FEE_PERCENT } = require("./constants");
+const {
+  MZ_TO_FCFA,
+  REGEX,
+  TRANSACTION_FEE_PERCENT,
+} = require("../utils/constants");
 
 /**
  * Génère un code de parrainage unique

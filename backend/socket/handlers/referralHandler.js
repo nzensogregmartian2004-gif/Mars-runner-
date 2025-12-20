@@ -2,7 +2,7 @@
 // socket/handlers/referralHandler.js
 // ============================================
 
-const User = require("../../models/user");
+const User = require("../models/user");
 const Referral = require("../../models/referral");
 const { BONUS } = require("../../utils/constants");
 

@@ -34,6 +34,12 @@ let potentialWin = 0;
 let collisionDetected = false;
 let velocity = 0;
 let legAnimation = 0;
+// 🔥 NOUVELLES VARIABLES ANTI-SPAM
+let isStartingGame = false;
+let startGameCooldown = false;
+let lastStartGameAttempt = 0;
+let isGameEnding = false; // ⭐ NOUVEAU : Évite les actions pendant la fin
+let gameEndTimeout = null; // ⭐ NOUVEAU : Timeout de sécurité
 
 // 🎮 CALIBRATION GAMING
 const BASE_SPEED = 4.2;
@@ -117,7 +123,7 @@ function initAudio() {
 // REMPLACER toute la fonction :
 // ========================================
 
-// Fichier: script.js — remplacer la fonction setupCanvas() par ceci
+// --- Remplacer la fonction setupCanvas() existante par celle-ci ---
 function setupCanvas() {
   canvas = document.getElementById("gameCanvas");
   if (!canvas) {
@@ -131,19 +137,22 @@ function setupCanvas() {
     return;
   }
 
+  // --- REMPLACER la fonction resizeCanvas() DANS setupCanvas() PAR CETTE VERSION ---
   function resizeCanvas() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
+    // Détection portrait mobile pour appliquer dézoom
     if (isMobile && !isLandscape) {
       displayScale = PORTRAIT_SCALE;
+      // canvas plus large en portrait mais reste adapté
       canvas.width = Math.min(windowWidth * 0.96, 450);
       canvas.height = Math.min(windowHeight * 0.6, 700);
       martianX = canvas.width * 0.2;
       cameraOffsetX = canvas.width * 0.12;
     } else if (isMobile && isLandscape) {
-      displayScale = 1.0;
+      displayScale = 1.0; // on annule le dézoom en paysage
       canvas.width = Math.min(windowWidth * 0.95, 900);
       canvas.height = Math.min(windowHeight * 0.65, 350);
       martianX = 120;
@@ -156,10 +165,11 @@ function setupCanvas() {
       cameraOffsetX = 0;
     }
 
+    // GROUND_Y et MARTIAN_SIZE tiennent compte de displayScale
     GROUND_Y = canvas.height - Math.floor(80 * displayScale);
     MARTIAN_SIZE = Math.max(35, Math.floor((canvas.width / 18) * displayScale));
 
-    // Réinitialiser listes pour éviter incohérences après rotation
+    // Pour éviter incohérences après rotation/resize, on réinitialise obstacles visibles
     obstacles = [];
     backgroundObjects = [];
     lastObstacleTime = Date.now();
@@ -184,16 +194,6 @@ function setupCanvas() {
       displayScale
     );
   }
-
-  // appeler une première fois et ajouter écouteurs
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-  window.addEventListener("orientationchange", () =>
-    setTimeout(resizeCanvas, 120)
-  );
-
-  martianY = GROUND_Y;
-  drawGame();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -306,10 +306,14 @@ function connectSocket() {
     socket.emit("wallet:getBalance");
     socket.emit("referral:getInfo");
   });
-
   socket.on("disconnect", (reason) => {
     isConnectedToSocket = false;
     console.log("❌ Socket déconnecté:", reason);
+
+    // 🔥 RÉINITIALISER LES FLAGS ANTI-SPAM
+    isStartingGame = false;
+    startGameCooldown = false;
+
     if (gameState === "playing" || gameState === "waiting") {
       showGameOverScreen(false, 0, "Déconnexion serveur. Partie annulée.");
     }
@@ -318,33 +322,60 @@ function connectSocket() {
   socket.on("connect_error", (error) => {
     console.error("❌ Erreur connexion Socket.IO:", error);
     showNotification("Erreur de connexion au serveur", "error");
+
+    // 🔥 RÉINITIALISER EN CAS D'ERREUR
+    isStartingGame = false;
+    startGameCooldown = false;
   });
+  // ========================================
+  // 🔥 AMÉLIORATION 2 : Gestion événement game:started
+  // REMPLACER l'événement socket.on("game:started") existant
+  // ========================================
 
   socket.on("game:started", (data) => {
     console.log("🎮 Partie démarrée - Data:", data);
 
-    // ⬅️ FIX: Vérifier que data existe
     if (!data) {
       console.error("❌ Données game:started manquantes");
       showNotification("Erreur démarrage partie", "error");
+      isStartingGame = false;
+      resetPlayButton();
+      return;
+    }
+
+    // ⭐ Éviter les démarrages multiples
+    if (gameState === "playing") {
+      console.warn("⚠️ Partie déjà en cours, ignoring duplicate start");
       return;
     }
 
     currentGameId = data.gameId;
-    balance = parseFloat(data.balance || balance || 0); // ⬅️ FIX: Fallback sur balance actuelle
+    balance = parseFloat(data.balance || balance || 0);
     multiplier = 1.0;
     gameState = "playing";
     canWithdraw = false;
     collisionDetected = false;
+    isGameEnding = false; // ⭐ Réinitialiser le flag
+
+    // ⭐ Débloquer APRÈS succès
+    isStartingGame = false;
+
     updateBalance();
     showNotification("Partie démarrée! Bonne chance.", "success");
 
     document.getElementById("actionButtons").innerHTML = `
-      <button class="btn-jump" onclick="jump()">⬆️ Sauter</button>
-      <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>💰 Retirer</button>
-    `;
+    <button class="btn-jump" onclick="jump()">⬆️ Sauter</button>
+    <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>💰 Retirer</button>
+  `;
     document.getElementById("multiplierOverlay").classList.remove("hidden");
     document.getElementById("minWarning").classList.remove("hidden");
+
+    // ⭐ Petit délai avant de lancer la loop locale (évite race conditions)
+    setTimeout(() => {
+      if (gameState === "playing") {
+        startLocalGameLoop();
+      }
+    }, 150);
   });
 
   // ========================================
@@ -373,21 +404,39 @@ function connectSocket() {
 
   socket.on("game:cashedOut", (data) => {
     console.log("💰 Cash Out réussi:", data);
-    if (!data) return; // ⬅️ FIX
+    if (!data) return;
+
+    // ⭐ Protection contre traitement multiple
+    if (isGameEnding) {
+      console.warn("⚠️ Cash out déjà en cours de traitement");
+      return;
+    }
+    isGameEnding = true;
 
     const winAmount = parseFloat(data.winAmount || 0);
-    balance = parseFloat(data.balance || balance || 0); // ⬅️ FIX
+    balance = parseFloat(data.balance || balance || 0);
     isNewPlayerBonusLocked = false;
+
     updateBalance();
-    showGameOverScreen(true, winAmount);
+
+    // ⭐ Délai avant d'afficher l'écran de fin
+    setTimeout(() => {
+      showGameOverScreen(true, winAmount);
+      isGameEnding = false;
+    }, 300);
   });
 
   socket.on("game:over", (data) => {
     console.log("📊 Game Over:", data);
 
-    // ⬅️ FIX: Gestion robuste de la balance
-    let finalBalance = balance; // Valeur par défaut
+    // ⭐ Protection contre traitement multiple
+    if (isGameEnding) {
+      console.warn("⚠️ Game over déjà en cours de traitement");
+      return;
+    }
+    isGameEnding = true;
 
+    let finalBalance = balance;
     if (data) {
       finalBalance = parseFloat(
         data.balance || data.balance_mz || balance || 0
@@ -397,13 +446,22 @@ function connectSocket() {
     balance = finalBalance;
     isNewPlayerBonusLocked = false;
     updateBalance();
-    showGameOverScreen(false, 0);
+
+    // ⭐ Délai avant d'afficher l'écran de fin
+    setTimeout(() => {
+      showGameOverScreen(false, 0);
+      isGameEnding = false;
+    }, 300);
   });
 
   socket.on("game:error", (data) => {
     console.error("❌ Erreur de jeu:", data);
-    const message = data?.message || "Erreur inconnue"; // ⬅️ FIX
+    const message = data?.message || "Erreur inconnue";
     showNotification(message, "error");
+
+    // 🔥 DÉBLOQUER LE BOUTON EN CAS D'ERREUR
+    isStartingGame = false;
+    resetPlayButton();
 
     if (gameState === "playing" || gameState === "waiting") {
       showGameOverScreen(false, 0, message);
@@ -522,12 +580,42 @@ function disconnectSocket() {
 // 5. GESTION DU JEU
 // ========================================
 
+/**
+ * 🔥 FONCTION CRITIQUE : startGame() avec protection complète
+ */
 function startGame() {
+  // 🛡️ PROTECTION 1 : Vérifier si une partie est déjà en cours
   if (gameState === "playing" || gameState === "waiting") {
+    console.warn("⚠️ Une partie est déjà en cours");
     showNotification("Une partie est déjà en cours", "warning");
     return;
   }
 
+  // 🛡️ PROTECTION 2 : Vérifier si une fin est en cours
+  if (isGameEnding) {
+    console.warn("⚠️ Partie précédente en cours de finalisation");
+    showNotification("Finalisation en cours, veuillez patienter...", "warning");
+    return;
+  }
+
+  // 🛡️ PROTECTION 3 : Empêcher les clics multiples
+  if (isStartingGame) {
+    console.warn("⚠️ Démarrage déjà en cours");
+    return;
+  }
+
+  // 🛡️ PROTECTION 4 : Cooldown entre parties
+  const now = Date.now();
+  if (startGameCooldown && now - lastStartGameAttempt < 2000) {
+    const remainingTime = Math.ceil(
+      (2000 - (now - lastStartGameAttempt)) / 1000
+    );
+    console.warn(`⏳ Cooldown actif: ${remainingTime}s`);
+    showNotification(`Attendez ${remainingTime}s avant de rejouer`, "warning");
+    return;
+  }
+
+  // 🛡️ PROTECTION 5 : Validation du montant
   const betInputElement = document.getElementById("betInput");
   betAmount = Math.max(1, parseFloat(betInputElement?.value || 1));
 
@@ -536,22 +624,72 @@ function startGame() {
     return;
   }
 
+  // 🛡️ PROTECTION 6 : Vérifier la connexion
   if (!isConnectedToSocket || !socket) {
     showNotification("Connexion au serveur requise.", "warning");
     connectSocket();
     return;
   }
 
+  // ✅ ACTIVER LES PROTECTIONS
+  isStartingGame = true;
+  startGameCooldown = true;
+  lastStartGameAttempt = now;
+
+  console.log("🎮 Lancement de la partie - Mise:", betAmount, "MZ");
+
+  // 🔄 DÉSACTIVER LE BOUTON
+  disablePlayButton();
+
+  // 📤 ÉMETTRE LA REQUÊTE
   socket.emit("game:start", { betAmount });
 
+  // ⏰ TIMEOUT DE SÉCURITÉ : 8 secondes
+  gameEndTimeout = setTimeout(() => {
+    if (gameState === "waiting") {
+      console.error("⏰ Timeout: Pas de réponse du serveur");
+      showNotification("Le serveur ne répond pas. Réessayez.", "error");
+      isStartingGame = false;
+      isGameEnding = false;
+      gameState = "menu";
+      resetPlayButton();
+    }
+  }, 8000);
+
+  // 🎯 PRÉPARER L'ÉTAT LOCAL
   gameState = "waiting";
   multiplier = 1.0;
   potentialWin = 0;
   canWithdraw = false;
   collisionDetected = false;
 
-  if (gameLoop) stopGame();
-  startLocalGameLoop();
+  // ⚠️ NE PAS démarrer la loop ici, attendre game:started
+}
+
+/**
+ * 🔧 Désactiver visuellement le bouton "Jouer"
+ */
+function disablePlayButton() {
+  const btnPlay = document.getElementById("btnPlay");
+  if (btnPlay) {
+    btnPlay.disabled = true;
+    btnPlay.textContent = "⏳ Démarrage...";
+    btnPlay.style.opacity = "0.5";
+    btnPlay.style.cursor = "not-allowed";
+  }
+}
+
+/**
+ * 🔧 Réactiver le bouton "Jouer"
+ */
+function resetPlayButton() {
+  const btnPlay = document.getElementById("btnPlay");
+  if (btnPlay) {
+    btnPlay.disabled = false;
+    btnPlay.textContent = `🚀 Jouer (${betAmount} MZ)`;
+    btnPlay.style.opacity = "1";
+    btnPlay.style.cursor = "pointer";
+  }
 }
 
 function startLocalGameLoop() {
@@ -700,7 +838,7 @@ function handleObstacleGeneration(deltaTime, currentTime) {
   if (obstacles.length > 0) {
     const lastObstacle = obstacles[obstacles.length - 1];
     const distanceFromEdge = canvas.width + cameraOffsetX - lastObstacle.x;
-    const MIN_DISTANCE_TO_SPAWN = 250 * displayScale;
+    const MIN_DISTANCE_TO_SPAWN = 150 * displayScale;
 
     if (distanceFromEdge < MIN_DISTANCE_TO_SPAWN) return;
   }
@@ -710,12 +848,12 @@ function handleObstacleGeneration(deltaTime, currentTime) {
   const obstacleWeights = {
     rock: 30,
     robot: 30,
-    flyingAlien: 30,
+    flyingAlien: 50,
     highDrone: 30,
     proximityMine: 30,
     fastMeteor: 30,
-    doubleDanger: 30,
-    rollingBall: 30,
+    doubleDanger: 10,
+    rollingBall: 10,
   };
 
   const totalWeight = Object.values(obstacleWeights).reduce((a, b) => a + b, 0);
@@ -934,6 +1072,12 @@ function stopGame() {
 }
 
 function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
+  // ⭐ Nettoyer le timeout de sécurité
+  if (gameEndTimeout) {
+    clearTimeout(gameEndTimeout);
+    gameEndTimeout = null;
+  }
+
   stopGame();
   gameState = "gameover";
 
@@ -974,37 +1118,37 @@ function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
     );
   }
 
+  // ⭐ Délai avant de permettre une nouvelle partie
   setTimeout(() => {
     gameState = "menu";
     currentGameId = null;
-  }, 1000);
+    // ⭐ Débloquer complètement les protections
+    isStartingGame = false;
+    startGameCooldown = false;
+    isGameEnding = false;
+  }, 1500); // ⭐ 1.5 secondes de stabilisation
 
   drawGame();
 }
 
-function cashOut() {
-  if (!canWithdraw) {
-    showNotification(
-      "Vous devez atteindre x1.50 minimum pour retirer!",
-      "error"
-    );
-    return;
-  }
-
-  if (!isConnectedToSocket) {
-    showNotification("Erreur de connexion au serveur", "error");
-    return;
-  }
-
-  socket.emit("game:cashout");
-}
-
 function replayGame() {
+  // ⭐ Vérifier qu'on peut vraiment rejouer
+  if (gameState === "playing" || gameState === "waiting" || isGameEnding) {
+    console.warn("⚠️ Impossible de rejouer maintenant");
+    showNotification("Veuillez patienter...", "warning");
+    return;
+  }
+
   gameState = "menu";
   multiplier = 1.0;
   potentialWin = 0;
   collisionDetected = false;
   canWithdraw = false;
+
+  // ⭐ Réinitialiser tous les flags
+  startGameCooldown = false;
+  isStartingGame = false;
+  isGameEnding = false;
 
   document.getElementById("multiplierDisplay").textContent = "x1.000";
   document.getElementById("potentialWin").textContent = "0.00";
@@ -1023,10 +1167,45 @@ function replayGame() {
 }
 
 function jump() {
-  if (gameState === "playing" && martianY >= GROUND_Y - 5) {
+  // ⭐ Ne sauter que si vraiment en jeu
+  if (gameState !== "playing") {
+    return;
+  }
+
+  // ⭐ Éviter les sauts pendant la fin
+  if (isGameEnding || collisionDetected) {
+    return;
+  }
+
+  if (martianY >= GROUND_Y - 5) {
     velocity = JUMP_FORCE;
   }
 }
+
+// ⭐ Gestion du touch global améliorée
+window.removeEventListener("touchstart", globalTouchHandler); // Enlever l'ancien
+function globalTouchHandler(e) {
+  // Ne réagir que si en jeu
+  if (gameState !== "playing") {
+    return;
+  }
+
+  // Ne pas sauter si fin de partie
+  if (isGameEnding || collisionDetected) {
+    return;
+  }
+
+  // Sécurité : éviter de sauter en touchant un bouton
+  if (e.target.tagName === "BUTTON" || e.target.closest("button")) {
+    return;
+  }
+
+  jump();
+
+  if (e.cancelable) e.preventDefault();
+}
+
+window.addEventListener("touchstart", globalTouchHandler, { passive: false });
 
 // ========================================
 // 6. INTERFACE

@@ -12,12 +12,12 @@ const path = require("path");
 require("dotenv").config();
 
 // ✅ IMPORTS - ORGANISATION CLAIRE
-const authRoutes = require("./routes/auth");
-const gameRoutes = require("./routes/game");
-const walletRoutes = require("./routes/wallet");
-const referralRoutes = require("./routes/referral");
-const paymentRoutes = require("./routes/manualpayment");
-const adminRoutes = require("./routes/admin");
+const authRoutes = require("./backend/routes/auth");
+const gameRoutes = require("./backend/routes/game");
+const walletRoutes = require("./backend/routes/wallet");
+const referralRoutes = require("./backend/routes/referral");
+const paymentRoutes = require("./backend/routes/manualpayment");
+const adminRoutes = require("./backend/routes/admin");
 
 // Initialisation serveur
 const app = express();
@@ -59,7 +59,7 @@ app.use(
 );
 
 // Fichiers statiques
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "frontend", "public")));
 
 // ============================================
 // ROUTES API
@@ -82,13 +82,13 @@ app.get("/health", (req, res) => {
 
 // Page d'accueil
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "frontend", "public", "index.html"));
 });
 
 // ============================================
 // SOCKET.IO HANDLER
 // ============================================
-const socketHandler = require("./socket/socketHandler");
+const socketHandler = require("./backend/socket/socketHandler");
 socketHandler(io);
 
 // Rendre io disponible aux routes (si nécessaire)
@@ -97,7 +97,7 @@ app.set("io", io);
 // ============================================
 // ERROR HANDLING
 // ============================================
-const { errorHandler } = require("./middleware/errorHandler");
+const { errorHandler } = require("./backend/middleware/errorHandler");
 app.use(errorHandler);
 
 // ============================================
