@@ -1,0 +1,1122 @@
+/* style.css - Version optimisée mobile */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Enlever le highlight bleu sur mobile */
+}
+/* Classe pour masquer les éléments */
+.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(
+    to bottom,
+    #0a0a0a 0%,
+    #1a0505 30%,
+    #2d0a0a 60%,
+    #4a1515 100%
+  );
+  min-height: 100vh;
+  color: white;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation; /* Améliore la réactivité tactile */
+}
+
+/* Animation des étoiles de fond */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.stars-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s infinite;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Écran d'authentification */
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.auth-box {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(51, 17, 17, 0.95) 100%
+  );
+  border: 3px solid #ff6b35;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(255, 107, 53, 0.3),
+    0 0 100px rgba(255, 107, 53, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.martian-logo {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  filter: drop-shadow(0 0 20px rgba(0, 255, 0, 0.5));
+}
+
+.martian-head {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 30%, #00ff88, #00cc44);
+  border-radius: 50%;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.martian-eye {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #000;
+  border-radius: 50%;
+  top: 35%;
+  animation: blink 4s infinite;
+}
+
+@keyframes blink {
+  0%,
+  98%,
+  100% {
+    transform: scaleY(1);
+  }
+  99% {
+    transform: scaleY(0.1);
+  }
+}
+
+.martian-eye.left {
+  left: 28%;
+}
+.martian-eye.right {
+  right: 28%;
+}
+
+.antenna {
+  position: absolute;
+  width: 3px;
+  height: 30px;
+  background: linear-gradient(to top, #00ff88, #00ff88);
+  top: -15px;
+}
+
+.antenna.left {
+  left: 30%;
+  transform: rotate(-15deg);
+}
+
+.antenna.right {
+  right: 30%;
+  transform: rotate(15deg);
+}
+
+.antenna::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, #00ffff, #00ff88);
+  border-radius: 50%;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  background: linear-gradient(45deg, #00ff88, #00ffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+  letter-spacing: 4px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #ff6b35;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.9rem;
+  margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #444;
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00ff88, #00cc44);
+  color: #000;
+  box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 255, 136, 0.6);
+}
+
+.text-link {
+  background: transparent;
+  color: #ff6b35;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.text-link:hover {
+  color: #ff8c5a;
+}
+
+/* Interface de jeu */
+.game-screen {
+  display: none;
+}
+
+.header {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(51, 17, 17, 0.95) 100%
+  );
+  border: 3px solid #ff6b35;
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mini-logo {
+  width: 60px;
+  height: 60px;
+}
+
+.balance-section {
+  text-align: right;
+}
+
+.balance-label {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.balance-amount {
+  font-size: 1.8rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #00ff88, #00ffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.btn-deposit {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  color: white;
+  flex: 1;
+  min-width: 140px;
+}
+
+.btn-withdraw {
+  background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+  color: white;
+  flex: 1;
+  min-width: 140px;
+}
+
+.btn-referral {
+  background: linear-gradient(135deg, #00ffff, #00ced1);
+  color: #000;
+  flex: 1;
+  min-width: 140px;
+}
+
+.btn-logout {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  width: auto;
+  flex-grow: 0;
+}
+
+/* Zone de jeu */
+.game-area {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(51, 17, 17, 0.95) 100%
+  );
+  border: 3px solid #ff6b35;
+  border-radius: 15px;
+  padding: 1rem;
+  box-shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
+}
+
+.canvas-container {
+  position: relative;
+  margin-bottom: 1rem;
+  touch-action: none; /* Important pour le contrôle tactile */
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  border: 3px solid #333;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+  display: block;
+  touch-action: none;
+}
+
+.multiplier-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.multiplier-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.control-box {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1rem;
+  border-radius: 10px;
+  border: 2px solid #444;
+}
+
+.control-label {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+}
+
+.control-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.value-yellow {
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.value-green {
+  background: linear-gradient(45deg, #00ff88, #00ffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.btn-play {
+  background: linear-gradient(135deg, #00ff88, #00cc44);
+  color: #000;
+  flex: 1;
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  min-height: 60px;
+}
+
+.btn-jump {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  color: white;
+  flex: 1;
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  min-height: 60px;
+}
+
+.btn-cashout {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  flex: 1;
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  min-height: 60px;
+}
+
+.btn-cashout:disabled {
+  background: #555;
+  color: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-replay {
+  background: linear-gradient(135deg, #ff6b35, #ff4500);
+  color: white;
+  flex: 1;
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  min-height: 60px;
+}
+
+.stats {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.stat-box {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid #444;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-top: 0.3rem;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 26, 26, 0.98) 0%,
+    rgba(51, 17, 17, 0.98) 100%
+  );
+  border: 3px solid #ff6b35;
+  border-radius: 15px;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(255, 107, 53, 0.5);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.btn-close {
+  background: transparent;
+  color: #aaa;
+  width: auto;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  min-width: 40px;
+}
+
+.btn-copy {
+  flex-shrink: 0;
+}
+
+.info-box {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+  border: 2px solid #444;
+}
+
+.info-box.bonus-locked {
+  border-color: #ff4500;
+  background: rgba(255, 69, 0, 0.1);
+}
+
+.info-box.bonus-unlocked {
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+/* Notifications */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  max-width: 300px;
+}
+
+.notification {
+  background: #333;
+  color: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.5s ease-out;
+  word-wrap: break-word;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-success {
+  border-left: 5px solid #00ff88;
+}
+.notification-error {
+  border-left: 5px solid #ff4500;
+}
+.notification-warning {
+  border-left: 5px solid #ffd700;
+}
+.notification-info {
+  border-left: 5px solid #2196f3;
+}
+
+/* Instructions */
+.instructions {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(51, 17, 17, 0.95) 100%
+  );
+  border: 3px solid #444;
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.instructions h3 {
+  color: #00ff88;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.instructions ul {
+  list-style: none;
+  padding: 0;
+}
+
+.instructions li {
+  margin-bottom: 0.8rem;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.instructions li::before {
+  content: "🚀";
+  position: absolute;
+  left: 0;
+}
+
+/* ========================================
+   RESPONSIVE MOBILE OPTIMISÉ
+======================================== */
+
+@media (max-width: 768px) {
+  body {
+    padding: 0;
+  }
+
+  .container {
+    padding: 0.3rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  /* 🎯 AUTH SCREEN - COMPACT */
+  .auth-box {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .martian-logo {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 0.8rem;
+  }
+
+  input {
+    padding: 0.7rem;
+    margin-bottom: 0.7rem;
+    font-size: 16px; /* Évite zoom iOS */
+  }
+
+  button {
+    padding: 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  /* 🎮 HEADER - ULTRA COMPACT */
+  .header {
+    padding: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo-section {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .mini-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .logo-section h2 {
+    font-size: 0.9rem;
+  }
+
+  .balance-section {
+    text-align: right;
+  }
+
+  .balance-label {
+    font-size: 0.75rem;
+  }
+
+  .balance-amount {
+    font-size: 1.3rem;
+  }
+
+  .header-buttons {
+    margin-top: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .header-buttons button {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+    min-width: 100px;
+  }
+
+  /* 🎨 GAME AREA - CANVAS PRIORITAIRE */
+  .game-area {
+    padding: 0.5rem;
+  }
+
+  .canvas-container {
+    margin-bottom: 0.5rem;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: auto !important;
+    border-width: 2px;
+  }
+
+  /* 📊 CONTROLS - 3 COLONNES COMPACTES */
+  .controls {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .control-box {
+    padding: 0.5rem;
+  }
+
+  .control-label {
+    font-size: 0.7rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .control-value {
+    font-size: 1.1rem;
+  }
+
+  /* 🎯 MULTIPLIER OVERLAY */
+  .multiplier-overlay {
+    padding: 0.4rem 0.8rem;
+    top: 5px;
+    left: 5px;
+  }
+
+  .multiplier-text {
+    font-size: 1rem;
+  }
+
+  /* 🎮 ACTION BUTTONS - HORIZONTAL */
+  .action-buttons {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .action-buttons button {
+    font-size: 1rem;
+    padding: 0.9rem;
+    min-height: 50px;
+  }
+
+  /* 📈 STATS - COMPACT */
+  .stats {
+    gap: 0.4rem;
+  }
+
+  .stat-box {
+    padding: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  /* 📱 MODAL */
+  .modal-content {
+    padding: 1rem;
+    margin: 0.5rem;
+    max-height: 85vh;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  /* 🔔 NOTIFICATIONS */
+  .notification-container {
+    max-width: calc(100% - 1rem);
+    right: 0.5rem;
+    left: 0.5rem;
+    top: 10px;
+  }
+
+  .notification {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+
+  /* 📖 INSTRUCTIONS */
+  .instructions {
+    padding: 0.8rem;
+    margin-top: 0.8rem;
+  }
+
+  .instructions h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .instructions li {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+    padding-left: 1.2rem;
+  }
+}
+
+/* ========================================
+   MODE PAYSAGE - OPTIMAL POUR LE JEU
+======================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  body {
+    overflow: hidden;
+  }
+
+  .container {
+    padding: 0.3rem;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  /* 🎮 HEADER MINI */
+  .header {
+    padding: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .mini-logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .balance-amount {
+    font-size: 1.1rem;
+  }
+
+  .header-buttons {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+
+  .header-buttons button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    min-width: 80px;
+  }
+
+  /* 🎨 CANVAS MAXIMUM */
+  .game-area {
+    padding: 0.3rem;
+  }
+
+  canvas {
+    max-height: 50vh;
+  }
+
+  /* 📊 CONTROLS EN LIGNE */
+  .controls {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .control-box {
+    padding: 0.3rem;
+  }
+
+  .control-label {
+    font-size: 0.65rem;
+  }
+
+  .control-value {
+    font-size: 0.95rem;
+  }
+
+  /* 🎮 ACTION BUTTONS COMPACTS */
+  .action-buttons {
+    gap: 0.3rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .action-buttons button {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+    min-height: 45px;
+  }
+
+  /* 📈 STATS MINI */
+  .stats {
+    gap: 0.3rem;
+  }
+
+  .stat-box {
+    padding: 0.3rem;
+  }
+
+  .stat-value {
+    font-size: 0.9rem;
+  }
+
+  /* 📖 INSTRUCTIONS CACHÉES */
+  .instructions {
+    display: none;
+  }
+}
+
+/* ========================================
+   TRÈS PETITS ÉCRANS (iPhone SE)
+======================================== */
+
+@media (max-width: 375px) {
+  h1 {
+    font-size: 1.3rem;
+  }
+
+  .balance-amount {
+    font-size: 1.2rem;
+  }
+
+  .control-value {
+    font-size: 1rem;
+  }
+
+  .multiplier-text {
+    font-size: 0.9rem;
+  }
+
+  .action-buttons button {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+}
+
+/* === Compactage paysage mobile: boutons fixés EN BAS pour ne plus recouvrir le canvas === */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Controls plus serrés */
+  .controls {
+    grid-template-columns: 1fr 0.75fr 1fr;
+    gap: 0.2rem;
+    margin-bottom: 0.2rem;
+    align-items: center;
+  }
+
+  .control-box {
+    padding: 0.35rem;
+    border-radius: 8px;
+    border-width: 1.5px;
+    max-height: 68px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .control-label {
+    font-size: 0.62rem;
+    color: #cfcfcf;
+    margin-bottom: 0.15rem;
+  }
+
+  .control-value {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  /* Input bet plus compact */
+  .control-box input#betInput {
+    font-size: 0.95rem;
+    padding: 6px;
+    margin-top: 4px;
+  }
+
+  /* Multiplier overlay plus petit et sous les boutons (z-index inférieur) */
+  .multiplier-overlay {
+    top: 8px;
+    left: 8px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    z-index: 20000;
+    pointer-events: auto;
+  }
+
+  .multiplier-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  /* Action buttons FIXÉS en bas de l'écran (accessible au pouce)
+     - position: fixed pour qu'ils ne flottent pas au-dessus du canvas
+     - fond semi-transparent pour lisibilité; changeable si tu veux opaque
+  */
+  .action-buttons {
+    position: fixed !important;
+    bottom: calc(env(safe-area-inset-bottom, 12px) + 8px);
+    left: 8px;
+    right: 8px;
+    z-index: 30000;
+    display: flex;
+    gap: 0.35rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px;
+    margin: 0;
+    background: rgba(6, 6, 6, 0.35); /* semi-transparent, remplace si besoin */
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+
+  .action-buttons button {
+    padding: 0.55rem;
+    font-size: 0.95rem;
+    min-height: 48px; /* confortable pour le pouce */
+    border-radius: 8px;
+    flex: 1;
+    margin: 0;
+  }
+
+  /* Espacer le canvas pour que les boutons fixes ne le recouvrent pas */
+  .canvas-container {
+    padding-bottom: calc(
+      48px + 20px + env(safe-area-inset-bottom, 12px)
+    ); /* min-height bouton + gap + safe-area */
+  }
+
+  /* S'assurer que notifications et overlays restent cliquables */
+  .action-buttons,
+  .multiplier-overlay,
+  .controls {
+    pointer-events: auto;
+  }
+
+  /* Statistiques réduites */
+  .stat-box {
+    padding: 0.35rem;
+  }
+
+  .stat-label {
+    font-size: 0.62rem;
+  }
+
+  .stat-value {
+    font-size: 0.9rem;
+  }
+}

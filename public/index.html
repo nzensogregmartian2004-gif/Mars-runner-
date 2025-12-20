@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="assets/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="assets/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="assets/favicon-16x16.png"
+    />
+    <link rel="manifest" href="assets/site.webmanifest" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MARS RUNNER</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="stars-background" id="starsBackground"></div>
+
+    <div class="auth-screen" id="authScreen">
+      <div class="auth-box">
+        <div class="martian-logo">
+          <div class="martian-head">
+            <div class="martian-eye left"></div>
+            <div class="martian-eye right"></div>
+            <div class="antenna left"></div>
+            <div class="antenna right"></div>
+          </div>
+        </div>
+        <h1>MARS</h1>
+        <p class="subtitle">Jeu de Course Martien</p>
+
+        <div id="loginForm">
+          <input type="email" id="loginEmail" placeholder="Email" />
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Mot de passe"
+          />
+          <button onclick="handleLogin(event)">Connexion</button>
+          <button class="text-link" onclick="showRegister()">
+            Créer un compte
+          </button>
+          <button class="text-link" onclick="showForgot()">
+            Mot de passe oublié?
+          </button>
+        </div>
+
+        <div id="registerForm" class="hidden">
+          <input type="text" id="regNom" placeholder="Nom" />
+          <input type="text" id="regPrenom" placeholder="Prénom" />
+          <input type="number" id="regAge" placeholder="Âge" />
+          <input type="tel" id="regTel" placeholder="Numéro de téléphone" />
+          <input type="email" id="regEmail" placeholder="Email" />
+          <input type="password" id="regPassword" placeholder="Mot de passe" />
+          <input
+            type="text"
+            id="regReferralCode"
+            placeholder="Code de Parrainage (Optionnel)"
+          />
+          <button class="btn-primary" onclick="handleRegister()">
+            S'inscrire
+          </button>
+          <button class="text-link" onclick="showLogin()">
+            Retour à la connexion
+          </button>
+        </div>
+
+        <div id="forgotForm" class="hidden">
+          <input
+            type="text"
+            id="forgotContact"
+            placeholder="Email ou Téléphone"
+          />
+          <button class="btn-primary" onclick="handleForgot()">
+            Réinitialiser
+          </button>
+          <button class="text-link" onclick="showLogin()">
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-screen container" id="gameScreen">
+      <div class="header">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="martian-logo mini-logo">
+              <div class="martian-head">
+                <div class="martian-eye left"></div>
+                <div class="martian-eye right"></div>
+                <div class="antenna left"></div>
+                <div class="antenna right"></div>
+              </div>
+            </div>
+            <div>
+              <h1 style="font-size: 1.8rem; margin: 0">MARS</h1>
+              <p style="font-size: 0.9rem; color: #aaa">1 MZ = 100 FCFA</p>
+            </div>
+          </div>
+          <div class="balance-section">
+            <div class="balance-label">Solde</div>
+            <div class="balance-amount" id="balance">50.00 MZ</div>
+          </div>
+        </div>
+        <div class="header-buttons">
+          <button class="btn-deposit" onclick="showDepositModal()">
+            💳 Dépôt
+          </button>
+          <button class="btn-withdraw" onclick="showWithdrawModal()">
+            💸 Retrait
+          </button>
+          <button class="btn-referral" onclick="showReferralModal()">
+            🤝 Parrainage
+          </button>
+          <button class="btn-logout" onclick="logout()">🚪 Déconnexion</button>
+        </div>
+      </div>
+
+      <div class="game-area">
+        <div class="canvas-container">
+          <canvas id="gameCanvas" width="800" height="400"></canvas>
+          <div class="multiplier-overlay hidden" id="multiplierOverlay">
+            <div class="multiplier-text" id="overlayMultiplier">x1.00000</div>
+          </div>
+        </div>
+
+        <!-- REMPLACEZ la section .controls dans votre HTML existant par ceci: -->
+
+        <div class="controls" id="betControls">
+          <!-- Mode Simple (par défaut) -->
+          <div class="control-box">
+            <div class="control-label">Multiplicateur</div>
+            <div class="control-value value-yellow" id="multiplierDisplay">
+              x1.000
+            </div>
+            <div
+              id="minWarning"
+              class="hidden"
+              style="font-size: 0.8rem; color: #ff4444; margin-top: 0.5rem"
+            >
+              Min: x1,5
+            </div>
+          </div>
+          <div class="control-box">
+            <div class="control-label">Mise</div>
+            <input
+              type="number"
+              id="betInput"
+              value="1"
+              min="1"
+              step="0.5"
+              style="
+                font-size: 1.5rem;
+                font-weight: bold;
+                margin-top: 0.5rem;
+                text-align: center;
+              "
+            />
+          </div>
+          <div class="control-box">
+            <div class="control-label">Gain potentiel</div>
+            <div class="control-value value-green" id="potentialWin">0.00</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-bottom: 1rem"></div>
+
+        <div class="action-buttons" id="actionButtons">
+          <button class="btn-play" id="btnPlay" onclick="startGame()">
+            🚀 Jouer (1 MZ)
+          </button>
+        </div>
+        <div class="stats">
+          <div class="stat-box">
+            <div class="stat-label">Score</div>
+            <div class="stat-value" id="scoreDisplay">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Record</div>
+            <div class="stat-value value-yellow" id="highScoreDisplay">
+              x0.00
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <h3>🎮 Comment jouer MARS RUNNER</h3>
+        <ul>
+          <li>
+            Le jeu démarre facilement puis devient progressivement plus
+            difficile
+          </li>
+          <li><strong>Mobile :</strong> Touchez l'écran pour sauter</li>
+          <li><strong>Desktop :</strong> Cliquez ou appuyez sur ESPACE</li>
+          <li>
+            Observez les objets de fond (OVNIs, météorites) pour voir votre
+            vitesse
+          </li>
+          <li>
+            Évitez les obstacles colorés : Satellites (gris), Rochers (rouge),
+            Robots (rouge vif), Drones (bleu)
+          </li>
+          <li>Atteignez x1,5 minimum pour pouvoir retirer vos gains</li>
+          <li>
+            Plus vous survivez longtemps, plus les obstacles sont rapides !
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ========================================
+     MODALS À AJOUTER/MODIFIER DANS index.html
+     ======================================== -->
+
+    <!-- ✅ MODAL DÉPÔT MODIFIÉ -->
+    <div id="depositModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeDepositModal()">&times;</span>
+        <h2>💰 Effectuer un Dépôt</h2>
+
+        <!-- Instructions -->
+        <div id="depositInstructions"></div>
+
+        <div class="modal-body">
+          <label for="depositAmount">Montant en FCFA:</label>
+          <input
+            type="number"
+            id="depositAmount"
+            placeholder="Minimum 100 FCFA"
+            min="100"
+            max="50000"
+          />
+
+          <p class="conversion-display">
+            = <span id="depositMZ">0.00</span> MZ
+          </p>
+
+          <button class="btn-primary" onclick="handleDeposit()">
+            📱 Contacter via WhatsApp
+          </button>
+
+          <button class="btn-secondary" onclick="closeDepositModal()">
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ MODAL RETRAIT MODIFIÉ -->
+    <div id="withdrawModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeWithdrawModal()">&times;</span>
+        <h2>💸 Effectuer un Retrait</h2>
+
+        <!-- Statut du bonus -->
+        <div id="withdrawStatus"></div>
+
+        <!-- Instructions -->
+        <div id="withdrawInstructions"></div>
+
+        <div class="modal-body">
+          <label for="withdrawAmount">Montant en MZ:</label>
+          <input
+            type="number"
+            id="withdrawAmount"
+            placeholder="Minimum 10 MZ"
+            min="10"
+            step="0.01"
+          />
+
+          <p class="conversion-display">
+            = <span id="withdrawFcfa">0</span> FCFA
+          </p>
+
+          <hr style="margin: 20px 0" />
+
+          <label for="withdrawWalletName"
+            >Nom enregistré sur le portefeuille:</label
+          >
+          <input
+            type="text"
+            id="withdrawWalletName"
+            placeholder="Ex: KOFFI Jean Pierre"
+            required
+          />
+
+          <label for="withdrawWalletNumber"
+            >Numéro de téléphone Mobile Money:</label
+          >
+          <input
+            type="tel"
+            id="withdrawWalletNumber"
+            placeholder="Ex: 0066837517"
+            required
+          />
+
+          <p class="info-note" style="margin-top: 15px">
+            ⚠️ <strong>Important:</strong> Assurez-vous que le nom et le numéro
+            correspondent exactement à votre compte Mobile Money.
+          </p>
+
+          <button class="btn-primary" onclick="handleWithdraw()">
+            ✅ Valider la demande
+          </button>
+
+          <button class="btn-secondary" onclick="closeWithdrawModal()">
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ STYLES ADDITIONNELS À AJOUTER -->
+    <style>
+      .payment-instructions {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .payment-instructions h3 {
+        margin-top: 0;
+        font-size: 1.2em;
+      }
+
+      .payment-instructions ol {
+        text-align: left;
+        padding-left: 20px;
+        margin: 15px 0;
+      }
+
+      .payment-instructions ol li {
+        margin: 8px 0;
+        line-height: 1.6;
+      }
+
+      .info-note {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 15px;
+        font-size: 0.9em;
+      }
+
+      .conversion-display {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #667eea;
+        margin: 15px 0;
+      }
+
+      .modal-body label {
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .modal-body input[type="number"],
+      .modal-body input[type="text"],
+      .modal-body input[type="tel"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        box-sizing: border-box;
+      }
+
+      .modal-body input:focus {
+        border-color: #667eea;
+        outline: none;
+      }
+
+      .info-box {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 0.95em;
+        line-height: 1.6;
+      }
+
+      .info-box.bonus-locked {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        color: #856404;
+      }
+
+      .info-box.bonus-unlocked {
+        background: #d4edda;
+        border: 2px solid #28a745;
+        color: #155724;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+        padding: 15px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+      @media screen and (max-width: 768px) {
+        /* Réduire la taille des boxes d'info */
+        .game-info {
+          font-size: 0.75rem !important;
+          padding: 0.3rem !important;
+        }
+
+        .game-info h3 {
+          font-size: 0.7rem !important;
+          margin-bottom: 0.2rem !important;
+        }
+
+        .multiplier-value {
+          font-size: 1.2rem !important;
+        }
+
+        .min-text {
+          font-size: 0.65rem !important;
+        }
+
+        /* Réduire la hauteur des boutons */
+        .btn-jump,
+        .btn-cashout,
+        .btn-replay,
+        .btn-play {
+          padding: 0.6rem 1rem !important;
+          font-size: 0.9rem !important;
+          min-height: 45px !important;
+        }
+
+        /* Espacer les boutons verticalement */
+        #actionButtons {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        /* Mode paysage : boutons côte à côte */
+        @media screen and (orientation: landscape) {
+          #actionButtons {
+            flex-direction: row;
+            gap: 0.5rem;
+          }
+
+          .btn-jump,
+          .btn-cashout {
+            flex: 1;
+          }
+        }
+      }
+    </style>
+
+    <div class="modal" id="referralModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">🤝 Programme de Parrainage</h2>
+          <button class="btn-close" onclick="closeReferralModal()">✕</button>
+        </div>
+        <div class="info-box" style="border-color: #00ffff">
+          <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #00ff88">
+            Partagez ce code pour gagner 2 MZ sur la première mise de chaque
+            ami!
+          </p>
+          <div style="font-size: 0.9rem; color: #aaa">
+            Votre ami gagne 5 MZ à l'inscription.
+          </div>
+        </div>
+
+        <label class="control-label">Votre Code de Parrainage</label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
+          <input
+            type="text"
+            id="myReferralCodeDisplay"
+            readonly
+            value="Chargement..."
+            style="margin-bottom: 0; text-align: center; font-weight: bold"
+          />
+          <button
+            class="btn-primary btn-copy"
+            onclick="copyReferralCode()"
+            style="width: auto; padding: 0.5rem 1rem"
+          >
+            📋 Copier
+          </button>
+        </div>
+
+        <h3 style="margin-top: 1.5rem; color: #ffd700">Mes Affiliés</h3>
+        <ul
+          id="affiliatedList"
+          style="
+            list-style-type: none;
+            padding-left: 0;
+            font-size: 0.9rem;
+            color: #ccc;
+          "
+        >
+          <li>Chargement de la liste...</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- IMPORTANT: Ajouter AVANT script.js -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js">
+      // Conversion FCFA -> MZ pour le dépôt
+      document.getElementById("depositAmount")?.addEventListener("input", function () {
+        const fcfa = parseFloat(this.value) || 0;
+        const mz = fcfa / 100;
+
+        const displayElement = document.getElementById("depositMZ");
+        if (displayElement) {
+          displayElement.textContent = mz.toFixed(2);
+        }
+      });
+
+      // Conversion MZ -> FCFA pour le retrait
+      document.getElementById("withdrawAmount")?.addEventListener("input", function () {
+        const mz = parseFloat(this.value) || 0;
+        const fcfa = mz * 100;
+
+        const fcfaElement = document.getElementById("withdrawFcfa");
+        if (fcfaElement) {
+          fcfaElement.textContent = fcfa.toFixed(0);
+        }
+      });
+    </script>
+  </body>
+</html>
