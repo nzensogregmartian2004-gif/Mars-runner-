@@ -26,7 +26,8 @@ const server = http.createServer(app);
 // ============================================
 // SOCKET.IO CONFIGURATION
 // ============================================
-const io = new Server(server, {
+const socket = io("https://mars-runner-backend.onrender.com", {
+  transports: ["websocket", "polling"],
   cors: {
     origin: "https://marsrunner.netlify.app",
     methods: ["GET", "POST"],
