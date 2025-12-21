@@ -1675,8 +1675,7 @@ function showDepositModal() {
     <li>Effectuez le dépôt <strong>manuellement</strong> sur le numéro choisi.</li>
     <li>Faites une <strong>capture d'écran</strong> du reçu et envoyez-la au numéro whatsApp (vérifiez bien le nom du destinataire).</li>
     <li>Vous recevrez un <strong>message de confirmation</strong> une fois la vérification terminée.</li>
-    <li>⚠️<strong> Note : Le paiement manuel est temporaire mais 100% sécurisé. ✅ Pour toute assistance ou méthode alternative, contactez le service client au 📞 066837517/074069443</strong> Email:marsrunner05@gmail.com.</li>
-    <li>💡 Taux de conversion:<strong> 100 FCFA = 1 MZ.</strong></li>
+    <li>⚠️<strong> Note : Le paiement manuel est temporaire mais 100% sécurisé. ✅ Pour toute assistance ou méthode alternative, contactez le service client au 📞 066837517/074069443 Email:marsrunner05@gmail.com.</strong></li>  
 </ol>
         <p class="info-note">💡 Taux de conversion: <strong>100 FCFA = 1 MZ</strong></p>
       </div>
