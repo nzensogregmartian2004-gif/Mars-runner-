@@ -48,12 +48,12 @@ const pool = mysql.createPool(poolOptions);
 
 const testConnection = async () => {
   try {
-    const connection = await pool.getConnection();
-    console.log("✅ Connexion MySQL OK:", `${DB_HOST}:${DB_PORT}/${DB_NAME}`);
-    connection.release();
+    const conn = await pool.getConnection();
+    console.log("✅ Connexion MySQL OK via URL");
+    conn.release();
     return true;
-  } catch (error) {
-    console.error("❌ Erreur connexion MySQL:", error && error.message);
+  } catch (err) {
+    console.error("❌ Erreur connexion MySQL:", err);
     return false;
   }
 };
