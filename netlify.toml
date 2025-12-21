@@ -3,6 +3,13 @@
   publish = "."
   command = "echo 'Frontend statique, pas de build nécessaire'"
 
+# PRIORITÉ À L’ADMIN
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+# SPA CLIENT
 [[redirects]]
   from = "/*"
   to = "/index.html"
