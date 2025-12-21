@@ -1669,13 +1669,15 @@ function showDepositModal() {
     depositInstructions.innerHTML = `
       <div class="payment-instructions">
         <h3>📱 Comment effectuer un dépôt ?</h3>
-        <ol>
-          <li>Effectuez votre transaction via Mobile Money (MTN, Moov, etc.)</li>
-          <li>Prenez une capture d'écran de la confirmation</li>
-          <li>Cliquez sur le bouton WhatsApp ci-dessous</li>
-          <li>Envoyez-nous votre capture avec le montant déposé</li>
-          <li>Votre compte sera crédité sous 5-30 minutes</li>
-        </ol>
+<ol>
+    <li>Saisissez le <strong>montant du dépôt</strong> et cliquez sur le bouton WhatsApp.</li>
+    <li>Choisissez votre <strong>moyen de transfert</strong> (AirtelMoney,Mobicash, etc.).</li>
+    <li>Effectuez le dépôt <strong>manuellement</strong> sur le numéro choisi.</li>
+    <li>Faites une <strong>capture d'écran</strong> du reçu et envoyez-la au numéro whatsApp (vérifiez bien le nom du destinataire).</li>
+    <li>Vous recevrez un <strong>message de confirmation</strong> une fois la vérification terminée.</li>
+    <li>⚠️<strong> Note : Le paiement manuel est temporaire mais 100% sécurisé. ✅ Pour toute assistance ou méthode alternative, contactez le service client au 📞 066837517/074069443</strong> Email:marsrunner05@gmail.com.</li>
+    <li>💡 Taux de conversion:<strong> 100 FCFA = 1 MZ.</strong></li>
+</ol>
         <p class="info-note">💡 Taux de conversion: <strong>100 FCFA = 1 MZ</strong></p>
       </div>
     `;
