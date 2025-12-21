@@ -22,6 +22,16 @@ const adminRoutes = require("./routes/admin");
 const app = express();
 const server = http.createServer(app);
 
+const { testConnection } = require("./config/database");
+
+(async () => {
+  const ok = await testConnection();
+  if (!ok) {
+    console.error("🛑 Impossible de démarrer sans MySQL");
+    process.exit(1);
+  }
+})();
+
 // ============================================
 // SOCKET.IO CONFIGURATION
 // ============================================
