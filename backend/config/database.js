@@ -44,12 +44,18 @@ if (DB_SSL) {
   }
 }
 
-const pool = mysql.createPool(poolOptions);
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL manquant");
+}
+
+const pool = mysql.createPool(DATABASE_URL);
 
 const testConnection = async () => {
   try {
     const conn = await pool.getConnection();
-    console.log("✅ Connexion MySQL OK via URL");
+    console.log("✅ Connexion MySQL OK (DATABASE_URL)");
     conn.release();
     return true;
   } catch (err) {
