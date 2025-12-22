@@ -1,50 +1,66 @@
-// backend/config/database.js
+// ============================================
+// backend/config/database.js - VERSION OPTIMISÉE
+// ============================================
 const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 /**
- * On utilise UNIQUEMENT DATABASE_URL (Railway / Render compatible)
- * Aucun DB_HOST / DB_PASSWORD pour éviter les conflits
+ * Vérification des variables d'environnement
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  throw new Error("❌ DATABASE_URL manquant");
+  throw new Error("❌ DATABASE_URL manquant. Vérifiez le fichier .env");
 }
 
-// Pool MySQL
-const pool = mysql.createPool(DATABASE_URL);
+/**
+ * Création d'un pool de connexions MySQL
+ */
+const pool = mysql.createPool({
+  uri: DATABASE_URL,
+  waitForConnections: true,
+  connectionLimit: 10, // Nombre maximal de connexions
+  queueLimit: 0, // Pas de limite pour la queue
+  connectTimeout: 10000, // Timeout des connexions (ms)
+});
 
-// Test connexion au démarrage
+/**
+ * Test de la connexion à la base de données au démarrage
+ */
 const testConnection = async () => {
   try {
     const conn = await pool.getConnection();
-    console.log("✅ Connexion MySQL OK (DATABASE_URL)");
+    console.log("✅ Connexion MySQL réussie (DATABASE_URL)");
     conn.release();
     return true;
   } catch (err) {
-    console.error("❌ Erreur connexion MySQL:", err);
+    console.error("❌ Erreur lors de la connexion MySQL:", err.message);
     return false;
   }
 };
 
-// Requêtes simples
+/**
+ * Requêtes simples MySQL
+ */
 const query = async (sql, params = []) => {
   try {
     const [rows] = await pool.execute(sql, params);
     return rows;
   } catch (error) {
-    console.error("❌ Erreur requête SQL:", error && error.message, sql);
+    console.error("❌ Erreur SQL:", error.message, sql);
     throw error;
   }
 };
 
-// Transactions
+/**
+ * Gestion des transactions MySQL
+ */
 const transaction = async (callback) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
+    // Fonction qui permet d'exécuter des requêtes dans une transaction
     const trx = {
       query: async (sql, params = []) => {
         const [rows] = await connection.execute(sql, params);
@@ -61,23 +77,31 @@ const transaction = async (callback) => {
     return result;
   } catch (error) {
     await connection.rollback();
-    console.error("❌ Erreur transaction:", error && error.message);
+    console.error("❌ Erreur dans la transaction MySQL:", error.message);
     throw error;
   } finally {
     connection.release();
   }
 };
 
-// Fermeture propre
+/**
+ * Fermeture propre du pool de connexions
+ */
 const closePool = async () => {
   try {
     await pool.end();
     console.log("✅ Pool MySQL fermé proprement");
   } catch (error) {
-    console.error("❌ Erreur fermeture pool:", error && error.message);
+    console.error(
+      "❌ Erreur lors de la fermeture du pool MySQL:",
+      error.message
+    );
   }
 };
 
+/**
+ * Export des fonctions pour utilisation globale
+ */
 module.exports = {
   pool,
   query,
