@@ -16,12 +16,24 @@ if (!DATABASE_URL) {
 /**
  * Création d'un pool de connexions MySQL
  */
+/**
+ * Création d'un pool de connexions MySQL - VERSION FIX RENDER
+ */
 const pool = mysql.createPool({
   uri: DATABASE_URL,
   waitForConnections: true,
-  connectionLimit: 10, // Nombre maximal de connexions
-  queueLimit: 0, // Pas de limite pour la queue
-  connectTimeout: 10000, // Timeout des connexions (ms)
+  connectionLimit: 10,
+  queueLimit: 0,
+  connectTimeout: 20000, // Augmenté pour les réseaux lents
+
+  // AJOUTS CRUCIAUX POUR ÉVITER "PROTOCOL_CONNECTION_LOST" :
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000, // Envoie un ping toutes les 10 secondes
+
+  // SSL : Souvent obligatoire sur les plateformes Cloud
+  ssl: {
+    rejectUnauthorized: false, // Permet la connexion sécurisée sur Render/Aiven/etc.
+  },
 });
 
 /**
@@ -30,11 +42,12 @@ const pool = mysql.createPool({
 const testConnection = async () => {
   try {
     const conn = await pool.getConnection();
-    console.log("✅ Connexion MySQL réussie (DATABASE_URL)");
+    await conn.query("SELECT 1"); // On force une vraie petite requête de test
+    console.log("✅ Connexion MySQL confirmée et active");
     conn.release();
     return true;
   } catch (err) {
-    console.error("❌ Erreur lors de la connexion MySQL:", err.message);
+    console.error("❌ Impossible de joindre MySQL :", err.message);
     return false;
   }
 };
