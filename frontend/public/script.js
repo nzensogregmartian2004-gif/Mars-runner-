@@ -1,5 +1,5 @@
 // =======================================================================
-// FRONTEND SOCKET.IO - script.js (VERSION CORRIGÉE MOBILE)
+// FRONTEND SOCKET.IO - script.js (VERSION CORRIGÉE)
 // =======================================================================
 
 // ========================================
@@ -34,14 +34,14 @@ let potentialWin = 0;
 let collisionDetected = false;
 let velocity = 0;
 let legAnimation = 0;
-// 🔥 NOUVELLES VARIABLES ANTI-SPAM
+// NOUVELLES VARIABLES ANTI-SPAM
 let isStartingGame = false;
 let startGameCooldown = false;
 let lastStartGameAttempt = 0;
-let isGameEnding = false; // ⭐ NOUVEAU : Évite les actions pendant la fin
-let gameEndTimeout = null; // ⭐ NOUVEAU : Timeout de sécurité
+let isGameEnding = false; // Évite les actions pendant la fin
+let gameEndTimeout = null; // Timeout de sécurité
 
-// 🎮 CALIBRATION GAMING
+// CALIBRATION GAMING
 const BASE_SPEED = 4.2;
 const SPEED_INCREMENT = 0.0015;
 let gameSpeed = BASE_SPEED;
@@ -51,13 +51,13 @@ let score = 0;
 const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
-// 🎯 ESPACEMENT DYNAMIQUE
+// ESPACEMENT DYNAMIQUE
 const MIN_GAP = 250;
 const MAX_GAP = 500;
 const GAP_COEFFICIENT = 14;
 const frameInterval = 1000 / 60;
 
-// ⚡ FLUCTUATION VITESSE
+// FLUCTUATION VITESSE
 const MAX_SPEED_FACTOR = 1.8;
 const MIN_SPEED_FACTOR = 0.6;
 const FLUCTUATION_DURATION = 100;
@@ -77,20 +77,20 @@ const isMobile =
     navigator.userAgent
   ) || window.innerWidth < 768;
 
-// ✅ TAILLES ADAPTÉES
+// TAILLES ADAPTÉES
 const GRAVITY = 0.5;
 const JUMP_FORCE = isMobile ? -9.5 : -11;
 
-// 🔥 VARIABLES CANVAS
+// VARIABLES CANVAS
 let martianY = 320;
-let martianX = 100; // ⬅️ POSITION HORIZONTALE DU MARTIEN
-let MARTIAN_SIZE = isMobile ? 45 : 50; // Martien réduit à 35px sur mobile
-let GROUND_Y = isMobile ? 260 : 320; // Sol un peu plus haut
-// --- Ajouts en haut du fichier (près des autres variables globales) ---
-let displayScale = 1.0; // échelle d'affichage/logique (1 = normal, <1 = dézoom)
-const PORTRAIT_SCALE = 0.7; // valeur quand mobile en portrait (ajuste ici si besoin)
+let martianX = 100; // POSITION HORIZONTALE DU MARTIEN
+let MARTIAN_SIZE = isMobile ? 45 : 50;
+let GROUND_Y = isMobile ? 260 : 320;
+// échelle d'affichage/logique (1 = normal, <1 = dézoom)
+let displayScale = 1.0;
+const PORTRAIT_SCALE = 0.7;
 
-// 📱 OFFSET CAMÉRA POUR MODE PORTRAIT
+// OFFSET CAMÉRA POUR MODE PORTRAIT
 let cameraOffsetX = 0;
 
 // ========================================
@@ -119,11 +119,8 @@ function initAudio() {
 }
 
 // ========================================
-// SECTION 2 : setupCanvas() (Ligne ~132-185)
-// REMPLACER toute la fonction :
+// setupCanvas()
 // ========================================
-
-// --- Remplacer la fonction setupCanvas() existante par celle-ci ---
 function setupCanvas() {
   canvas = document.getElementById("gameCanvas");
   if (!canvas) {
@@ -137,7 +134,6 @@ function setupCanvas() {
     return;
   }
 
-  // --- REMPLACER la fonction resizeCanvas() DANS setupCanvas() PAR CETTE VERSION ---
   function resizeCanvas() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -146,13 +142,12 @@ function setupCanvas() {
     // Détection portrait mobile pour appliquer dézoom
     if (isMobile && !isLandscape) {
       displayScale = PORTRAIT_SCALE;
-      // canvas plus large en portrait mais reste adapté
       canvas.width = Math.min(windowWidth * 0.96, 450);
       canvas.height = Math.min(windowHeight * 0.6, 700);
       martianX = canvas.width * 0.2;
       cameraOffsetX = canvas.width * 0.12;
     } else if (isMobile && isLandscape) {
-      displayScale = 1.0; // on annule le dézoom en paysage
+      displayScale = 1.0;
       canvas.width = Math.min(windowWidth * 0.95, 900);
       canvas.height = Math.min(windowHeight * 0.65, 350);
       martianX = 120;
@@ -169,7 +164,7 @@ function setupCanvas() {
     GROUND_Y = canvas.height - Math.floor(80 * displayScale);
     MARTIAN_SIZE = Math.max(35, Math.floor((canvas.width / 18) * displayScale));
 
-    // Pour éviter incohérences après rotation/resize, on réinitialise obstacles visibles
+    // Réinitialisation d'état visible après rotation/resize
     obstacles = [];
     backgroundObjects = [];
     lastObstacleTime = Date.now();
@@ -194,6 +189,12 @@ function setupCanvas() {
       displayScale
     );
   }
+
+  // appel initial pour dimensionner le canvas
+  resizeCanvas();
+
+  // assurer que resizeCanvas est accessible depuis l'extérieur si besoin
+  window.__resizeGameCanvas = resizeCanvas;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -215,33 +216,40 @@ window.addEventListener("DOMContentLoaded", () => {
     connectSocket();
     showGameInterface();
   } else {
-    showLogin(); // ⬅️ AFFICHER UNIQUEMENT LOGIN AU DÉMARRAGE
+    showLogin(); // AFFICHER LOGIN AU DÉMARRAGE
   }
 
-  // ⬅️ FIX: Empêcher soumission par défaut
-  document.getElementById("loginForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleLogin(e);
-  });
-
-  document.getElementById("registerForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleRegister();
-  });
-
-  document.getElementById("forgotForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleForgot();
-  });
+  // Empêcher soumission par défaut
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleLogin(e);
+    });
+  }
+  const registerForm = document.getElementById("registerForm");
+  if (registerForm) {
+    registerForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleRegister();
+    });
+  }
+  const forgotForm = document.getElementById("forgotForm");
+  if (forgotForm) {
+    forgotForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleForgot();
+    });
+  }
 
   window.addEventListener("resize", () => {
-    setupCanvas();
+    if (window.__resizeGameCanvas) window.__resizeGameCanvas();
     drawGame();
   });
 
   window.addEventListener("orientationchange", () => {
     setTimeout(() => {
-      setupCanvas();
+      if (window.__resizeGameCanvas) window.__resizeGameCanvas();
       drawGame();
     }, 100);
   });
@@ -263,8 +271,10 @@ if (gameCanvasElement) {
   gameCanvasElement.addEventListener(
     "touchstart",
     (e) => {
-      e.preventDefault();
-      if (gameState === "playing") jump();
+      if (gameState === "playing") {
+        e.preventDefault();
+        jump();
+      }
     },
     { passive: false }
   );
@@ -306,11 +316,12 @@ function connectSocket() {
     socket.emit("wallet:getBalance");
     socket.emit("referral:getInfo");
   });
+
   socket.on("disconnect", (reason) => {
     isConnectedToSocket = false;
     console.log("❌ Socket déconnecté:", reason);
 
-    // 🔥 RÉINITIALISER LES FLAGS ANTI-SPAM
+    // RÉINITIALISER LES FLAGS ANTI-SPAM
     isStartingGame = false;
     startGameCooldown = false;
 
@@ -323,15 +334,12 @@ function connectSocket() {
     console.error("❌ Erreur connexion Socket.IO:", error);
     showNotification("Erreur de connexion au serveur", "error");
 
-    // 🔥 RÉINITIALISER EN CAS D'ERREUR
+    // RÉINITIALISER EN CAS D'ERREUR
     isStartingGame = false;
     startGameCooldown = false;
   });
-  // ========================================
-  // 🔥 AMÉLIORATION 2 : Gestion événement game:started
-  // REMPLACER l'événement socket.on("game:started") existant
-  // ========================================
 
+  // Gestion événement game:started
   socket.on("game:started", (data) => {
     console.log("🎮 Partie démarrée - Data:", data);
 
@@ -343,7 +351,7 @@ function connectSocket() {
       return;
     }
 
-    // ⭐ Éviter les démarrages multiples
+    // Éviter les démarrages multiples
     if (gameState === "playing") {
       console.warn("⚠️ Partie déjà en cours, ignoring duplicate start");
       return;
@@ -355,22 +363,28 @@ function connectSocket() {
     gameState = "playing";
     canWithdraw = false;
     collisionDetected = false;
-    isGameEnding = false; // ⭐ Réinitialiser le flag
+    isGameEnding = false;
 
-    // ⭐ Débloquer APRÈS succès
+    // Débloquer APRÈS succès
     isStartingGame = false;
 
     updateBalance();
     showNotification("Partie démarrée! Bonne chance.", "success");
 
-    document.getElementById("actionButtons").innerHTML = `
-    <button class="btn-jump" onclick="jump()">⬆️ Sauter</button>
-    <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>💰 Retirer</button>
-  `;
-    document.getElementById("multiplierOverlay").classList.remove("hidden");
-    document.getElementById("minWarning").classList.remove("hidden");
+    const actionButtons = document.getElementById("actionButtons");
+    if (actionButtons) {
+      actionButtons.innerHTML = `
+      <button class="btn-jump" onclick="jump()">⬆️ Sauter</button>
+      <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>💰 Retirer</button>
+    `;
+    }
 
-    // ⭐ Petit délai avant de lancer la loop locale (évite race conditions)
+    const multOverlay = document.getElementById("multiplierOverlay");
+    if (multOverlay) multOverlay.classList.remove("hidden");
+    const minWarn = document.getElementById("minWarning");
+    if (minWarn) minWarn.classList.remove("hidden");
+
+    // Petit délai avant de lancer la loop locale (évite race conditions)
     setTimeout(() => {
       if (gameState === "playing") {
         startLocalGameLoop();
@@ -378,11 +392,7 @@ function connectSocket() {
     }, 150);
   });
 
-  // ========================================
-  // SECTION 6 : Mettre à jour socket.on("game:progress")
-  // REMPLACER les lignes d'affichage du multiplicateur (Ligne ~360-368)
-  // ========================================
-
+  // game:progress
   socket.on("game:progress", (data) => {
     if (gameState !== "playing" && gameState !== "waiting") return;
     if (!data) return;
@@ -398,7 +408,6 @@ function connectSocket() {
       if (minWarning) minWarning.classList.add("hidden");
     }
 
-    // ✅ UTILISER LA NOUVELLE FONCTION
     updateMultiplierDisplay();
   });
 
@@ -406,7 +415,6 @@ function connectSocket() {
     console.log("💰 Cash Out réussi:", data);
     if (!data) return;
 
-    // ⭐ Protection contre traitement multiple
     if (isGameEnding) {
       console.warn("⚠️ Cash out déjà en cours de traitement");
       return;
@@ -419,7 +427,6 @@ function connectSocket() {
 
     updateBalance();
 
-    // ⭐ Délai avant d'afficher l'écran de fin
     setTimeout(() => {
       showGameOverScreen(true, winAmount);
       isGameEnding = false;
@@ -429,7 +436,6 @@ function connectSocket() {
   socket.on("game:over", (data) => {
     console.log("📊 Game Over:", data);
 
-    // ⭐ Protection contre traitement multiple
     if (isGameEnding) {
       console.warn("⚠️ Game over déjà en cours de traitement");
       return;
@@ -447,7 +453,6 @@ function connectSocket() {
     isNewPlayerBonusLocked = false;
     updateBalance();
 
-    // ⭐ Délai avant d'afficher l'écran de fin
     setTimeout(() => {
       showGameOverScreen(false, 0);
       isGameEnding = false;
@@ -459,7 +464,7 @@ function connectSocket() {
     const message = data?.message || "Erreur inconnue";
     showNotification(message, "error");
 
-    // 🔥 DÉBLOQUER LE BOUTON EN CAS D'ERREUR
+    // DÉBLOQUER LE BOUTON EN CAS D'ERREUR
     isStartingGame = false;
     resetPlayButton();
 
@@ -469,7 +474,7 @@ function connectSocket() {
   });
 
   socket.on("wallet:balance", (data) => {
-    if (!data) return; // ⬅️ FIX
+    if (!data) return;
 
     const newBalance = parseFloat(
       data.balance || data.balance_mz || balance || 0
@@ -484,21 +489,12 @@ function connectSocket() {
     console.log("🎯 Données de parrainage reçues:", data);
     if (!data) return;
 
-    // Récupérer le code
     myReferralCode = data.referralCode || data.referral_code || "";
     console.log("✅ Code parrainage:", myReferralCode);
 
-    // Récupérer les affiliés
     if (data.affiliatedUsers && Array.isArray(data.affiliatedUsers)) {
       affiliatedUsers = data.affiliatedUsers;
       console.log("✅ Affiliés reçus:", affiliatedUsers.length);
-      affiliatedUsers.forEach((aff) => {
-        console.log(
-          `  → ${aff.name}:  ${aff.bonusEarned} MZ (${
-            aff.bonusUnlocked ? "Débloqué" : "En attente"
-          })`
-        );
-      });
     } else {
       affiliatedUsers = [];
       console.log("⚠️ Pas d'affiliés");
@@ -507,7 +503,7 @@ function connectSocket() {
 
   socket.on("user:info", (data) => {
     console.log("👤 Infos utilisateur:", data);
-    if (!data) return; // ⬅️ FIX
+    if (!data) return;
 
     if (data.balance !== undefined && data.balance !== null) {
       balance = parseFloat(data.balance);
@@ -522,7 +518,7 @@ function connectSocket() {
   });
 
   socket.on("deposit:confirmed", (data) => {
-    if (!data) return; // ⬅️ FIX
+    if (!data) return;
     balance = parseFloat(data.balance || balance);
     updateBalance();
     showNotification(
@@ -532,7 +528,7 @@ function connectSocket() {
   });
 
   socket.on("withdrawal:confirmed", (data) => {
-    if (!data) return; // ⬅️ FIX
+    if (!data) return;
     showNotification(
       `✅ Retrait effectué! ${data.amount} MZ envoyés.`,
       "success"
@@ -540,13 +536,12 @@ function connectSocket() {
   });
 
   socket.on("withdrawal:rejected", (data) => {
-    if (!data) return; // ⬅️ FIX
+    if (!data) return;
     balance = parseFloat(data.balance || balance);
     updateBalance();
     showNotification(`❌ Retrait refusé: ${data.reason}`, "error");
   });
 
-  // ✅ RÉCEPTION DU CODE UNIQUEMENT
   socket.on("referral:code", (data) => {
     console.log("🎯 Code de parrainage reçu:", data);
     if (data && (data.referralCode || data.referral_code)) {
@@ -554,13 +549,10 @@ function connectSocket() {
     }
   });
 
-  // ✅ RÉCEPTION DES STATS
   socket.on("referral:stats", (data) => {
     console.log("📊 Stats de parrainage:", data);
-    // Vous pouvez afficher ces stats dans l'UI si nécessaire
   });
 
-  // ✅ ERREURS DE PARRAINAGE
   socket.on("referral:error", (data) => {
     console.error("❌ Erreur parrainage:", data);
     showNotification(data.message || "Erreur de parrainage", "error");
@@ -581,30 +573,26 @@ function disconnectSocket() {
 // ========================================
 
 /**
- * 🔥 FONCTION CRITIQUE : startGame() avec protection complète
+ * startGame() avec protection complète
  */
 function startGame() {
-  // 🛡️ PROTECTION 1 : Vérifier si une partie est déjà en cours
   if (gameState === "playing" || gameState === "waiting") {
     console.warn("⚠️ Une partie est déjà en cours");
     showNotification("Une partie est déjà en cours", "warning");
     return;
   }
 
-  // 🛡️ PROTECTION 2 : Vérifier si une fin est en cours
   if (isGameEnding) {
     console.warn("⚠️ Partie précédente en cours de finalisation");
     showNotification("Finalisation en cours, veuillez patienter...", "warning");
     return;
   }
 
-  // 🛡️ PROTECTION 3 : Empêcher les clics multiples
   if (isStartingGame) {
     console.warn("⚠️ Démarrage déjà en cours");
     return;
   }
 
-  // 🛡️ PROTECTION 4 : Cooldown entre parties
   const now = Date.now();
   if (startGameCooldown && now - lastStartGameAttempt < 2000) {
     const remainingTime = Math.ceil(
@@ -615,7 +603,6 @@ function startGame() {
     return;
   }
 
-  // 🛡️ PROTECTION 5 : Validation du montant
   const betInputElement = document.getElementById("betInput");
   betAmount = Math.max(1, parseFloat(betInputElement?.value || 1));
 
@@ -624,27 +611,27 @@ function startGame() {
     return;
   }
 
-  // 🛡️ PROTECTION 6 : Vérifier la connexion
   if (!isConnectedToSocket || !socket) {
     showNotification("Connexion au serveur requise.", "warning");
     connectSocket();
     return;
   }
 
-  // ✅ ACTIVER LES PROTECTIONS
   isStartingGame = true;
   startGameCooldown = true;
   lastStartGameAttempt = now;
 
   console.log("🎮 Lancement de la partie - Mise:", betAmount, "MZ");
 
-  // 🔄 DÉSACTIVER LE BOUTON
   disablePlayButton();
 
-  // 📤 ÉMETTRE LA REQUÊTE
   socket.emit("game:start", { betAmount });
 
-  // ⏰ TIMEOUT DE SÉCURITÉ : 8 secondes
+  // TIMEOUT DE SÉCURITÉ : 8 secondes
+  if (gameEndTimeout) {
+    clearTimeout(gameEndTimeout);
+    gameEndTimeout = null;
+  }
   gameEndTimeout = setTimeout(() => {
     if (gameState === "waiting") {
       console.error("⏰ Timeout: Pas de réponse du serveur");
@@ -656,18 +643,15 @@ function startGame() {
     }
   }, 8000);
 
-  // 🎯 PRÉPARER L'ÉTAT LOCAL
   gameState = "waiting";
   multiplier = 1.0;
   potentialWin = 0;
   canWithdraw = false;
   collisionDetected = false;
-
-  // ⚠️ NE PAS démarrer la loop ici, attendre game:started
 }
 
 /**
- * 🔧 Désactiver visuellement le bouton "Jouer"
+ * Désactiver visuellement le bouton "Jouer"
  */
 function disablePlayButton() {
   const btnPlay = document.getElementById("btnPlay");
@@ -680,7 +664,7 @@ function disablePlayButton() {
 }
 
 /**
- * 🔧 Réactiver le bouton "Jouer"
+ * Réactiver le bouton "Jouer"
  */
 function resetPlayButton() {
   const btnPlay = document.getElementById("btnPlay");
@@ -797,10 +781,6 @@ function generateBackgroundObjects(deltaTime) {
     .map((obj) => ({ ...obj, x: obj.x - obj.speed * deltaTime }))
     .filter((obj) => obj.x > -100 - cameraOffsetX);
 }
-
-// --- Modifier les endroits de génération d'obstacles pour tenir compte de displayScale ---
-// Remplace la fonction handleObstacleGeneration par la version suivante (garde le comportement,
-// mais utilise des constantes multipliées par displayScale pour positions / tailles) :
 
 function handleObstacleGeneration(deltaTime, currentTime) {
   targetGameSpeed += SPEED_INCREMENT * deltaTime;
@@ -967,14 +947,10 @@ function handleObstacleGeneration(deltaTime, currentTime) {
   lastObstacleTime = currentTime;
 }
 
-// --- REMPLACER handleObstacleMovement() PAR CETTE VERSION ---
 function handleObstacleMovement(deltaTime) {
   obstacles = obstacles
     .map((obs) => {
-      // Mettre à jour la vitesse de l'obstacle pour la rendre cohérente avec gameSpeed
       obs.speed = gameSpeed;
-
-      // Utiliser gameSpeed directement (évite divergence si obs.speed était ancien)
       obs.x -= gameSpeed * deltaTime;
 
       if (obs.isFalling) {
@@ -1012,18 +988,15 @@ function handleObstacleMovement(deltaTime) {
 
       return obs;
     })
-    // garder obstacles en se basant sur la position écran
     .filter((obs) => obs.x > -50 - cameraOffsetX);
 }
 
-// --- REMPLACER checkCollision() PAR CETTE VERSION (UTILISE COORDÉES ÉCRAN) ---
 function checkCollision() {
   if (collisionDetected) return false;
 
   const martianRight = martianX + MARTIAN_SIZE;
   const martianBottom = martianY + MARTIAN_SIZE;
 
-  // Tolérance adaptée à l'échelle d'affichage
   const hitboxTolerance = Math.max(4, Math.floor(6 * displayScale));
   const proximityRangeBase = 55;
   const proximityRange = Math.max(
@@ -1032,7 +1005,6 @@ function checkCollision() {
   );
 
   for (let obs of obstacles) {
-    // Convertir la position obstacle en coordonnée écran (consistante avec draw)
     const obsScreenX = obs.x - cameraOffsetX;
     const obsRight = obsScreenX + obs.width;
     const obsBottom = obs.y + obs.height;
@@ -1072,7 +1044,6 @@ function stopGame() {
 }
 
 function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
-  // ⭐ Nettoyer le timeout de sécurité
   if (gameEndTimeout) {
     clearTimeout(gameEndTimeout);
     gameEndTimeout = null;
@@ -1095,12 +1066,17 @@ function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
       highScoreDisplay.textContent = "x" + highScore.toFixed(2);
   }
 
-  document.getElementById("actionButtons").innerHTML = `
-    <button class="btn-replay" onclick="replayGame()">🔄 Rejouer</button>
-  `;
+  const actionButtons = document.getElementById("actionButtons");
+  if (actionButtons) {
+    actionButtons.innerHTML = `
+      <button class="btn-replay" onclick="replayGame()">🔄 Rejouer</button>
+    `;
+  }
 
-  document.getElementById("multiplierOverlay").classList.add("hidden");
-  document.getElementById("minWarning").classList.add("hidden");
+  const multOverlay = document.getElementById("multiplierOverlay");
+  if (multOverlay) multOverlay.classList.add("hidden");
+  const minWarn = document.getElementById("minWarning");
+  if (minWarn) minWarn.classList.add("hidden");
 
   if (notificationMessage) {
     showNotification(notificationMessage, "error");
@@ -1118,21 +1094,18 @@ function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
     );
   }
 
-  // ⭐ Délai avant de permettre une nouvelle partie
   setTimeout(() => {
     gameState = "menu";
     currentGameId = null;
-    // ⭐ Débloquer complètement les protections
     isStartingGame = false;
     startGameCooldown = false;
     isGameEnding = false;
-  }, 1500); // ⭐ 1.5 secondes de stabilisation
+  }, 1500);
 
   drawGame();
 }
 
 function replayGame() {
-  // ⭐ Vérifier qu'on peut vraiment rejouer
   if (gameState === "playing" || gameState === "waiting" || isGameEnding) {
     console.warn("⚠️ Impossible de rejouer maintenant");
     showNotification("Veuillez patienter...", "warning");
@@ -1145,18 +1118,23 @@ function replayGame() {
   collisionDetected = false;
   canWithdraw = false;
 
-  // ⭐ Réinitialiser tous les flags
   startGameCooldown = false;
   isStartingGame = false;
   isGameEnding = false;
 
-  document.getElementById("multiplierDisplay").textContent = "x1.000";
-  document.getElementById("potentialWin").textContent = "0.00";
-  document.getElementById("scoreDisplay").textContent = "0";
+  const multDisplay = document.getElementById("multiplierDisplay");
+  if (multDisplay) multDisplay.textContent = "x1.000";
+  const potDisplay = document.getElementById("potentialWin");
+  if (potDisplay) potDisplay.textContent = "0.00";
+  const scoreDisplay = document.getElementById("scoreDisplay");
+  if (scoreDisplay) scoreDisplay.textContent = "0";
 
-  document.getElementById("actionButtons").innerHTML = `
-    <button class="btn-play" id="btnPlay" onclick="startGame()">🚀 Jouer (${betAmount} MZ)</button>
-  `;
+  const actionButtons = document.getElementById("actionButtons");
+  if (actionButtons) {
+    actionButtons.innerHTML = `
+      <button class="btn-play" id="btnPlay" onclick="startGame()">🚀 Jouer (${betAmount} MZ)</button>
+    `;
+  }
 
   if (backgroundMusic && backgroundMusic.paused) {
     backgroundMusic.currentTime = 0;
@@ -1167,12 +1145,10 @@ function replayGame() {
 }
 
 function jump() {
-  // ⭐ Ne sauter que si vraiment en jeu
   if (gameState !== "playing") {
     return;
   }
 
-  // ⭐ Éviter les sauts pendant la fin
   if (isGameEnding || collisionDetected) {
     return;
   }
@@ -1182,20 +1158,16 @@ function jump() {
   }
 }
 
-// ⭐ Gestion du touch global améliorée
-window.removeEventListener("touchstart", globalTouchHandler); // Enlever l'ancien
+// Gestion du touch global améliorée
 function globalTouchHandler(e) {
-  // Ne réagir que si en jeu
   if (gameState !== "playing") {
     return;
   }
 
-  // Ne pas sauter si fin de partie
   if (isGameEnding || collisionDetected) {
     return;
   }
 
-  // Sécurité : éviter de sauter en touchant un bouton
   if (e.target.tagName === "BUTTON" || e.target.closest("button")) {
     return;
   }
@@ -1228,34 +1200,22 @@ function showNotification(message, type = "info") {
   }, 4000);
 }
 
-// ========================================
-// SECTION 5 : Affichage multiplicateur compact (NOUVEAU)
-// AJOUTER cette fonction après showNotification()
-// ========================================
-
+// Affichage multiplicateur compact
 function updateMultiplierDisplay() {
-  // Adaptation pour mobile
   const multDisplay = document.getElementById("multiplierDisplay");
   const overlayMult = document.getElementById("overlayMultiplier");
   const potWin = document.getElementById("potentialWin");
 
   if (isMobile) {
-    // Affichage ultra-compact sur mobile
-    if (multDisplay) multDisplay.textContent = "x" + multiplier.toFixed(2); // 2 décimales au lieu de 3
-    if (overlayMult) overlayMult.textContent = "x" + multiplier.toFixed(3); // 3 au lieu de 5
+    if (multDisplay) multDisplay.textContent = "x" + multiplier.toFixed(2);
+    if (overlayMult) overlayMult.textContent = "x" + multiplier.toFixed(3);
   } else {
-    // Affichage normal sur desktop
     if (multDisplay) multDisplay.textContent = "x" + multiplier.toFixed(3);
     if (overlayMult) overlayMult.textContent = "x" + multiplier.toFixed(5);
   }
 
   if (potWin) potWin.textContent = potentialWin.toFixed(2);
 }
-drawGame();
-// ========================================
-// 📍 CORRECTION 4 : Nouvelle fonction pour debug (OPTIONNEL)
-// Ajouter après updateMultiplierDisplay()
-// ========================================
 
 function debugPortraitMode() {
   if (!isMobile) return;
@@ -1281,14 +1241,9 @@ function debugPortraitMode() {
 }
 
 // ============================================
-// CORRECTION 1: Frontend - script.js
-// Ligne ~1027 - Fonction updateBalance()
+// updateBalance()
 // ============================================
-
-// Ligne 1050 - CORRIGER updateBalance()
-
 function updateBalance(data = null) {
-  // ✅ FIX:  Gérer correctement tous les cas
   if (data) {
     if (typeof data === "number") {
       balance = parseFloat(data);
@@ -1301,12 +1256,10 @@ function updateBalance(data = null) {
     }
   }
 
-  // ✅ S'assurer que balance est un nombre valide
   if (isNaN(balance) || balance === undefined || balance === null) {
     balance = 0;
   }
 
-  // ✅ Vérifier que balance est bien un nombre avant d'appeler toFixed
   if (typeof balance !== "number") {
     balance = parseFloat(balance) || 0;
   }
@@ -1320,7 +1273,7 @@ function updateBalance(data = null) {
 }
 
 // ============================================
-// MODIFIER updateUserInfo() (Ligne ~682)
+// updateUserInfo()
 // ============================================
 
 function updateUserInfo(user) {
@@ -1333,13 +1286,11 @@ function updateUserInfo(user) {
       `${user.prenom || ""} ${user.nom || ""}`.trim() || user.email || "Joueur";
   }
 
-  // ✅ RÉCUPÉRER LE CODE DE PARRAINAGE
   if (user.referral_code || user.referralCode) {
     myReferralCode = user.referral_code || user.referralCode;
     console.log("🎯 Code de parrainage récupéré:", myReferralCode);
   }
 
-  // ✅ RÉCUPÉRER LES AFFILIÉS
   if (user.affiliated_users || user.affiliatedUsers) {
     affiliatedUsers = user.affiliated_users || user.affiliatedUsers;
     console.log("👥 Affiliés récupérés:", affiliatedUsers);
@@ -1357,52 +1308,57 @@ function updateUserInfo(user) {
 }
 
 function showGameInterface() {
-  document.getElementById("authScreen").style.display = "none";
-  document.getElementById("gameScreen").style.display = "block";
+  const auth = document.getElementById("authScreen");
+  const game = document.getElementById("gameScreen");
+  if (auth) auth.style.display = "none";
+  if (game) game.style.display = "block";
 }
 
 // ========================================
-// 7. AUTHENTIFICATION (SÉPARATION COMPLÈTE)
+// 7. AUTHENTIFICATION
 // ========================================
 
 function showLogin() {
-  // ⬅️ MASQUER TOUS LES FORMULAIRES
-  document.getElementById("loginForm").classList.add("hidden");
-  document.getElementById("registerForm").classList.add("hidden");
-  document.getElementById("forgotForm").classList.add("hidden");
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const forgotForm = document.getElementById("forgotForm");
+  if (loginForm) loginForm.classList.add("hidden");
+  if (registerForm) registerForm.classList.add("hidden");
+  if (forgotForm) forgotForm.classList.add("hidden");
 
-  // ⬅️ AFFICHER UNIQUEMENT LOGIN
   setTimeout(() => {
-    document.getElementById("loginForm").classList.remove("hidden");
+    if (loginForm) loginForm.classList.remove("hidden");
   }, 50);
 }
 
 function showRegister() {
-  // ⬅️ MASQUER TOUS LES FORMULAIRES
-  document.getElementById("loginForm").classList.add("hidden");
-  document.getElementById("registerForm").classList.add("hidden");
-  document.getElementById("forgotForm").classList.add("hidden");
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const forgotForm = document.getElementById("forgotForm");
+  if (loginForm) loginForm.classList.add("hidden");
+  if (registerForm) registerForm.classList.add("hidden");
+  if (forgotForm) forgotForm.classList.add("hidden");
 
-  // ⬅️ AFFICHER UNIQUEMENT REGISTER
   setTimeout(() => {
-    document.getElementById("registerForm").classList.remove("hidden");
+    if (registerForm) registerForm.classList.remove("hidden");
   }, 50);
 }
 
 function showForgot() {
-  // ⬅️ MASQUER TOUS LES FORMULAIRES
-  document.getElementById("loginForm").classList.add("hidden");
-  document.getElementById("registerForm").classList.add("hidden");
-  document.getElementById("forgotForm").classList.add("hidden");
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const forgotForm = document.getElementById("forgotForm");
+  if (loginForm) loginForm.classList.add("hidden");
+  if (registerForm) registerForm.classList.add("hidden");
+  if (forgotForm) forgotForm.classList.add("hidden");
 
-  // ⬅️ AFFICHER UNIQUEMENT FORGOT
   setTimeout(() => {
-    document.getElementById("forgotForm").classList.remove("hidden");
+    if (forgotForm) forgotForm.classList.remove("hidden");
   }, 50);
 }
 
 async function handleLogin(event) {
-  event.preventDefault();
+  if (event && event.preventDefault) event.preventDefault();
 
   try {
     const email = document.getElementById("loginEmail").value;
@@ -1522,8 +1478,10 @@ function logout() {
 
   disconnectSocket();
 
-  document.getElementById("authScreen").style.display = "flex";
-  document.getElementById("gameScreen").style.display = "none";
+  const auth = document.getElementById("authScreen");
+  const game = document.getElementById("gameScreen");
+  if (auth) auth.style.display = "flex";
+  if (game) game.style.display = "none";
 
   if (gameState === "playing") {
     stopGame();
@@ -1538,7 +1496,6 @@ function logout() {
     backgroundMusic.currentTime = 0;
   }
 
-  // ⬅️ RETOUR AU LOGIN
   showLogin();
 }
 
@@ -1580,9 +1537,11 @@ async function apiCall(endpoint, method = "GET", data = null) {
       if (response.status === 401) {
         localStorage.removeItem("authToken");
         disconnectSocket();
-        document.getElementById("authScreen").style.display = "flex";
-        document.getElementById("gameScreen").style.display = "none";
-        showLogin(); // ⬅️ RETOUR AU LOGIN
+        const auth = document.getElementById("authScreen");
+        const game = document.getElementById("gameScreen");
+        if (auth) auth.style.display = "flex";
+        if (game) game.style.display = "none";
+        showLogin();
         showNotification("Session expirée. Reconnectez-vous.", "warning");
       }
       throw new Error(result.message || "Erreur API");
@@ -1624,10 +1583,25 @@ function simulateApiCall(endpoint, method, data) {
             },
           },
         });
+      } else if (endpoint === "/manualpayment/deposit") {
+        resolve({
+          success: true,
+          data: {
+            depositId: "DEP" + Date.now(),
+          },
+        });
+      } else if (endpoint === "/manualpayment/withdrawal") {
+        resolve({
+          success: true,
+          data: {
+            withdrawalId: "WTH" + Date.now(),
+            newBalance: Math.max(0, balance - (data.amountMz || 0)),
+          },
+        });
       } else {
         resolve({ success: true, data: {} });
       }
-    }, 100);
+    }, 200);
   });
 }
 
@@ -1635,9 +1609,7 @@ function simulateApiCall(endpoint, method, data) {
 // 9. HELPERS
 // ========================================
 
-// --- Remplacer createObstacle() par cette version (applique displayScale aux sizes) ---
 function createObstacle(type, x, y, width = 35, height = 35) {
-  // Appliquer l'échelle d'affichage aux dimensions
   const w = Math.max(8, Math.floor(width * displayScale));
   const h = Math.max(8, Math.floor(height * displayScale));
 
@@ -1663,23 +1635,20 @@ function refreshBalance() {
 
 // Modals (Deposit, Withdraw, Referral)
 function showDepositModal() {
-  document.getElementById("depositModal").style.display = "flex";
+  const modal = document.getElementById("depositModal");
+  if (modal) modal.style.display = "flex";
 }
 
 function closeDepositModal() {
-  document.getElementById("depositModal").style.display = "none";
+  const modal = document.getElementById("depositModal");
+  if (modal) modal.style.display = "none";
 }
 
-// ========================================
-// DÉPÔT - ÉTAPE 2 : AFFICHER FORMULAIRE
-// ========================================
 function showDepositForm(method) {
   selectedPaymentMethod = method;
 
-  // Fermer la modale de choix
   closeDepositModal();
 
-  // Mettre à jour le titre selon le moyen choisi
   const title = document.getElementById("depositFormTitle");
   if (title) {
     title.textContent =
@@ -1688,31 +1657,37 @@ function showDepositForm(method) {
         : "💰 Dépôt via Moov Money";
   }
 
-  // Pré-remplir les champs si les données utilisateur existent
   const userEmail = localStorage.getItem("userEmail") || "";
   if (userEmail) {
-    document.getElementById("depositEmail").value = userEmail;
+    const depositEmailEl = document.getElementById("depositEmail");
+    if (depositEmailEl) depositEmailEl.value = userEmail;
   }
 
-  // Afficher le formulaire
-  document.getElementById("depositFormModal").style.display = "flex";
+  const modal = document.getElementById("depositFormModal");
+  if (modal) modal.style.display = "flex";
 }
 
 function closeDepositFormModal() {
-  document.getElementById("depositFormModal").style.display = "none";
+  const modal = document.getElementById("depositFormModal");
+  if (modal) modal.style.display = "none";
   selectedPaymentMethod = null;
 
-  // Réinitialiser les champs
-  document.getElementById("depositAmount").value = "";
-  document.getElementById("depositNom").value = "";
-  document.getElementById("depositPrenom").value = "";
-  document.getElementById("depositEmail").value = "";
-  document.getElementById("depositTelephone").value = "";
+  const elems = [
+    "depositAmount",
+    "depositNom",
+    "depositPrenom",
+    "depositEmail",
+    "depositTelephone",
+  ];
+  elems.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  const displayElement = document.getElementById("depositMZ");
+  if (displayElement) displayElement.textContent = "0.00";
 }
 
-// ========================================
-// DÉPÔT - ÉTAPE 3 : SOUMISSION
-// ========================================
 async function submitDeposit() {
   const amount = parseFloat(document.getElementById("depositAmount").value);
   const nom = document.getElementById("depositNom").value.trim();
@@ -1720,7 +1695,6 @@ async function submitDeposit() {
   const email = document.getElementById("depositEmail").value.trim();
   const telephone = document.getElementById("depositTelephone").value.trim();
 
-  // Validations
   if (!amount || amount < 500) {
     showNotification("Dépôt minimum: 500 FCFA", "error");
     return;
@@ -1759,11 +1733,10 @@ async function submitDeposit() {
   const mz = amount / 100;
 
   try {
-    // Enregistrer la demande dans la base de données
     const response = await apiCall("/manualpayment/deposit", "POST", {
       amountFcfa: amount,
       amountMz: mz,
-      paymentMethod: selectedPaymentMethod, // 'airtel' ou 'moov'
+      paymentMethod: selectedPaymentMethod,
       nom: nom,
       prenom: prenom,
       email: email,
@@ -1780,40 +1753,35 @@ async function submitDeposit() {
 
     console.log("✅ Demande de dépôt enregistrée:", response.data);
 
-    // Fermer le formulaire
     closeDepositFormModal();
 
-    // Notification de confirmation
     showNotification(
       `✅ Demande de dépôt enregistrée!\n\n` +
         `Montant: ${amount} FCFA (${mz.toFixed(2)} MZ)\n` +
         `Moyen: ${
           selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
         }\n` +
-        `ID: #${response.data.depositId}\n\n` +
+        `ID: #${response.data.depositId || "N/A"}\n\n` +
         `📱 Confirmez sur votre téléphone`,
       "success"
     );
 
-    // Réinitialiser
     selectedPaymentMethod = null;
   } catch (error) {
     console.error("❌ Erreur submitDeposit:", error);
     showNotification(
-      "Erreur lors de la demande de dépôt: " + error.message,
+      "Erreur lors de la demande de dépôt: " + (error.message || error),
       "error"
     );
   }
 }
 
-// ========================================
-// RETRAIT - ÉTAPE 1 : OUVERTURE MODALE CHOIX
-// ========================================
+// RETRAIT
 function showWithdrawModal() {
   const modal = document.getElementById("withdrawModal");
+  if (!modal) return;
   modal.style.display = "flex";
 
-  // Afficher le statut du bonus
   const withdrawStatusElement = document.getElementById("withdrawStatus");
   if (withdrawStatusElement) {
     if (isNewPlayerBonusLocked) {
@@ -1837,14 +1805,11 @@ function showWithdrawModal() {
 }
 
 function closeWithdrawModal() {
-  document.getElementById("withdrawModal").style.display = "none";
+  const modal = document.getElementById("withdrawModal");
+  if (modal) modal.style.display = "none";
 }
 
-// ========================================
-// RETRAIT - ÉTAPE 2 : AFFICHER FORMULAIRE
-// ========================================
 function showWithdrawForm(method) {
-  // Vérifier d'abord si le bonus est débloqué
   if (isNewPlayerBonusLocked) {
     showNotification(
       "Retrait impossible. Le bonus d'inscription doit être joué par une mise pour débloquer le retrait.",
@@ -1855,10 +1820,8 @@ function showWithdrawForm(method) {
 
   selectedPaymentMethod = method;
 
-  // Fermer la modale de choix
   closeWithdrawModal();
 
-  // Mettre à jour le titre selon le moyen choisi
   const title = document.getElementById("withdrawFormTitle");
   if (title) {
     title.textContent =
@@ -1867,31 +1830,37 @@ function showWithdrawForm(method) {
         : "💸 Retrait via Moov Money";
   }
 
-  // Pré-remplir les champs si les données utilisateur existent
   const userEmail = localStorage.getItem("userEmail") || "";
   if (userEmail) {
-    document.getElementById("withdrawEmail").value = userEmail;
+    const withdrawEmail = document.getElementById("withdrawEmail");
+    if (withdrawEmail) withdrawEmail.value = userEmail;
   }
 
-  // Afficher le formulaire
-  document.getElementById("withdrawFormModal").style.display = "flex";
+  const modal = document.getElementById("withdrawFormModal");
+  if (modal) modal.style.display = "flex";
 }
 
 function closeWithdrawFormModal() {
-  document.getElementById("withdrawFormModal").style.display = "none";
+  const modal = document.getElementById("withdrawFormModal");
+  if (modal) modal.style.display = "none";
   selectedPaymentMethod = null;
 
-  // Réinitialiser les champs
-  document.getElementById("withdrawAmount").value = "";
-  document.getElementById("withdrawNom").value = "";
-  document.getElementById("withdrawPrenom").value = "";
-  document.getElementById("withdrawEmail").value = "";
-  document.getElementById("withdrawTelephone").value = "";
+  const elems = [
+    "withdrawAmount",
+    "withdrawNom",
+    "withdrawPrenom",
+    "withdrawEmail",
+    "withdrawTelephone",
+  ];
+  elems.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  const fcfaElement = document.getElementById("withdrawFcfa");
+  if (fcfaElement) fcfaElement.textContent = "0";
 }
 
-// ========================================
-// RETRAIT - ÉTAPE 3 : SOUMISSION
-// ========================================
 async function submitWithdraw() {
   const amount = parseFloat(document.getElementById("withdrawAmount").value);
   const nom = document.getElementById("withdrawNom").value.trim();
@@ -1901,7 +1870,6 @@ async function submitWithdraw() {
 
   const fcfa = amount * 100;
 
-  // Validations
   if (!amount || fcfa < 500) {
     showNotification("Retrait minimum: 500 FCFA (5 MZ)", "error");
     return;
@@ -1955,10 +1923,9 @@ async function submitWithdraw() {
       telephone,
     });
 
-    // Enregistrer la demande dans la base de données
     const response = await apiCall("/manualpayment/withdrawal", "POST", {
       amountMz: amount,
-      paymentMethod: selectedPaymentMethod, // 'airtel' ou 'moov'
+      paymentMethod: selectedPaymentMethod,
       nom: nom,
       prenom: prenom,
       email: email,
@@ -1975,49 +1942,41 @@ async function submitWithdraw() {
       return;
     }
 
-    // Mettre à jour la balance
     if (response.data && response.data.newBalance !== undefined) {
       balance = parseFloat(response.data.newBalance);
     } else {
-      balance = balance - amount;
+      balance = Math.max(0, balance - amount);
     }
 
     updateBalance();
 
-    // Fermer le formulaire
     closeWithdrawFormModal();
 
-    // Notification de confirmation
     showNotification(
       `✅ Demande de retrait enregistrée!\n\n` +
         `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
         `Moyen: ${
           selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
         }\n` +
-        `ID: #${response.data.withdrawalId}\n\n` +
+        `ID: #${response.data.withdrawalId || "N/A"}\n\n` +
         `📱 Vous recevrez un message de confirmation sous 24h`,
       "success"
     );
 
-    // Réinitialiser
     selectedPaymentMethod = null;
   } catch (error) {
     console.error("❌ Erreur submitWithdraw:", error);
     showNotification(
-      "Erreur lors de la demande de retrait: " + error.message,
+      "Erreur lors de la demande de retrait: " + (error.message || error),
       "error"
     );
   }
 }
 
-// ========================================
-// CONVERSIONS AUTOMATIQUES
-// ========================================
-
-// Conversion FCFA -> MZ pour le dépôt
-document
-  .getElementById("depositAmount")
-  ?.addEventListener("input", function () {
+// CONVERSIONS AUTOMATIQUES (listeners uniques)
+const depositAmountEl = document.getElementById("depositAmount");
+if (depositAmountEl) {
+  depositAmountEl.addEventListener("input", function () {
     const fcfa = parseFloat(this.value) || 0;
     const mz = fcfa / 100;
 
@@ -2026,11 +1985,11 @@ document
       displayElement.textContent = mz.toFixed(2);
     }
   });
+}
 
-// Conversion MZ -> FCFA pour le retrait
-document
-  .getElementById("withdrawAmount")
-  ?.addEventListener("input", function () {
+const withdrawAmountEl = document.getElementById("withdrawAmount");
+if (withdrawAmountEl) {
+  withdrawAmountEl.addEventListener("input", function () {
     const mz = parseFloat(this.value) || 0;
     const fcfa = mz * 100;
 
@@ -2039,152 +1998,7 @@ document
       fcfaElement.textContent = fcfa.toFixed(0);
     }
   });
-
-try {
-  // ✅ ENREGISTRER LA DEMANDE DANS LA BASE DE DONNÉES
-  const response = await apiCall("/manualpayment/withdrawal", "POST", {
-    amountMz: amount,
-    walletName: walletName,
-    walletNumber: walletNumber,
-  });
-
-  if (!response.success) {
-    showNotification(response.message || "Erreur lors de la demande", "error");
-    return;
-  }
-
-  console.log("✅ Demande de retrait enregistrée:", response.data);
-
-  // Mettre à jour le solde localement
-  balance = response.data.newBalance;
-  updateBalance();
-
-  closeWithdrawModal();
-  document.getElementById("withdrawAmount").value = "";
-  if (document.getElementById("withdrawWalletName"))
-    document.getElementById("withdrawWalletName").value = "";
-  if (document.getElementById("withdrawWalletNumber"))
-    document.getElementById("withdrawWalletNumber").value = "";
-
-  showNotification(
-    `✅ Demande de retrait enregistrée! ID: #${response.data.withdrawalId}\n\n` +
-      `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
-      `Destinataire: ${walletNumber} (${walletName})\n\n` +
-      `Votre argent sera envoyé sous 24h.`,
-    "success"
-  );
-
-  // Notification rappel après 5 secondes
-  setTimeout(() => {
-    showNotification(
-      "📞 Service client disponible si besoin après 24h",
-      "info"
-    );
-  }, 5000);
-} catch (error) {
-  console.error("❌ Erreur handleWithdraw:", error);
-  showNotification("Erreur lors de la demande de retrait", "error");
 }
-// ============================================
-// MODIFIER showReferralModal() (Ligne ~1062)
-// ============================================
-
-function showReferralModal() {
-  const modal = document.getElementById("referralModal");
-  if (!modal) return;
-
-  modal.style.display = "flex";
-
-  // ✅ Demander les données actualisées au serveur
-  if (socket && isConnectedToSocket) {
-    socket.emit("referral:getInfo");
-  }
-
-  // ✅ Afficher le code (sera mis à jour par l'événement)
-  const codeDisplay = document.getElementById("myReferralCodeDisplay");
-  if (codeDisplay) {
-    codeDisplay.value = myReferralCode || "Chargement...";
-  }
-
-  // ✅ Afficher les affiliés
-  const listElement = document.getElementById("affiliatedList");
-  if (!listElement) return;
-
-  if (!affiliatedUsers || affiliatedUsers.length === 0) {
-    listElement.innerHTML = `
-      <li style="color: #888; font-style: italic;">
-        Aucun affilié pour le moment. Partagez votre code !
-      </li>
-    `;
-    return;
-  }
-
-  // ✅ Construire la liste depuis les vraies données
-  let listHtml = "";
-  affiliatedUsers.forEach((user) => {
-    const name =
-      user.name ||
-      `${user.prenom || ""} ${user.nom || ""}`.trim() ||
-      user.email ||
-      "Utilisateur";
-    const bonusEarned = parseFloat(user.bonusEarned || user.bonus_earned || 0);
-    const isUnlocked = !!user.bonusUnlocked || user.bonus_unlocked === 1;
-
-    const status = isUnlocked
-      ? `✅ GAGNÉ (${bonusEarned.toFixed(2)} MZ)`
-      : `🕐 EN ATTENTE`;
-
-    listHtml += `
-    <li style="margin-bottom: 0.5rem; padding:  0.5rem; background: rgba(0,0,0,0.3); border-radius: 5px;">
-      <strong>${name}</strong> - ${status}
-    </li>
-  `;
-  });
-
-  listElement.innerHTML = listHtml;
-}
-
-function closeReferralModal() {
-  document.getElementById("referralModal").style.display = "none";
-}
-
-function copyReferralCode() {
-  const codeInput = document.getElementById("myReferralCodeDisplay");
-  navigator.clipboard
-    .writeText(codeInput.value)
-    .then(() => {
-      showNotification("Code de parrainage copié!", "info");
-    })
-    .catch((err) => {
-      codeInput.select();
-      document.execCommand("copy");
-      showNotification("Code de parrainage copié! (Fallback)", "info");
-    });
-}
-
-document
-  .getElementById("depositAmount")
-  ?.addEventListener("input", function () {
-    const fcfa = parseFloat(this.value) || 0;
-    const mz = fcfa / 100;
-    const displayElement =
-      document.getElementById("depositMZ") ||
-      document.getElementById("depositDisplay");
-    if (displayElement) {
-      displayElement.textContent = mz.toFixed(2);
-    }
-  });
-
-document
-  .getElementById("withdrawAmount")
-  ?.addEventListener("input", function () {
-    const mz = parseFloat(this.value) || 0;
-    const fcfa = mz * 100;
-    const fcfaElement = document.getElementById("withdrawFcfa");
-    if (fcfaElement) {
-      fcfaElement.textContent = fcfa.toFixed(0);
-    }
-  });
 
 document.getElementById("betInput")?.addEventListener("input", function () {
   betAmount = Math.max(1, parseFloat(this.value) || 1);
@@ -2397,15 +2211,6 @@ function drawGame() {
         ctx.beginPath();
         ctx.arc(-5, -5, 6, 0, Math.PI * 2);
         ctx.fill();
-      } else if (obs.type === "rock") {
-        ctx.fillStyle = "#CD5C5C";
-        ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#8B4513";
-        ctx.beginPath();
-        ctx.arc(-5, -5, 6, 0, Math.PI * 2);
-        ctx.fill();
       } else if (obs.type === "robot") {
         ctx.fillStyle = "#FF0000";
         ctx.fillRect(-15, -20, 30, 35);
@@ -2488,24 +2293,18 @@ function drawGame() {
     });
   }
 }
+
 /**
- * GESTION DU SAUT TACTILE GLOBAL
- * Permet de sauter en touchant n'importe où sur l'écran
+ * TOUCH GLOBAL: Permet de sauter en touchant n'importe où (déjà créé plus haut)
  */
 window.addEventListener(
   "touchstart",
   function (e) {
-    // 1. On ne réagit que si la partie est lancée
     if (gameState === "playing") {
-      // 2. SÉCURITÉ : Si on touche un bouton (comme "Retirer"), on ne saute pas
       if (e.target.tagName === "BUTTON" || e.target.closest("button")) {
         return;
       }
-
-      // 3. Faire sauter le martien
       jump();
-
-      // 4. Empêche le comportement par défaut (évite le zoom accidentel)
       if (e.cancelable) e.preventDefault();
     }
   },
