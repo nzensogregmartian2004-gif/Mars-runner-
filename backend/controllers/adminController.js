@@ -1,5 +1,5 @@
-// ============================================
-// controllers/adminController.js (VERSION FINALE)
+// ============================================// ============================================
+// controllers/adminController.js
 // ============================================
 
 const jwt = require("jsonwebtoken");
@@ -9,6 +9,7 @@ const { successResponse, errorResponse } = require("../utils/helpers");
 class AdminController {
   /**
    * ✅ CONNEXION ADMIN
+   * Permet l'authentification de l'administrateur avec un JWT.
    */
   static async login(req, res, next) {
     try {
@@ -68,17 +69,17 @@ class AdminController {
       const totalUsers = usersResult[0].total;
 
       const depositsResult = await query(
-        "SELECT COUNT(*) as total FROM manual_deposits WHERE status = 'pending'"
+        "SELECT COUNT(*) as total FROM deposits WHERE status = 'pending'"
       );
       const pendingDeposits = depositsResult[0].total;
 
       const withdrawalsResult = await query(
-        "SELECT COUNT(*) as total FROM manual_withdrawals WHERE status = 'pending'"
+        "SELECT COUNT(*) as total FROM withdrawals WHERE status = 'pending'"
       );
       const pendingWithdrawals = withdrawalsResult[0].total;
 
       const revenueResult = await query(
-        "SELECT COALESCE(SUM(amount_fcfa), 0) as total FROM manual_deposits WHERE status = 'approved'"
+        "SELECT COALESCE(SUM(amount_fcfa), 0) as total FROM deposits WHERE status = 'approved'"
       );
       const totalRevenue = parseFloat(revenueResult[0].total);
 
@@ -100,12 +101,12 @@ class AdminController {
     try {
       const sql = `
         SELECT 
-          md.*,
+          d.*,
           u.nom, u.prenom, u.email, u.telephone,
           CONCAT(u.prenom, ' ', u.nom) as user_name
-        FROM manual_deposits md
-        LEFT JOIN users u ON md.user_id = u.id
-        ORDER BY md.created_at DESC
+        FROM deposits d
+        LEFT JOIN users u ON d.user_id = u.id
+        ORDER BY d.created_at DESC
         LIMIT 100
       `;
 
@@ -119,19 +120,13 @@ class AdminController {
   /**
    * ✅ APPROUVER UN DÉPÔT
    */
-
-  // ============================================
-  // CORRIGER approveDeposit() - Même logique
-  // ============================================
-
   static async approveDeposit(req, res, next) {
     try {
       const { id } = req.params;
 
-      const depositResult = await query(
-        "SELECT * FROM manual_deposits WHERE id = ?",
-        [id]
-      );
+      const depositResult = await query("SELECT * FROM deposits WHERE id = ?", [
+        id,
+      ]);
 
       if (!depositResult || depositResult.length === 0) {
         return errorResponse(res, "Dépôt introuvable", "NOT_FOUND", 404);
@@ -148,56 +143,24 @@ class AdminController {
         );
       }
 
-      try {
-        // 1. Mettre à jour le statut
-        await query(
-          "UPDATE manual_deposits SET status = 'approved', processed_at = NOW() WHERE id = ?",
-          [id]
-        );
+      // 1. Mettre à jour le statut
+      await query(
+        "UPDATE deposits SET status = 'approved', processed_at = NOW() WHERE id = ?",
+        [id]
+      );
 
-        // 2. Créditer le compte
-        await query(
-          "UPDATE users SET balance_mz = balance_mz + ? WHERE id = ?",
-          [parseFloat(deposit.amount_mz), deposit.user_id]
-        );
+      // 2. Créditer le compte utilisateur
+      await query("UPDATE users SET balance_mz = balance_mz + ? WHERE id = ?", [
+        parseFloat(deposit.amount_mz),
+        deposit.user_id,
+      ]);
 
-        // 3. Récupérer la nouvelle balance
-        const userResult = await query(
-          "SELECT balance_mz FROM users WHERE id = ? ",
-          [deposit.user_id]
-        );
-        const newBalance = parseFloat(userResult[0].balance_mz);
+      console.log(
+        `✅ Dépôt #${id} approuvé - ${deposit.amount_mz} MZ crédités`
+      );
 
-        console.log(
-          `✅ Dépôt #${id} approuvé - ${deposit.amount_mz} MZ crédités - Nouvelle balance: ${newBalance} MZ`
-        );
-
-        // 4. Notifier via Socket.IO
-        const io = req.app.get("io");
-        if (io) {
-          io.to(`user_${deposit.user_id}`).emit("deposit:confirmed", {
-            amount: deposit.amount_mz,
-            balance: newBalance,
-            balance_mz: newBalance,
-          });
-
-          io.to(`user_${deposit.user_id}`).emit("wallet:balance", {
-            balance: newBalance,
-            balance_mz: newBalance,
-          });
-        }
-
-        return successResponse(
-          res,
-          { newBalance },
-          "Dépôt approuvé avec succès"
-        );
-      } catch (error) {
-        console.error("❌ Erreur lors du traitement:", error);
-        throw error;
-      }
+      return successResponse(res, null, "Dépôt approuvé avec succès");
     } catch (error) {
-      console.error("❌ Erreur approveDeposit:", error);
       next(error);
     }
   }
@@ -210,10 +173,9 @@ class AdminController {
       const { id } = req.params;
       const { reason } = req.body;
 
-      const depositResult = await query(
-        "SELECT * FROM manual_deposits WHERE id = ?",
-        [id]
-      );
+      const depositResult = await query("SELECT * FROM deposits WHERE id = ?", [
+        id,
+      ]);
 
       if (!depositResult || depositResult.length === 0) {
         return errorResponse(res, "Dépôt introuvable", "NOT_FOUND", 404);
@@ -231,13 +193,13 @@ class AdminController {
       }
 
       await query(
-        "UPDATE manual_deposits SET status = 'rejected', processed_at = NOW(), reject_reason = ? WHERE id = ?",
+        "UPDATE deposits SET status = 'rejected', processed_at = NOW(), reject_reason = ? WHERE id = ?",
         [reason || null, id]
       );
 
       console.log(`❌ Dépôt #${id} rejeté`);
 
-      return successResponse(res, null, "Dépôt rejeté");
+      return successResponse(res, null, "Dépôt rejeté avec succès");
     } catch (error) {
       next(error);
     }
@@ -250,12 +212,12 @@ class AdminController {
     try {
       const sql = `
         SELECT 
-          mw.*,
+          w.*,
           u.nom, u.prenom, u.email, u.telephone,
           CONCAT(u.prenom, ' ', u.nom) as user_name
-        FROM manual_withdrawals mw
-        LEFT JOIN users u ON mw.user_id = u.id
-        ORDER BY mw.created_at DESC
+        FROM withdrawals w
+        LEFT JOIN users u ON w.user_id = u.id
+        ORDER BY w.created_at DESC
         LIMIT 100
       `;
 
@@ -267,21 +229,14 @@ class AdminController {
   }
 
   /**
-   * ✅ APPROUVER UN RETRAIT (FIX CRITIQUE)
+   * ✅ APPROUVER UN RETRAIT
    */
-  /**
-   * ✅ APPROUVER UN RETRAIT (CORRIGÉ)
-   */
-  // ============================================
-  // CORRIGER approveWithdrawal()
-  // ============================================
-
   static async approveWithdrawal(req, res, next) {
     try {
       const { id } = req.params;
 
       const withdrawalResult = await query(
-        "SELECT * FROM manual_withdrawals WHERE id = ?",
+        "SELECT * FROM withdrawals WHERE id = ?",
         [id]
       );
 
@@ -300,74 +255,20 @@ class AdminController {
         );
       }
 
-      const userResult = await query(
-        "SELECT balance_mz FROM users WHERE id = ?",
-        [withdrawal.user_id]
+      // Déduction de fonds :
+      const newBalance = await query(
+        `UPDATE users SET balance_mz = balance_mz - ? WHERE id = ?`,
+        [withdrawal.amount_mz, withdrawal.user_id]
       );
 
-      if (!userResult || userResult.length === 0) {
-        return errorResponse(res, "Utilisateur introuvable", "NOT_FOUND", 404);
-      }
+      await query(
+        "UPDATE withdrawals SET status = 'approved', processed_at = NOW() WHERE id = ?",
+        [id]
+      );
 
-      const currentBalance = parseFloat(userResult[0].balance_mz);
-
-      if (currentBalance < parseFloat(withdrawal.amount_mz)) {
-        return errorResponse(
-          res,
-          "Solde insuffisant",
-          "INSUFFICIENT_BALANCE",
-          400
-        );
-      }
-
-      const newBalance = currentBalance - parseFloat(withdrawal.amount_mz);
-
-      // ✅ SANS START TRANSACTION (mysql2 problème)
-      // Faire les deux opérations sans transaction explicite
-      try {
-        // 1. Mettre à jour le statut
-        await query(
-          "UPDATE manual_withdrawals SET status = 'approved', processed_at = NOW() WHERE id = ?",
-          [id]
-        );
-
-        // 2. Déduire la balance
-        await query("UPDATE users SET balance_mz = ?  WHERE id = ?", [
-          newBalance,
-          withdrawal.user_id,
-        ]);
-
-        console.log(
-          `✅ Retrait #${id} approuvé - ${withdrawal.amount_mz} MZ déduits - Nouvelle balance: ${newBalance} MZ`
-        );
-
-        // 3. Notifier via Socket.IO
-        const io = req.app.get("io");
-        if (io) {
-          io.to(`user_${withdrawal.user_id}`).emit("withdrawal: confirmed", {
-            amount: withdrawal.amount_mz,
-            walletNumber: withdrawal.wallet_number,
-            balance: newBalance,
-            balance_mz: newBalance,
-          });
-
-          io.to(`user_${withdrawal.user_id}`).emit("wallet:balance", {
-            balance: newBalance,
-            balance_mz: newBalance,
-          });
-        }
-
-        return successResponse(
-          res,
-          { newBalance },
-          "Retrait approuvé avec succès"
-        );
-      } catch (error) {
-        console.error("❌ Erreur lors du traitement:", error);
-        throw error;
-      }
+      console.log(`✅ Retrait #${id} approuvé`);
+      return successResponse(res, null, "Retrait approuvé avec succès");
     } catch (error) {
-      console.error("❌ Erreur approveWithdrawal:", error);
       next(error);
     }
   }
@@ -375,16 +276,13 @@ class AdminController {
   /**
    * ✅ REJETER UN RETRAIT
    */
-  /**
-   * ✅ REJETER UN RETRAIT (CORRIGÉ)
-   */
   static async rejectWithdrawal(req, res, next) {
     try {
       const { id } = req.params;
       const { reason } = req.body;
 
       const withdrawalResult = await query(
-        "SELECT * FROM manual_withdrawals WHERE id = ?",
+        "SELECT * FROM withdrawals WHERE id = ?",
         [id]
       );
 
@@ -403,79 +301,14 @@ class AdminController {
         );
       }
 
-      // ✅ PAS DE REMBOURSEMENT car on n'a jamais déduit !
-      // Simplement mettre à jour le statut
+      // Modifier le statut
       await query(
-        "UPDATE manual_withdrawals SET status = 'rejected', processed_at = NOW(), reject_reason = ? WHERE id = ?",
+        "UPDATE withdrawals SET status = 'rejected', processed_at = NOW(), reject_reason = ? WHERE id = ?",
         [reason || null, id]
       );
 
       console.log(`❌ Retrait #${id} rejeté`);
-
-      // Récupérer la balance actuelle (inchangée)
-      const userResult = await query(
-        "SELECT balance_mz FROM users WHERE id = ?",
-        [withdrawal.user_id]
-      );
-      const currentBalance = parseFloat(userResult[0].balance_mz);
-
-      // Notifier via Socket.IO
-      const io = req.app.get("io");
-      if (io) {
-        io.to(`user_${withdrawal.user_id}`).emit("withdrawal:rejected", {
-          amount: withdrawal.amount_mz,
-          reason: reason || "Votre demande de retrait a été refusée",
-          balance: currentBalance,
-          balance_mz: currentBalance,
-        });
-      }
-
-      return successResponse(res, null, "Retrait rejeté");
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * ✅ LISTE DES UTILISATEURS
-   */
-  static async getUsers(req, res, next) {
-    try {
-      const sql = `
-        SELECT 
-          id, nom, prenom, email, telephone, 
-          balance_mz, created_at
-        FROM users
-        ORDER BY created_at DESC
-        LIMIT 100
-      `;
-
-      const users = await query(sql);
-      return successResponse(res, users);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * ✅ HISTORIQUE DES PARTIES
-   */
-  static async getGames(req, res, next) {
-    try {
-      const sql = `
-        SELECT 
-          g.*,
-          u.nom, u.prenom, u.email,
-          CONCAT(u.prenom, ' ', u.nom) as user_name
-        FROM games g
-        LEFT JOIN users u ON g.user_id = u.id
-        WHERE g.game_status = 'completed'
-        ORDER BY g.created_at DESC
-        LIMIT 200
-      `;
-
-      const games = await query(sql);
-      return successResponse(res, games);
+      return successResponse(res, null, "Retrait rejeté avec succès");
     } catch (error) {
       next(error);
     }

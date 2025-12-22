@@ -1,30 +1,41 @@
 // ============================================
-// models/manualPayment.js - GESTION DÉPÔTS/RETRAITS MANUELS
+// models/payment.js - GESTION DÉPÔTS/RETRAITS
 // ============================================
 
 const { query } = require("../config/database");
 
-class ManualPayment {
+class Payment {
   /**
    * ✅ CRÉER UNE DEMANDE DE DÉPÔT
    */
-  static async createDeposit(userId, amountFcfa, amountMz, connection = null) {
+  static async createDeposit(
+    userId,
+    amountFcfa,
+    amountMz,
+    paymentMethod,
+    phoneNumber,
+    connection = null
+  ) {
     const db = connection || { query };
 
     const sql = `
-      INSERT INTO manual_deposits (
+      INSERT INTO deposits (
         user_id,
         amount_fcfa,
         amount_mz,
+        payment_method,
+        phone_number,
         status,
         created_at
-      ) VALUES (?, ?, ?, 'pending', NOW())
+      ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
     `;
 
     const result = await db.query(sql, [
       userId,
       parseFloat(amountFcfa),
       parseFloat(amountMz),
+      paymentMethod,
+      phoneNumber,
     ]);
 
     console.log(
@@ -41,30 +52,33 @@ class ManualPayment {
     userId,
     amountFcfa,
     amountMz,
+    paymentMethod,
+    phoneNumber,
     walletName,
-    walletNumber,
     connection = null
   ) {
     const db = connection || { query };
 
     const sql = `
-      INSERT INTO manual_withdrawals (
+      INSERT INTO withdrawals (
         user_id,
         amount_fcfa,
         amount_mz,
+        payment_method,
+        phone_number,
         wallet_name,
-        wallet_number,
         status,
         created_at
-      ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
     `;
 
     const result = await db.query(sql, [
       userId,
       parseFloat(amountFcfa),
       parseFloat(amountMz),
+      paymentMethod,
+      phoneNumber,
       walletName,
-      walletNumber,
     ]);
 
     console.log(
@@ -82,12 +96,12 @@ class ManualPayment {
 
     const sql = `
       SELECT 
-        md.*,
+        d.*, 
         u.nom, u.prenom, u.email, u.telephone,
         CONCAT(u.prenom, ' ', u.nom) as user_name
-      FROM manual_deposits md
-      LEFT JOIN users u ON md.user_id = u.id
-      ORDER BY md.created_at DESC
+      FROM deposits d
+      LEFT JOIN users u ON d.user_id = u.id
+      ORDER BY d.created_at DESC
     `;
 
     return await db.query(sql);
@@ -101,37 +115,15 @@ class ManualPayment {
 
     const sql = `
       SELECT 
-        mw.*,
+        w.*, 
         u.nom, u.prenom, u.email, u.telephone,
         CONCAT(u.prenom, ' ', u.nom) as user_name
-      FROM manual_withdrawals mw
-      LEFT JOIN users u ON mw.user_id = u.id
-      ORDER BY mw.created_at DESC
+      FROM withdrawals w
+      LEFT JOIN users u ON w.user_id = u.id
+      ORDER BY w.created_at DESC
     `;
 
     return await db.query(sql);
-  }
-
-  /**
-   * ✅ RÉCUPÉRER UN DÉPÔT PAR ID
-   */
-  static async getDepositById(depositId, connection = null) {
-    const db = connection || { query };
-
-    const sql = "SELECT * FROM manual_deposits WHERE id = ?";
-    const deposits = await db.query(sql, [depositId]);
-    return deposits[0] || null;
-  }
-
-  /**
-   * ✅ RÉCUPÉRER UN RETRAIT PAR ID
-   */
-  static async getWithdrawalById(withdrawalId, connection = null) {
-    const db = connection || { query };
-
-    const sql = "SELECT * FROM manual_withdrawals WHERE id = ?";
-    const withdrawals = await db.query(sql, [withdrawalId]);
-    return withdrawals[0] || null;
   }
 
   /**
@@ -141,7 +133,7 @@ class ManualPayment {
     const db = connection || { query };
 
     const sql = `
-      UPDATE manual_deposits 
+      UPDATE deposits 
       SET status = 'approved', processed_at = NOW() 
       WHERE id = ?
     `;
@@ -158,7 +150,7 @@ class ManualPayment {
     const db = connection || { query };
 
     const sql = `
-      UPDATE manual_deposits 
+      UPDATE deposits 
       SET status = 'rejected', processed_at = NOW(), reject_reason = ? 
       WHERE id = ?
     `;
@@ -175,7 +167,7 @@ class ManualPayment {
     const db = connection || { query };
 
     const sql = `
-      UPDATE manual_withdrawals 
+      UPDATE withdrawals 
       SET status = 'approved', processed_at = NOW() 
       WHERE id = ?
     `;
@@ -196,15 +188,15 @@ class ManualPayment {
     const db = connection || { query };
 
     const sql = `
-      UPDATE manual_withdrawals 
+      UPDATE withdrawals 
       SET status = 'rejected', processed_at = NOW(), reject_reason = ? 
       WHERE id = ?
     `;
 
-    await db.query(sql, [withdrawalId, reason]);
+    await db.query(sql, [reason, withdrawalId]);
     console.log(`❌ Retrait #${withdrawalId} rejeté`);
     return true;
   }
 }
 
-module.exports = ManualPayment;
+module.exports = Payment;

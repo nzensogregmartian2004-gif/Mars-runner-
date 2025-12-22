@@ -15,7 +15,7 @@ const authRoutes = require("./routes/auth");
 const gameRoutes = require("./routes/game");
 const walletRoutes = require("./routes/wallet");
 const referralRoutes = require("./routes/referral");
-const paymentRoutes = require("./routes/manualpayment");
+const paymentRoutes = require("./routes/payment");
 const adminRoutes = require("./routes/admin");
 
 // Initialisation serveur
@@ -85,7 +85,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/game", gameRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/referral", referralRoutes);
-app.use("/api/manualpayment", paymentRoutes);
+app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 
 // ============================================
@@ -114,7 +114,7 @@ app.get("/", (req, res) => {
       game: "/api/game",
       wallet: "/api/wallet",
       referral: "/api/referral",
-      payment: "/api/manualpayment",
+      payment: "/api/payment",
       admin: "/api/admin",
     },
     documentation: "Contact admin for API docs",
@@ -149,7 +149,7 @@ app.use("*", (req, res) => {
       "/api/game",
       "/api/wallet",
       "/api/referral",
-      "/api/manualpayment",
+      "/api/payment",
       "/api/admin",
     ],
   });
