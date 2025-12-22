@@ -376,116 +376,74 @@
         </button>
       </div>
 
-      <!-- TAB DÉPÔTS -->
-      <div id="deposits" class="tab-content active">
-        <h2 class="section-title">📥 Gestion des Dépôts</h2>
-        <input
-          type="text"
-          class="search-box"
-          placeholder="🔍 Rechercher..."
-          onkeyup="searchTable('depositsTable', this.value)"
-        />
-        <div class="filters">
-          <button
-            class="filter-btn active"
-            onclick="filterByStatus('deposits', 'all')"
-          >
-            Tous
-          </button>
-          <button
-            class="filter-btn"
-            onclick="filterByStatus('deposits', 'pending')"
-          >
-            ⏳ En attente
-          </button>
-          <button
-            class="filter-btn"
-            onclick="filterByStatus('deposits', 'approved')"
-          >
-            ✅ Approuvés
-          </button>
-          <button
-            class="filter-btn"
-            onclick="filterByStatus('deposits', 'rejected')"
-          >
-            ❌ Rejetés
-          </button>
-        </div>
-        <table id="depositsTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Utilisateur</th>
-              <th>Email</th>
-              <th>Montant</th>
-              <th>Date</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="depositsBody">
-            <tr>
-              <td colspan="7" class="loading">Chargement...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- ============================================
+     MISE À JOUR TABLEAUX ADMIN
+     À REMPLACER dans admin/index.html
+     ============================================ -->
 
-      <!-- TAB RETRAITS -->
-      <div id="withdrawals" class="tab-content">
-        <h2 class="section-title">📤 Gestion des Retraits</h2>
-        <input
-          type="text"
-          class="search-box"
-          placeholder="🔍 Rechercher..."
-          onkeyup="searchTable('withdrawalsTable', this.value)"
-        />
-        <div class="filters">
-          <button
-            class="filter-btn active"
-            onclick="filterByStatus('withdrawals', 'all')"
-          >
-            Tous
-          </button>
-          <button
-            class="filter-btn"
-            onclick="filterByStatus('withdrawals', 'pending')"
-          >
-            ⏳ En attente
-          </button>
-          <button
-            class="filter-btn"
-            onclick="filterByStatus('withdrawals', 'approved')"
-          >
-            ✅ Approuvés
-          </button>
-          <button
-            class="filter-btn"
-            onclick="filterByStatus('withdrawals', 'rejected')"
-          >
-            ❌ Rejetés
-          </button>
-        </div>
-        <table id="withdrawalsTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Utilisateur</th>
-              <th>Email</th>
-              <th>Montant</th>
-              <th>Mobile Money</th>
-              <th>Date</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawalsBody">
-            <tr>
-              <td colspan="8" class="loading">Chargement...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- TAB DÉPÔTS (lignes ~150-175) -->
+      <table id="depositsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Montant</th>
+            <th>Moyen / Téléphone</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="depositsBody">
+          <tr>
+            <td colspan="8" class="loading">Chargement...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- TAB RETRAITS (lignes ~210-235) -->
+      <table id="withdrawalsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Montant</th>
+            <th>Moyen / Téléphone</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="withdrawalsBody">
+          <tr>
+            <td colspan="8" class="loading">Chargement...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- STYLES ADDITIONNELS (à ajouter dans la balise <style>) -->
+      <style>
+        .payment-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          font-weight: bold;
+          margin-bottom: 4px;
+        }
+
+        .payment-badge.airtel {
+          background: linear-gradient(135deg, #ff0000, #cc0000);
+          color: white;
+        }
+
+        .payment-badge.moov {
+          background: linear-gradient(135deg, #0066cc, #004499);
+          color: white;
+        }
+      </style>
 
       <!-- TAB UTILISATEURS -->
       <div id="users" class="tab-content">

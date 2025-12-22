@@ -13,7 +13,7 @@ const USE_BACKEND = true;
 // ========================================
 // 2. VARIABLES GLOBALES
 // ========================================
-
+let selectedPaymentMethod = null;
 let socket = null;
 let isConnectedToSocket = false;
 let authToken = null;
@@ -1664,53 +1664,110 @@ function refreshBalance() {
 // Modals (Deposit, Withdraw, Referral)
 function showDepositModal() {
   document.getElementById("depositModal").style.display = "flex";
-  const depositInstructions = document.getElementById("depositInstructions");
-  if (depositInstructions) {
-    depositInstructions.innerHTML = `
-      <div class="payment-instructions">
-        <h3>📱 Comment effectuer un dépôt ?</h3>
-<ol>
-    <li>Saisissez le <strong>montant du dépôt</strong> et cliquez sur le bouton WhatsApp.</li>
-    <li>Choisissez votre <strong>moyen de transfert</strong> (AirtelMoney,Mobicash, etc.).</li>
-    <li>Effectuez le dépôt <strong>manuellement</strong> sur le numéro choisi.</li>
-    <li>Faites une <strong>capture d'écran</strong> du reçu et envoyez-la au numéro whatsApp (vérifiez bien le nom du destinataire).</li>
-    <li>Vous recevrez un <strong>message de confirmation</strong> une fois la vérification terminée.</li>
-    <li>⚠️<strong> Note : Le paiement manuel est temporaire mais 100% sécurisé. ✅ Pour toute assistance ou méthode alternative, contactez le service client au 📞 066837517/074069443 Email:marsrunner05@gmail.com.</strong></li>  
-</ol>
-        <p class="info-note">💡 Taux de conversion: <strong>100 FCFA = 1 MZ</strong></p>
-      </div>
-    `;
-  }
 }
 
 function closeDepositModal() {
   document.getElementById("depositModal").style.display = "none";
 }
 
-// ============================================
-// REMPLACER LA FONCTION handleDeposit() (Ligne ~947)
-// ============================================
+// ========================================
+// DÉPÔT - ÉTAPE 2 : AFFICHER FORMULAIRE
+// ========================================
+function showDepositForm(method) {
+  selectedPaymentMethod = method;
 
-async function handleDeposit() {
+  // Fermer la modale de choix
+  closeDepositModal();
+
+  // Mettre à jour le titre selon le moyen choisi
+  const title = document.getElementById("depositFormTitle");
+  if (title) {
+    title.textContent =
+      method === "airtel"
+        ? "💰 Dépôt via Airtel Money"
+        : "💰 Dépôt via Moov Money";
+  }
+
+  // Pré-remplir les champs si les données utilisateur existent
+  const userEmail = localStorage.getItem("userEmail") || "";
+  if (userEmail) {
+    document.getElementById("depositEmail").value = userEmail;
+  }
+
+  // Afficher le formulaire
+  document.getElementById("depositFormModal").style.display = "flex";
+}
+
+function closeDepositFormModal() {
+  document.getElementById("depositFormModal").style.display = "none";
+  selectedPaymentMethod = null;
+
+  // Réinitialiser les champs
+  document.getElementById("depositAmount").value = "";
+  document.getElementById("depositNom").value = "";
+  document.getElementById("depositPrenom").value = "";
+  document.getElementById("depositEmail").value = "";
+  document.getElementById("depositTelephone").value = "";
+}
+
+// ========================================
+// DÉPÔT - ÉTAPE 3 : SOUMISSION
+// ========================================
+async function submitDeposit() {
   const amount = parseFloat(document.getElementById("depositAmount").value);
+  const nom = document.getElementById("depositNom").value.trim();
+  const prenom = document.getElementById("depositPrenom").value.trim();
+  const email = document.getElementById("depositEmail").value.trim();
+  const telephone = document.getElementById("depositTelephone").value.trim();
 
-  if (!amount || amount < 100) {
-    showNotification("Dépôt minimum: 100 FCFA (1 MZ)", "error");
+  // Validations
+  if (!amount || amount < 500) {
+    showNotification("Dépôt minimum: 500 FCFA", "error");
     return;
   }
 
   if (amount > 50000) {
-    showNotification("Dépôt maximum: 50000 FCFA (500 MZ)", "error");
+    showNotification("Dépôt maximum: 50000 FCFA", "error");
+    return;
+  }
+
+  if (!nom || nom.length < 2) {
+    showNotification("Veuillez entrer votre nom", "error");
+    return;
+  }
+
+  if (!prenom || prenom.length < 2) {
+    showNotification("Veuillez entrer votre prénom", "error");
+    return;
+  }
+
+  if (!email || !email.includes("@")) {
+    showNotification("Veuillez entrer un email valide", "error");
+    return;
+  }
+
+  if (!telephone || telephone.length < 8) {
+    showNotification("Veuillez entrer un numéro de téléphone valide", "error");
+    return;
+  }
+
+  if (!selectedPaymentMethod) {
+    showNotification("Erreur: moyen de paiement non sélectionné", "error");
     return;
   }
 
   const mz = amount / 100;
 
   try {
-    // ✅ ENREGISTRER LA DEMANDE DANS LA BASE DE DONNÉES
+    // Enregistrer la demande dans la base de données
     const response = await apiCall("/manualpayment/deposit", "POST", {
       amountFcfa: amount,
       amountMz: mz,
+      paymentMethod: selectedPaymentMethod, // 'airtel' ou 'moov'
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      telephone: telephone,
     });
 
     if (!response.success) {
@@ -1723,155 +1780,40 @@ async function handleDeposit() {
 
     console.log("✅ Demande de dépôt enregistrée:", response.data);
 
-    // ✅ OUVRIR WHATSAPP
-    const whatsappNumber = "241066837517";
-    const userEmail = localStorage.getItem("userEmail") || "Non fourni";
+    // Fermer le formulaire
+    closeDepositFormModal();
 
-    const message = encodeURIComponent(
-      `Bonjour! Je souhaite effectuer un dépôt de ${amount} FCFA (${mz.toFixed(
-        2
-      )} MZ) sur mon compte.\n\n` +
-        `Montant: ${amount} FCFA\n` +
-        `Équivalent: ${mz.toFixed(2)} MZ\n` +
-        `ID Demande: #${response.data.depositId}\n\n` +
-        `Je vais envoyer ma capture d'écran de transaction.`
-    );
-
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
-    window.open(whatsappUrl, "_blank");
-
-    closeDepositModal();
-    document.getElementById("depositAmount").value = "";
-
+    // Notification de confirmation
     showNotification(
-      `✅ Demande de dépôt enregistrée! ID: #${response.data.depositId}\n\nContactez-nous sur WhatsApp avec votre capture d'écran.`,
-      "success"
-    );
-  } catch (error) {
-    console.error("❌ Erreur handleDeposit:", error);
-    showNotification("Erreur lors de la demande de dépôt", "error");
-  }
-}
-
-// ============================================
-// CORRECTION 2: Frontend - handleWithdraw()
-// Ligne ~1651 - Remplacer toute la fonction
-// ============================================
-
-async function handleWithdraw() {
-  const amount = parseFloat(document.getElementById("withdrawAmount").value);
-  const walletName = document
-    .getElementById("withdrawWalletName")
-    ?.value.trim();
-  const walletNumber = document
-    .getElementById("withdrawWalletNumber")
-    ?.value.trim();
-
-  const fcfa = amount * 100;
-
-  // Validations
-  if (!amount || fcfa < 1000) {
-    showNotification("Retrait minimum: 1000 FCFA (10 MZ)", "error");
-    return;
-  }
-
-  if (amount > balance) {
-    showNotification("Solde insuffisant", "error");
-    return;
-  }
-
-  if (!walletName || walletName.length < 2) {
-    showNotification(
-      "Veuillez entrer le nom enregistré pour le portefeuille",
-      "error"
-    );
-    return;
-  }
-
-  if (!walletNumber || walletNumber.length < 8) {
-    showNotification("Veuillez entrer un numéro de téléphone valide", "error");
-    return;
-  }
-
-  if (isNewPlayerBonusLocked) {
-    showNotification(
-      "Retrait impossible. Le bonus d'inscription de 5 MZ doit être joué par une mise pour débloquer le retrait.",
-      "error"
-    );
-    return;
-  }
-
-  try {
-    console.log("📤 Envoi demande de retrait:", {
-      amount,
-      walletName,
-      walletNumber,
-    });
-
-    // ✅ Enregistrer la demande dans la base de données
-    const response = await apiCall("/manualpayment/withdrawal", "POST", {
-      amountMz: amount,
-      walletName: walletName,
-      walletNumber: walletNumber,
-    });
-
-    console.log("✅ Réponse API retrait:", response);
-
-    if (!response.success) {
-      showNotification(
-        response.message || "Erreur lors de la demande",
-        "error"
-      );
-      return;
-    }
-
-    // ✅ FIX CRITIQUE: Mettre à jour la balance correctement
-    if (response.data && response.data.newBalance !== undefined) {
-      balance = parseFloat(response.data.newBalance);
-    } else {
-      // Fallback: déduire manuellement si le serveur ne renvoie pas la nouvelle balance
-      balance = balance - amount;
-    }
-
-    updateBalance(); // ⬅️ Appel sans paramètre car balance est déjà mise à jour
-
-    closeWithdrawModal();
-
-    // Réinitialiser les champs
-    document.getElementById("withdrawAmount").value = "";
-    if (document.getElementById("withdrawWalletName")) {
-      document.getElementById("withdrawWalletName").value = "";
-    }
-    if (document.getElementById("withdrawWalletNumber")) {
-      document.getElementById("withdrawWalletNumber").value = "";
-    }
-
-    showNotification(
-      `✅ Demande de retrait enregistrée! ID: #${response.data.withdrawalId}\n\n` +
-        `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
-        `Destinataire: ${walletNumber} (${walletName})\n\n` +
-        `Votre argent sera envoyé sous 24h.`,
+      `✅ Demande de dépôt enregistrée!\n\n` +
+        `Montant: ${amount} FCFA (${mz.toFixed(2)} MZ)\n` +
+        `Moyen: ${
+          selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
+        }\n` +
+        `ID: #${response.data.depositId}\n\n` +
+        `📱 Confirmez sur votre téléphone`,
       "success"
     );
 
-    // Notification rappel après 5 secondes
-    setTimeout(() => {
-      showNotification(
-        "📞 Service client disponible si besoin après 24h",
-        "info"
-      );
-    }, 5000);
+    // Réinitialiser
+    selectedPaymentMethod = null;
   } catch (error) {
-    console.error("❌ Erreur handleWithdraw:", error);
+    console.error("❌ Erreur submitDeposit:", error);
     showNotification(
-      "Erreur lors de la demande de retrait: " + error.message,
+      "Erreur lors de la demande de dépôt: " + error.message,
       "error"
     );
   }
 }
 
+// ========================================
+// RETRAIT - ÉTAPE 1 : OUVERTURE MODALE CHOIX
+// ========================================
 function showWithdrawModal() {
-  document.getElementById("withdrawModal").style.display = "flex";
+  const modal = document.getElementById("withdrawModal");
+  modal.style.display = "flex";
+
+  // Afficher le statut du bonus
   const withdrawStatusElement = document.getElementById("withdrawStatus");
   if (withdrawStatusElement) {
     if (isNewPlayerBonusLocked) {
@@ -1885,7 +1827,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 10 MZ (1000 FCFA) | Maximum: ${balance.toFixed(
+          <small>💡 Minimum: 5 MZ (500 FCFA) | Maximum: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -1898,23 +1840,70 @@ function closeWithdrawModal() {
   document.getElementById("withdrawModal").style.display = "none";
 }
 
-// ============================================
-// REMPLACER LA FONCTION handleWithdraw() (Ligne ~999)
-// ============================================
+// ========================================
+// RETRAIT - ÉTAPE 2 : AFFICHER FORMULAIRE
+// ========================================
+function showWithdrawForm(method) {
+  // Vérifier d'abord si le bonus est débloqué
+  if (isNewPlayerBonusLocked) {
+    showNotification(
+      "Retrait impossible. Le bonus d'inscription doit être joué par une mise pour débloquer le retrait.",
+      "error"
+    );
+    return;
+  }
 
-async function handleWithdraw() {
+  selectedPaymentMethod = method;
+
+  // Fermer la modale de choix
+  closeWithdrawModal();
+
+  // Mettre à jour le titre selon le moyen choisi
+  const title = document.getElementById("withdrawFormTitle");
+  if (title) {
+    title.textContent =
+      method === "airtel"
+        ? "💸 Retrait via Airtel Money"
+        : "💸 Retrait via Moov Money";
+  }
+
+  // Pré-remplir les champs si les données utilisateur existent
+  const userEmail = localStorage.getItem("userEmail") || "";
+  if (userEmail) {
+    document.getElementById("withdrawEmail").value = userEmail;
+  }
+
+  // Afficher le formulaire
+  document.getElementById("withdrawFormModal").style.display = "flex";
+}
+
+function closeWithdrawFormModal() {
+  document.getElementById("withdrawFormModal").style.display = "none";
+  selectedPaymentMethod = null;
+
+  // Réinitialiser les champs
+  document.getElementById("withdrawAmount").value = "";
+  document.getElementById("withdrawNom").value = "";
+  document.getElementById("withdrawPrenom").value = "";
+  document.getElementById("withdrawEmail").value = "";
+  document.getElementById("withdrawTelephone").value = "";
+}
+
+// ========================================
+// RETRAIT - ÉTAPE 3 : SOUMISSION
+// ========================================
+async function submitWithdraw() {
   const amount = parseFloat(document.getElementById("withdrawAmount").value);
-  const walletName = document
-    .getElementById("withdrawWalletName")
-    ?.value.trim();
-  const walletNumber = document
-    .getElementById("withdrawWalletNumber")
-    ?.value.trim();
+  const nom = document.getElementById("withdrawNom").value.trim();
+  const prenom = document.getElementById("withdrawPrenom").value.trim();
+  const email = document.getElementById("withdrawEmail").value.trim();
+  const telephone = document.getElementById("withdrawTelephone").value.trim();
 
   const fcfa = amount * 100;
 
-  if (!amount || fcfa < 1000) {
-    showNotification("Retrait minimum: 1000 FCFA (10 MZ)", "error");
+  // Validations
+  if (!amount || fcfa < 500) {
+    showNotification("Retrait minimum: 500 FCFA (5 MZ)", "error");
     return;
   }
 
@@ -1923,34 +1912,60 @@ async function handleWithdraw() {
     return;
   }
 
-  if (!walletName || walletName.length < 2) {
-    showNotification(
-      "Veuillez entrer le nom enregistré pour le portefeuille",
-      "error"
-    );
+  if (!nom || nom.length < 2) {
+    showNotification("Veuillez entrer votre nom", "error");
     return;
   }
 
-  if (!walletNumber || walletNumber.length < 8) {
+  if (!prenom || prenom.length < 2) {
+    showNotification("Veuillez entrer votre prénom", "error");
+    return;
+  }
+
+  if (!email || !email.includes("@")) {
+    showNotification("Veuillez entrer un email valide", "error");
+    return;
+  }
+
+  if (!telephone || telephone.length < 8) {
     showNotification("Veuillez entrer un numéro de téléphone valide", "error");
+    return;
+  }
+
+  if (!selectedPaymentMethod) {
+    showNotification("Erreur: moyen de paiement non sélectionné", "error");
     return;
   }
 
   if (isNewPlayerBonusLocked) {
     showNotification(
-      "Retrait impossible. Le bonus d'inscription de 5 MZ doit être joué par une mise pour débloquer le retrait.",
+      "Retrait impossible. Le bonus d'inscription doit être joué.",
       "error"
     );
     return;
   }
 
   try {
-    // ✅ ENREGISTRER LA DEMANDE DANS LA BASE DE DONNÉES
+    console.log("📤 Envoi demande de retrait:", {
+      amount,
+      paymentMethod: selectedPaymentMethod,
+      nom,
+      prenom,
+      email,
+      telephone,
+    });
+
+    // Enregistrer la demande dans la base de données
     const response = await apiCall("/manualpayment/withdrawal", "POST", {
       amountMz: amount,
-      walletName: walletName,
-      walletNumber: walletNumber,
+      paymentMethod: selectedPaymentMethod, // 'airtel' ou 'moov'
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      telephone: telephone,
     });
+
+    console.log("✅ Réponse API retrait:", response);
 
     if (!response.success) {
       showNotification(
@@ -1960,38 +1975,115 @@ async function handleWithdraw() {
       return;
     }
 
-    console.log("✅ Demande de retrait enregistrée:", response.data);
+    // Mettre à jour la balance
+    if (response.data && response.data.newBalance !== undefined) {
+      balance = parseFloat(response.data.newBalance);
+    } else {
+      balance = balance - amount;
+    }
 
-    // Mettre à jour le solde localement
-    balance = response.data.newBalance;
     updateBalance();
 
-    closeWithdrawModal();
-    document.getElementById("withdrawAmount").value = "";
-    if (document.getElementById("withdrawWalletName"))
-      document.getElementById("withdrawWalletName").value = "";
-    if (document.getElementById("withdrawWalletNumber"))
-      document.getElementById("withdrawWalletNumber").value = "";
+    // Fermer le formulaire
+    closeWithdrawFormModal();
 
+    // Notification de confirmation
     showNotification(
-      `✅ Demande de retrait enregistrée! ID: #${response.data.withdrawalId}\n\n` +
+      `✅ Demande de retrait enregistrée!\n\n` +
         `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
-        `Destinataire: ${walletNumber} (${walletName})\n\n` +
-        `Votre argent sera envoyé sous 24h.`,
+        `Moyen: ${
+          selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
+        }\n` +
+        `ID: #${response.data.withdrawalId}\n\n` +
+        `📱 Vous recevrez un message de confirmation sous 24h`,
       "success"
     );
 
-    // Notification rappel après 5 secondes
-    setTimeout(() => {
-      showNotification(
-        "📞 Service client disponible si besoin après 24h",
-        "info"
-      );
-    }, 5000);
+    // Réinitialiser
+    selectedPaymentMethod = null;
   } catch (error) {
-    console.error("❌ Erreur handleWithdraw:", error);
-    showNotification("Erreur lors de la demande de retrait", "error");
+    console.error("❌ Erreur submitWithdraw:", error);
+    showNotification(
+      "Erreur lors de la demande de retrait: " + error.message,
+      "error"
+    );
   }
+}
+
+// ========================================
+// CONVERSIONS AUTOMATIQUES
+// ========================================
+
+// Conversion FCFA -> MZ pour le dépôt
+document
+  .getElementById("depositAmount")
+  ?.addEventListener("input", function () {
+    const fcfa = parseFloat(this.value) || 0;
+    const mz = fcfa / 100;
+
+    const displayElement = document.getElementById("depositMZ");
+    if (displayElement) {
+      displayElement.textContent = mz.toFixed(2);
+    }
+  });
+
+// Conversion MZ -> FCFA pour le retrait
+document
+  .getElementById("withdrawAmount")
+  ?.addEventListener("input", function () {
+    const mz = parseFloat(this.value) || 0;
+    const fcfa = mz * 100;
+
+    const fcfaElement = document.getElementById("withdrawFcfa");
+    if (fcfaElement) {
+      fcfaElement.textContent = fcfa.toFixed(0);
+    }
+  });
+
+try {
+  // ✅ ENREGISTRER LA DEMANDE DANS LA BASE DE DONNÉES
+  const response = await apiCall("/manualpayment/withdrawal", "POST", {
+    amountMz: amount,
+    walletName: walletName,
+    walletNumber: walletNumber,
+  });
+
+  if (!response.success) {
+    showNotification(response.message || "Erreur lors de la demande", "error");
+    return;
+  }
+
+  console.log("✅ Demande de retrait enregistrée:", response.data);
+
+  // Mettre à jour le solde localement
+  balance = response.data.newBalance;
+  updateBalance();
+
+  closeWithdrawModal();
+  document.getElementById("withdrawAmount").value = "";
+  if (document.getElementById("withdrawWalletName"))
+    document.getElementById("withdrawWalletName").value = "";
+  if (document.getElementById("withdrawWalletNumber"))
+    document.getElementById("withdrawWalletNumber").value = "";
+
+  showNotification(
+    `✅ Demande de retrait enregistrée! ID: #${response.data.withdrawalId}\n\n` +
+      `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
+      `Destinataire: ${walletNumber} (${walletName})\n\n` +
+      `Votre argent sera envoyé sous 24h.`,
+    "success"
+  );
+
+  // Notification rappel après 5 secondes
+  setTimeout(() => {
+    showNotification(
+      "📞 Service client disponible si besoin après 24h",
+      "info"
+    );
+  }, 5000);
+} catch (error) {
+  console.error("❌ Erreur handleWithdraw:", error);
+  showNotification("Erreur lors de la demande de retrait", "error");
 }
 // ============================================
 // MODIFIER showReferralModal() (Ligne ~1062)

@@ -158,16 +158,12 @@ async function loadGames() {
   }
 }
 
-// ============================================
-// RENDU DES DONNÉES
-// ============================================
-
 function renderDeposits(deposits) {
   const tbody = document.getElementById("depositsBody");
 
   if (!deposits || deposits.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="7" class="empty-state">Aucun dépôt</td></tr>';
+      '<tr><td colspan="8" class="empty-state">Aucun dépôt</td></tr>';
     return;
   }
 
@@ -178,9 +174,16 @@ function renderDeposits(deposits) {
       <td>#${d.id}</td>
       <td>${d.user_name || d.prenom + " " + d.nom}</td>
       <td>${d.email}</td>
-      <td>${d.amount_fcfa.toLocaleString()} FCFA<br><small>(${
-        d.amount_mz
-      } MZ)</small></td>
+      <td>
+        <strong>${d.amount_fcfa.toLocaleString()} FCFA</strong><br>
+        <small>(${d.amount_mz} MZ)</small>
+      </td>
+      <td>
+        <span class="payment-badge ${d.payment_method}">
+          ${d.payment_method === "airtel" ? "📱 Airtel" : "💳 Moov"}
+        </span><br>
+        <small>${d.telephone}</small>
+      </td>
       <td>${formatDate(d.created_at)}</td>
       <td><span class="badge badge-${d.status}">${getStatusLabel(
         d.status
@@ -189,8 +192,8 @@ function renderDeposits(deposits) {
         ${
           d.status === "pending"
             ? `
-          <button class="btn btn-approve" onclick="approveDeposit(${d.id})">✅ Valider</button>
-          <button class="btn btn-reject" onclick="rejectDeposit(${d.id})">❌ Refuser</button>
+          <button class="btn btn-approve" onclick="approveDeposit(${d.id})">✅ Approuver</button>
+          <button class="btn btn-reject" onclick="rejectDeposit(${d.id})">❌ Rejeter</button>
         `
             : ""
         }
@@ -200,7 +203,6 @@ function renderDeposits(deposits) {
     )
     .join("");
 }
-
 function renderWithdrawals(withdrawals) {
   const tbody = document.getElementById("withdrawalsBody");
 
@@ -217,10 +219,16 @@ function renderWithdrawals(withdrawals) {
       <td>#${w.id}</td>
       <td>${w.user_name || w.prenom + " " + w.nom}</td>
       <td>${w.email}</td>
-      <td>${w.amount_fcfa.toLocaleString()} FCFA<br><small>(${
-        w.amount_mz
-      } MZ)</small></td>
-      <td>${w.wallet_name}<br><small>${w.wallet_number}</small></td>
+      <td>
+        <strong>${w.amount_fcfa.toLocaleString()} FCFA</strong><br>
+        <small>(${w.amount_mz} MZ)</small>
+      </td>
+      <td>
+        <span class="payment-badge ${w.payment_method}">
+          ${w.payment_method === "airtel" ? "📱 Airtel" : "💳 Moov"}
+        </span><br>
+        <small>${w.telephone}</small>
+      </td>
       <td>${formatDate(w.created_at)}</td>
       <td><span class="badge badge-${w.status}">${getStatusLabel(
         w.status
@@ -229,8 +237,8 @@ function renderWithdrawals(withdrawals) {
         ${
           w.status === "pending"
             ? `
-          <button class="btn btn-approve" onclick="approveWithdrawal(${w.id})">✅ Valider</button>
-          <button class="btn btn-reject" onclick="rejectWithdrawal(${w.id})">❌ Refuser</button>
+          <button class="btn btn-approve" onclick="approveWithdrawal(${w.id})">✅ Approuver</button>
+          <button class="btn btn-reject" onclick="rejectWithdrawal(${w.id})">❌ Rejeter</button>
         `
             : ""
         }

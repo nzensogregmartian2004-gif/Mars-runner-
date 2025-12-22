@@ -224,25 +224,46 @@
     </div>
 
     <!-- ========================================
-     MODALS À AJOUTER/MODIFIER DANS index.html
+     NOUVELLES MODALS DÉPÔT/RETRAIT
+     À REMPLACER dans index.html (lignes ~200-330)
      ======================================== -->
 
-    <!-- ✅ MODAL DÉPÔT MODIFIÉ -->
+    <!-- MODAL DÉPÔT - CHOIX DU MOYEN -->
     <div id="depositModal" class="modal" style="display: none">
       <div class="modal-content">
         <span class="close" onclick="closeDepositModal()">&times;</span>
-        <h2>💰 Effectuer un Dépôt</h2>
+        <h2>💰 Choisir le moyen de dépôt</h2>
 
-        <!-- Instructions -->
-        <div id="depositInstructions"></div>
+        <div class="payment-methods">
+          <button
+            class="payment-method-btn"
+            onclick="showDepositForm('airtel')"
+          >
+            <div class="payment-icon">📱</div>
+            <div class="payment-name">Airtel Money</div>
+          </button>
+
+          <button class="payment-method-btn" onclick="showDepositForm('moov')">
+            <div class="payment-icon">💳</div>
+            <div class="payment-name">Moov Money</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FORMULAIRE DÉPÔT -->
+    <div id="depositFormModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeDepositFormModal()">&times;</span>
+        <h2 id="depositFormTitle">💰 Dépôt via Airtel Money</h2>
 
         <div class="modal-body">
           <label for="depositAmount">Montant en FCFA:</label>
           <input
             type="number"
             id="depositAmount"
-            placeholder="Minimum 100 FCFA"
-            min="100"
+            placeholder="Min: 500 FCFA - Max: 50000 FCFA"
+            min="500"
             max="50000"
           />
 
@@ -250,36 +271,88 @@
             = <span id="depositMZ">0.00</span> MZ
           </p>
 
-          <button class="btn-primary" onclick="handleDeposit()">
-            📱 Contacter via WhatsApp
+          <label for="depositNom">Nom:</label>
+          <input type="text" id="depositNom" placeholder="Votre nom" required />
+
+          <label for="depositPrenom">Prénom:</label>
+          <input
+            type="text"
+            id="depositPrenom"
+            placeholder="Votre prénom"
+            required
+          />
+
+          <label for="depositEmail">Email:</label>
+          <input
+            type="email"
+            id="depositEmail"
+            placeholder="votre@email.com"
+            required
+          />
+
+          <label for="depositTelephone">Numéro de téléphone:</label>
+          <input
+            type="tel"
+            id="depositTelephone"
+            placeholder="Ex: 066837517"
+            required
+          />
+
+          <p class="info-note">
+            ⚠️ <strong>Important:</strong> Vérifiez que toutes les informations
+            sont correctes.
+          </p>
+
+          <button class="btn-primary" onclick="submitDeposit()">
+            ✅ Valider le dépôt
           </button>
 
-          <button class="btn-secondary" onclick="closeDepositModal()">
+          <button class="btn-secondary" onclick="closeDepositFormModal()">
             Annuler
           </button>
         </div>
       </div>
     </div>
 
-    <!-- ✅ MODAL RETRAIT MODIFIÉ -->
+    <!-- MODAL RETRAIT - CHOIX DU MOYEN -->
     <div id="withdrawModal" class="modal" style="display: none">
       <div class="modal-content">
         <span class="close" onclick="closeWithdrawModal()">&times;</span>
-        <h2>💸 Effectuer un Retrait</h2>
+        <h2>💸 Choisir le moyen de retrait</h2>
 
         <!-- Statut du bonus -->
         <div id="withdrawStatus"></div>
 
-        <!-- Instructions -->
-        <div id="withdrawInstructions"></div>
+        <div class="payment-methods">
+          <button
+            class="payment-method-btn"
+            onclick="showWithdrawForm('airtel')"
+          >
+            <div class="payment-icon">📱</div>
+            <div class="payment-name">Airtel Money</div>
+          </button>
+
+          <button class="payment-method-btn" onclick="showWithdrawForm('moov')">
+            <div class="payment-icon">💳</div>
+            <div class="payment-name">Moov Money</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FORMULAIRE RETRAIT -->
+    <div id="withdrawFormModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeWithdrawFormModal()">&times;</span>
+        <h2 id="withdrawFormTitle">💸 Retrait via Airtel Money</h2>
 
         <div class="modal-body">
           <label for="withdrawAmount">Montant en MZ:</label>
           <input
             type="number"
             id="withdrawAmount"
-            placeholder="Minimum 10 MZ"
-            min="10"
+            placeholder="Minimum 5 MZ"
+            min="5"
             step="0.01"
           />
 
@@ -289,153 +362,120 @@
 
           <hr style="margin: 20px 0" />
 
-          <label for="withdrawWalletName"
-            >Nom enregistré sur le portefeuille:</label
-          >
+          <label for="withdrawNom">Nom:</label>
           <input
             type="text"
-            id="withdrawWalletName"
-            placeholder="Ex: KOFFI Jean Pierre"
+            id="withdrawNom"
+            placeholder="Votre nom"
             required
           />
 
-          <label for="withdrawWalletNumber"
+          <label for="withdrawPrenom">Prénom:</label>
+          <input
+            type="text"
+            id="withdrawPrenom"
+            placeholder="Votre prénom"
+            required
+          />
+
+          <label for="withdrawEmail">Email:</label>
+          <input
+            type="email"
+            id="withdrawEmail"
+            placeholder="votre@email.com"
+            required
+          />
+
+          <label for="withdrawTelephone"
             >Numéro de téléphone Mobile Money:</label
           >
           <input
             type="tel"
-            id="withdrawWalletNumber"
-            placeholder="Ex: 0066837517"
+            id="withdrawTelephone"
+            placeholder="Ex: 066837517"
             required
           />
 
           <p class="info-note" style="margin-top: 15px">
-            ⚠️ <strong>Important:</strong> Assurez-vous que le nom et le numéro
-            correspondent exactement à votre compte Mobile Money.
+            ⚠️ <strong>Important:</strong> Le numéro doit correspondre à votre
+            compte Mobile Money.
           </p>
 
-          <button class="btn-primary" onclick="handleWithdraw()">
-            ✅ Valider la demande
+          <button class="btn-primary" onclick="submitWithdraw()">
+            ✅ Valider le retrait
           </button>
 
-          <button class="btn-secondary" onclick="closeWithdrawModal()">
+          <button class="btn-secondary" onclick="closeWithdrawFormModal()">
             Annuler
           </button>
         </div>
       </div>
     </div>
 
-    <!-- ✅ STYLES ADDITIONNELS À AJOUTER -->
+    <!-- STYLES ADDITIONNELS -->
     <style>
-      .payment-instructions {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+      .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
       }
 
-      .payment-instructions h3 {
-        margin-top: 0;
-        font-size: 1.2em;
-      }
-
-      .payment-instructions ol {
-        text-align: left;
-        padding-left: 20px;
-        margin: 15px 0;
-      }
-
-      .payment-instructions ol li {
-        margin: 8px 0;
-        line-height: 1.6;
-      }
-
-      .info-note {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 15px;
-        font-size: 0.9em;
-      }
-
-      .conversion-display {
-        font-size: 1.3em;
-        font-weight: bold;
-        color: #667eea;
-        margin: 15px 0;
-      }
-
-      .modal-body label {
-        display: block;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #333;
-      }
-
-      .modal-body input[type="number"],
-      .modal-body input[type="text"],
-      .modal-body input[type="tel"] {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        font-size: 1em;
-        box-sizing: border-box;
-      }
-
-      .modal-body input:focus {
-        border-color: #667eea;
-        outline: none;
-      }
-
-      .info-box {
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        font-size: 0.95em;
-        line-height: 1.6;
-      }
-
-      .info-box.bonus-locked {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-      }
-
-      .info-box.bonus-unlocked {
-        background: #d4edda;
-        border: 2px solid #28a745;
-        color: #155724;
-      }
-
-      .btn-primary,
-      .btn-secondary {
-        width: 100%;
-        padding: 15px;
-        margin-top: 10px;
-        border: none;
-        border-radius: 8px;
-        font-size: 1em;
-        font-weight: bold;
+      .payment-method-btn {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 2px solid #444;
+        border-radius: 15px;
+        padding: 2rem 1rem;
         cursor: pointer;
         transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
       }
 
-      .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+      .payment-method-btn:hover {
+        border-color: #00ff88;
+        background: linear-gradient(
+          135deg,
+          rgba(0, 255, 136, 0.2) 0%,
+          rgba(0, 255, 136, 0.1) 100%
+        );
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
       }
 
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      .payment-icon {
+        font-size: 3rem;
+        /* Si vous voulez remplacer par des images plus tard:
+    background: url('chemin-vers-logo.png') center/contain no-repeat;
+    width: 80px;
+    height: 80px;
+    */
       }
 
-      .btn-secondary {
-        background: #6c757d;
-        color: white;
+      .payment-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      @media (max-width: 768px) {
+        .payment-methods {
+          grid-template-columns: 1fr;
+        }
+
+        .payment-method-btn {
+          padding: 1.5rem 1rem;
+        }
+
+        .payment-icon {
+          font-size: 2.5rem;
+        }
       }
 
       .btn-secondary:hover {
