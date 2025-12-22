@@ -142,18 +142,42 @@ class User {
   // Ajouter la méthode updateBalance
   // ============================================
 
-  // Dans la classe User, ajouter cette méthode statique:
+  // ============================================
+  // À AJOUTER dans models/User.js
+  // ============================================
 
-  static async updateBalance(userId, newBalance, connection = null) {
-    const db = connection || { query };
+  /**
+   * ✅ METTRE À JOUR LE SOLDE D'UN UTILISATEUR
+   */
+  static async updateBalance(userId, newBalance) {
+    const sql = `
+    UPDATE users 
+    SET balance_mz = ? 
+    WHERE id = ?
+  `;
 
-    const sql = "UPDATE users SET balance_mz = ? WHERE id = ?";
-
-    await db.query(sql, [parseFloat(newBalance), userId]);
+    await query(sql, [parseFloat(newBalance), userId]);
 
     console.log(`💰 Balance mise à jour - User ${userId}: ${newBalance} MZ`);
 
     return true;
+  }
+
+  /**
+   * ✅ TROUVER UN UTILISATEUR PAR ID
+   */
+  static async findById(userId) {
+    const sql = `SELECT * FROM users WHERE id = ? LIMIT 1`;
+    const results = await query(sql, [userId]);
+    return results[0] || null;
+  }
+
+  /**
+   * ✅ FONCTION QUERY GÉNÉRIQUE (si elle n'existe pas déjà)
+   */
+  static async query(sql, params = []) {
+    const { query } = require("../config/database");
+    return await query(sql, params);
   }
 
   /**
