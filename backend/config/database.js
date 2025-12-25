@@ -1,21 +1,37 @@
 // ============================================
-// backend/config/database.js - VERSION OPTIMISÉE
+// backend/config/database.js - VERSION CORRIGÉE
 // ============================================
 const mysql = require("mysql2/promise");
-require("dotenv").config();
+const path = require("path");
+
+// ⚠️ IMPORTANT : Spécifier le chemin EXACT du fichier .env
+require("dotenv").config({
+  path: path.resolve(__dirname, "../.env"),
+});
 
 /**
  * Vérification des variables d'environnement
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 
+console.log("🔍 Chemin du .env :", path.resolve(__dirname, "../.env"));
+console.log(
+  "🔍 DATABASE_URL détecté :",
+  DATABASE_URL ? "✅ Présent" : "❌ Manquant"
+);
+
 if (!DATABASE_URL) {
+  console.error("❌ DATABASE_URL manquant. Vérifiez le fichier .env");
+  console.error("📂 Emplacement attendu :", path.resolve(__dirname, "../.env"));
+  console.error(
+    "📋 Contenu de process.env.DATABASE_URL :",
+    process.env.DATABASE_URL
+  );
   throw new Error("❌ DATABASE_URL manquant. Vérifiez le fichier .env");
 }
 
-/**
- * Création d'un pool de connexions MySQL
- */
+console.log("✅ DATABASE_URL =", DATABASE_URL);
+
 /**
  * Création d'un pool de connexions MySQL - VERSION FIX RENDER
  */

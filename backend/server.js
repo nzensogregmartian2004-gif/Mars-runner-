@@ -2,13 +2,18 @@
 // server.js - VERSION PRODUCTION POUR RENDER
 // =============================================
 
+// ⚠️ IMPORTANT : CHARGER DOTENV EN PREMIER !
+require("dotenv").config();
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-require("dotenv").config();
+
+// ✅ MAINTENANT on peut charger database.js (après dotenv)
+const { testConnection } = require("./config/database");
 
 // ✅ IMPORTS
 const authRoutes = require("./routes/auth");
@@ -22,8 +27,7 @@ const adminRoutes = require("./routes/admin");
 const app = express();
 const server = http.createServer(app);
 
-const { testConnection } = require("./config/database");
-
+// Test de connexion à la base de données
 (async () => {
   const ok = await testConnection();
   if (!ok) {
@@ -167,11 +171,11 @@ server.listen(PORT, "0.0.0.0", () => {
 ╚═══════════════════════════════════════════╝
 
 🌐 URL:        https://mars-runner-backend.onrender.com
-📍 Port:       ${PORT}
+🔌 Port:       ${PORT}
 🔌 Socket.IO:  ✅ Actif
 🛡️  Sécurité:   ✅ Helmet + CORS
 📊 Logs:       ✅ Morgan activé
-🌍 CORS:       ✅ Netlify autorisé
+🌐 CORS:       ✅ Netlify autorisé
 
 Environment:   ${process.env.NODE_ENV || "development"}
 Database:      ${process.env.DB_HOST ? "✅ Connecté" : "⚠️  Non configuré"}

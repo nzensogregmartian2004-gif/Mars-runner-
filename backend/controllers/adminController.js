@@ -1,5 +1,5 @@
-// ============================================// ============================================
-// controllers/adminController.js
+// ============================================
+// controllers/adminController.js - VERSION COMPLÈTE
 // ============================================
 
 const jwt = require("jsonwebtoken");
@@ -255,11 +255,11 @@ class AdminController {
         );
       }
 
-      // Déduction de fonds :
-      const newBalance = await query(
-        `UPDATE users SET balance_mz = balance_mz - ? WHERE id = ?`,
-        [withdrawal.amount_mz, withdrawal.user_id]
-      );
+      // Déduction de fonds
+      await query(`UPDATE users SET balance_mz = balance_mz - ? WHERE id = ?`, [
+        withdrawal.amount_mz,
+        withdrawal.user_id,
+      ]);
 
       await query(
         "UPDATE withdrawals SET status = 'approved', processed_at = NOW() WHERE id = ?",
@@ -301,7 +301,6 @@ class AdminController {
         );
       }
 
-      // Modifier le statut
       await query(
         "UPDATE withdrawals SET status = 'rejected', processed_at = NOW(), reject_reason = ? WHERE id = ?",
         [reason || null, id]
@@ -309,6 +308,62 @@ class AdminController {
 
       console.log(`❌ Retrait #${id} rejeté`);
       return successResponse(res, null, "Retrait rejeté avec succès");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * ✅ LISTE DES UTILISATEURS
+   */
+  static async getUsers(req, res, next) {
+    try {
+      const sql = `
+        SELECT 
+          id,
+          nom,
+          prenom,
+          email,
+          telephone,
+          balance_mz,
+          balance_fcfa,
+          total_games_played,
+          total_wins,
+          sponsor_code,
+          created_at,
+          last_login
+        FROM users
+        ORDER BY created_at DESC
+        LIMIT 100
+      `;
+
+      const users = await query(sql);
+      return successResponse(res, users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * ✅ HISTORIQUE DES PARTIES
+   */
+  static async getGames(req, res, next) {
+    try {
+      const sql = `
+        SELECT 
+          g.*,
+          u.nom,
+          u.prenom,
+          u.email,
+          CONCAT(u.prenom, ' ', u.nom) as player_name
+        FROM games g
+        LEFT JOIN users u ON g.user_id = u.id
+        ORDER BY g.created_at DESC
+        LIMIT 200
+      `;
+
+      const games = await query(sql);
+      return successResponse(res, games);
     } catch (error) {
       next(error);
     }

@@ -1,5 +1,5 @@
 // ============================================
-// routes/payment.js
+// routes/payment.js - VERSION CORRIGÉE
 // ============================================
 
 const express = require("express");
@@ -15,27 +15,27 @@ router.use(authenticate);
  * @desc    Demande de dépôt
  * @access  Authenticated
  */
-router.post("/deposit", PaymentController.requestDeposit);
+router.post("/deposit", PaymentController.createDeposit);
 
 /**
  * @route   POST /api/payment/withdrawal
  * @desc    Demande de retrait
  * @access  Authenticated
  */
-router.post("/withdrawal", PaymentController.requestWithdrawal);
+router.post("/withdrawal", PaymentController.createWithdrawal);
 
 /**
  * @route   GET /api/payment/deposits
  * @desc    Historique des dépôts
  * @access  Authenticated
  */
-router.get("/deposits", PaymentController.getUserDeposits);
+router.get("/deposits", PaymentController.getDeposits);
 
 /**
  * @route   GET /api/payment/withdrawals
  * @desc    Historique des retraits
  * @access  Authenticated
  */
-router.get("/withdrawals", PaymentController.getUserWithdrawals);
+router.get("/withdrawals", PaymentController.getWithdrawals);
 
 module.exports = router;
