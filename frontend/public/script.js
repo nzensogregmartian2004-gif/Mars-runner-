@@ -1795,7 +1795,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 5 MZ (500 FCFA) | Maximum: ${balance.toFixed(
+          <small>💡 Minimum: 5 MZ (500 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -1973,6 +1973,204 @@ async function submitWithdraw() {
   }
 }
 
+// ========================================
+// MODAL DE PARRAINAGE
+// ========================================
+
+/**
+ * Afficher le modal de parrainage
+ */
+function showReferralModal() {
+  const modal = document.getElementById("referralModal");
+  if (!modal) {
+    console.error("❌ Modal de parrainage introuvable");
+    return;
+  }
+
+  // Afficher le modal
+  modal.style.display = "flex";
+
+  // Afficher le code de parrainage
+  const codeElement = document.getElementById("referralCode");
+  if (codeElement) {
+    if (myReferralCode) {
+      codeElement.textContent = myReferralCode;
+    } else {
+      codeElement.textContent = "Chargement...";
+      // Demander le code au serveur si absent
+      if (socket && isConnectedToSocket) {
+        socket.emit("referral:getInfo");
+      }
+    }
+  }
+
+  // Afficher le lien de parrainage
+  const linkElement = document.getElementById("referralLink");
+  if (linkElement && myReferralCode) {
+    const baseUrl = window.location.origin;
+    linkElement.value = `${baseUrl}?ref=${myReferralCode}`;
+  }
+
+  // Afficher les affiliés
+  displayAffiliatedUsers();
+
+  // Afficher les statistiques
+  const statsElement = document.getElementById("referralStats");
+  if (statsElement) {
+    const totalAffiliates = affiliatedUsers.length || 0;
+    const totalEarnings = totalAffiliates * sponsorBonus;
+
+    statsElement.innerHTML = `
+      <div class="stat-item">
+        <span class="stat-label">👥 Filleuls:</span>
+        <span class="stat-value">${totalAffiliates}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">💰 Gains totaux:</span>
+        <span class="stat-value">${totalEarnings.toFixed(2)} MZ</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">🎁 Bonus par filleul:</span>
+        <span class="stat-value">${sponsorBonus} MZ</span>
+      </div>
+    `;
+  }
+
+  console.log("✅ Modal de parrainage ouvert");
+}
+
+/**
+ * Fermer le modal de parrainage
+ */
+function closeReferralModal() {
+  const modal = document.getElementById("referralModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+/**
+ * Copier le code de parrainage
+ */
+function copyReferralCode() {
+  if (!myReferralCode) {
+    showNotification("Code de parrainage non disponible", "error");
+    return;
+  }
+
+  const codeElement = document.getElementById("referralCode");
+  if (!codeElement) return;
+
+  // Créer un élément temporaire pour copier
+  const tempInput = document.createElement("input");
+  tempInput.value = myReferralCode;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+
+  try {
+    document.execCommand("copy");
+    showNotification("✅ Code copié: " + myReferralCode, "success");
+  } catch (err) {
+    console.error("❌ Erreur copie:", err);
+    showNotification("Erreur lors de la copie", "error");
+  }
+
+  document.body.removeChild(tempInput);
+}
+
+/**
+ * Copier le lien de parrainage
+ */
+function copyReferralLink() {
+  const linkElement = document.getElementById("referralLink");
+  if (!linkElement || !linkElement.value) {
+    showNotification("Lien de parrainage non disponible", "error");
+    return;
+  }
+
+  linkElement.select();
+
+  try {
+    document.execCommand("copy");
+    showNotification("✅ Lien copié!", "success");
+  } catch (err) {
+    console.error("❌ Erreur copie:", err);
+    showNotification("Erreur lors de la copie", "error");
+  }
+}
+
+/**
+ * Afficher la liste des filleuls
+ */
+function displayAffiliatedUsers() {
+  const container = document.getElementById("affiliatedUsersList");
+  if (!container) return;
+
+  if (!affiliatedUsers || affiliatedUsers.length === 0) {
+    container.innerHTML = `
+      <div class="no-affiliates">
+        <p>🎯 Aucun filleul pour le moment</p>
+        <p class="help-text">Partagez votre code pour gagner des bonus!</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '<div class="affiliates-list">';
+
+  affiliatedUsers.forEach((user, index) => {
+    const userName = user.prenom
+      ? `${user.prenom} ${user.nom || ""}`.trim()
+      : user.email || `Utilisateur #${index + 1}`;
+
+    const joinDate = user.created_at
+      ? new Date(user.created_at).toLocaleDateString("fr-FR")
+      : "Date inconnue";
+
+    html += `
+      <div class="affiliate-item">
+        <div class="affiliate-icon">👤</div>
+        <div class="affiliate-info">
+          <div class="affiliate-name">${userName}</div>
+          <div class="affiliate-date">Inscrit le ${joinDate}</div>
+        </div>
+        <div class="affiliate-bonus">+${sponsorBonus} MZ</div>
+      </div>
+    `;
+  });
+
+  html += "</div>";
+  container.innerHTML = html;
+}
+
+/**
+ * Partager le code de parrainage (Web Share API)
+ */
+function shareReferralCode() {
+  if (!myReferralCode) {
+    showNotification("Code de parrainage non disponible", "error");
+    return;
+  }
+
+  const baseUrl = window.location.origin;
+  const shareUrl = `${baseUrl}?ref=${myReferralCode}`;
+  const shareText = `🚀 Rejoins-moi sur Mars Runner et gagne ${newPlayerBonus} MZ à l'inscription! Utilise mon code: ${myReferralCode}`;
+
+  // Vérifier si Web Share API est disponible
+  if (navigator.share) {
+    navigator
+      .share({
+        title: "Mars Runner - Code de parrainage",
+        text: shareText,
+        url: shareUrl,
+      })
+      .then(() => console.log("✅ Partage réussi"))
+      .catch((err) => console.log("❌ Erreur partage:", err));
+  } else {
+    // Fallback: copier le texte
+    copyReferralCode();
+  }
+}
 // CONVERSIONS AUTOMATIQUES (listeners uniques)
 const depositAmountEl = document.getElementById("depositAmount");
 if (depositAmountEl) {

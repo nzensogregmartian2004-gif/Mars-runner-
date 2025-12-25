@@ -1120,3 +1120,86 @@ canvas {
     font-size: 0.9rem;
   }
 }
+/* ========================================
+   MODAL DE PARRAINAGE
+   ======================================== */
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.stat-value {
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.no-affiliates {
+  text-align: center;
+  padding: 30px 20px;
+  color: #888;
+}
+
+.no-affiliates p {
+  margin: 10px 0;
+}
+
+.help-text {
+  font-size: 13px;
+  color: #666;
+}
+
+.affiliates-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.affiliate-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: background 0.3s;
+}
+
+.affiliate-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.affiliate-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.affiliate-info {
+  flex: 1;
+}
+
+.affiliate-name {
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.affiliate-date {
+  font-size: 12px;
+  color: #888;
+}
+
+.affiliate-bonus {
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 14px;
+}
