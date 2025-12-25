@@ -24,8 +24,8 @@ class AdminController {
         );
       }
 
-      const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-      const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+      const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Martian";
+      const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Azerty12345";
 
       if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
         return errorResponse(
