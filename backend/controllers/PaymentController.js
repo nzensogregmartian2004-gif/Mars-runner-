@@ -1,21 +1,15 @@
 // ============================================
-// controllers/paymentController.js (nouvelle version complète)
+// controllers/PaymentController.js - VERSION SANS MODÈLES
 // ============================================
 
-const Payment = require("../models/payment");
-const User = require("../models/user");
-const {
-  successResponse,
-  errorResponse,
-  getClientIp,
-  getUserAgent,
-} = require("../utils/helpers");
+const { query, transaction } = require("../config/database");
+const { successResponse, errorResponse } = require("../utils/helpers");
 
 const BONUS_LOCKED_AMOUNT = 5; // Bonus verrouillé pour les nouveaux joueurs
 
 class PaymentController {
   /**
-   * DEMANDE DE DÉPÔT
+   * ✅ DEMANDE DE DÉPÔT
    */
   static async createDeposit(req, res, next) {
     try {
@@ -41,15 +35,33 @@ class PaymentController {
         );
       }
 
-      const depositId = await Payment.createDeposit(userId, {
+      // Insertion du dépôt
+      const sql = `
+        INSERT INTO deposits (
+          user_id, 
+          amount_fcfa, 
+          amount_mz, 
+          payment_method, 
+          name, 
+          phone, 
+          status, 
+          created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+      `;
+
+      const result = await query(sql, [
+        userId,
         amountFcfa,
-        amountMz,
-        paymentMethod,
+        amountMz || amountFcfa / 100, // Conversion automatique si pas fourni
+        paymentMethod || "mobile_money",
         name,
         phone,
-      });
+      ]);
 
-      console.log(`✔️ [DEPÔT] ID: ${depositId} pour l'utilisateur ${userId}`);
+      const depositId = result.insertId;
+
+      console.log(`✅ [DÉPÔT] ID: ${depositId} pour l'utilisateur ${userId}`);
 
       return successResponse(
         res,
@@ -63,7 +75,7 @@ class PaymentController {
   }
 
   /**
-   * DEMANDE DE RETRAIT
+   * ✅ DEMANDE DE RETRAIT
    */
   static async createWithdrawal(req, res, next) {
     try {
@@ -89,15 +101,27 @@ class PaymentController {
         );
       }
 
-      // Vérifier le solde requis
-      const user = await User.findById(userId);
-      if (!user) {
+      // Vérifier le solde de l'utilisateur
+      const userSql = `
+        SELECT 
+          balance_mz, 
+          new_player_bonus_locked
+        FROM users 
+        WHERE id = ?
+      `;
+      const users = await query(userSql, [userId]);
+
+      if (!users || users.length === 0) {
         return errorResponse(res, "Utilisateur introuvable.", "NOT_FOUND", 404);
       }
 
+      const user = users[0];
+
+      // Calculer le solde disponible
       const availableBalance =
         user.balance_mz -
         (user.new_player_bonus_locked ? BONUS_LOCKED_AMOUNT : 0);
+
       if (amountMz > availableBalance) {
         return errorResponse(
           res,
@@ -107,16 +131,32 @@ class PaymentController {
         );
       }
 
-      // Enregistrer la demande de retrait
-      const withdrawalId = await Payment.createWithdrawal(userId, {
+      // Insertion de la demande de retrait
+      const sql = `
+        INSERT INTO withdrawals (
+          user_id, 
+          amount_mz, 
+          payment_method, 
+          name, 
+          phone, 
+          status, 
+          created_at
+        )
+        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+      `;
+
+      const result = await query(sql, [
+        userId,
         amountMz,
-        paymentMethod,
+        paymentMethod || "mobile_money",
         name,
         phone,
-      });
+      ]);
+
+      const withdrawalId = result.insertId;
 
       console.log(
-        `✔️ [RETRAIT] ID: ${withdrawalId} pour l'utilisateur ${userId}`
+        `✅ [RETRAIT] ID: ${withdrawalId} pour l'utilisateur ${userId}`
       );
 
       return successResponse(
@@ -131,12 +171,31 @@ class PaymentController {
   }
 
   /**
-   * HISTORIQUE DES DÉPÔTS
+   * ✅ HISTORIQUE DES DÉPÔTS
    */
   static async getDeposits(req, res, next) {
     try {
       const userId = req.user.id;
-      const deposits = await Payment.getDepositsByUser(userId);
+
+      const sql = `
+        SELECT 
+          id,
+          amount_fcfa,
+          amount_mz,
+          payment_method,
+          name,
+          phone,
+          status,
+          created_at,
+          processed_at,
+          reject_reason
+        FROM deposits
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 50
+      `;
+
+      const deposits = await query(sql, [userId]);
 
       return successResponse(res, deposits, "Liste des dépôts récupérée.");
     } catch (error) {
@@ -146,12 +205,30 @@ class PaymentController {
   }
 
   /**
-   * HISTORIQUE DES RETRAITS
+   * ✅ HISTORIQUE DES RETRAITS
    */
   static async getWithdrawals(req, res, next) {
     try {
       const userId = req.user.id;
-      const withdrawals = await Payment.getWithdrawalsByUser(userId);
+
+      const sql = `
+        SELECT 
+          id,
+          amount_mz,
+          payment_method,
+          name,
+          phone,
+          status,
+          created_at,
+          processed_at,
+          reject_reason
+        FROM withdrawals
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 50
+      `;
+
+      const withdrawals = await query(sql, [userId]);
 
       return successResponse(res, withdrawals, "Liste des retraits récupérée.");
     } catch (error) {
