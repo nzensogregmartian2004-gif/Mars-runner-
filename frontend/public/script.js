@@ -1593,19 +1593,20 @@ function simulateApiCall(endpoint, method, data) {
             },
           },
         });
-      } else if (endpoint === "/manualpayment/deposit") {
+      } else if (endpoint === "/payment/deposit") {
+        // 🔥 CORRIGÉ
         resolve({
           success: true,
           data: {
             depositId: "DEP" + Date.now(),
           },
         });
-      } else if (endpoint === "/manualpayment/withdrawal") {
+      } else if (endpoint === "/payment/withdrawal") {
+        // 🔥 CORRIGÉ
         resolve({
           success: true,
           data: {
             withdrawalId: "WTH" + Date.now(),
-            newBalance: Math.max(0, balance - (data.amountMz || 0)),
           },
         });
       } else {
@@ -1743,7 +1744,8 @@ async function submitDeposit() {
   const mz = amount / 100;
 
   try {
-    const response = await apiCall("/manualpayment/deposit", "POST", {
+    // 🔥 CORRECTION: Utiliser /payment/deposit au lieu de /manualpayment/deposit
+    const response = await apiCall("/payment/deposit", "POST", {
       amountFcfa: amount,
       amountMz: mz,
       paymentMethod: selectedPaymentMethod,
@@ -1772,7 +1774,7 @@ async function submitDeposit() {
           selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
         }\n` +
         `ID: #${response.data.depositId || "N/A"}\n\n` +
-        `📱 Confirmez sur votre téléphone`,
+        `📱 Votre demande sera validée par l'administrateur sous 24h`,
       "success"
     );
 
@@ -1785,7 +1787,6 @@ async function submitDeposit() {
     );
   }
 }
-
 // RETRAIT
 function showWithdrawModal() {
   const modal = document.getElementById("withdrawModal");
@@ -1933,7 +1934,8 @@ async function submitWithdraw() {
       telephone,
     });
 
-    const response = await apiCall("/manualpayment/withdrawal", "POST", {
+    // 🔥 CORRECTION: Utiliser /payment/withdrawal au lieu de /manualpayment/withdrawal
+    const response = await apiCall("/payment/withdrawal", "POST", {
       amountMz: amount,
       paymentMethod: selectedPaymentMethod,
       nom: nom,
@@ -1952,13 +1954,8 @@ async function submitWithdraw() {
       return;
     }
 
-    if (response.data && response.data.newBalance !== undefined) {
-      balance = parseFloat(response.data.newBalance);
-    } else {
-      balance = Math.max(0, balance - amount);
-    }
-
-    updateBalance();
+    // ⚠️ NE PAS déduire le montant immédiatement - attendre validation admin
+    // balance reste inchangé jusqu'à validation
 
     closeWithdrawFormModal();
 
@@ -1969,7 +1966,7 @@ async function submitWithdraw() {
           selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
         }\n` +
         `ID: #${response.data.withdrawalId || "N/A"}\n\n` +
-        `📱 Vous recevrez un message de confirmation sous 24h`,
+        `📱 Votre demande sera traitée sous 24h`,
       "success"
     );
 
@@ -1982,7 +1979,6 @@ async function submitWithdraw() {
     );
   }
 }
-
 // ========================================
 // MODAL DE PARRAINAGE
 // ========================================

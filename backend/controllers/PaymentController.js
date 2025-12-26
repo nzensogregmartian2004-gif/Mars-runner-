@@ -17,10 +17,10 @@ class PaymentController {
       const { amountFcfa, amountMz, paymentMethod, name, phone } = req.body;
 
       // Validation des champs
-      if (!amountFcfa || amountFcfa < 500 || amountFcfa > 50000) {
+      if (!amountFcfa || amountFcfa < 100 || amountFcfa > 50000) {
         return errorResponse(
           res,
-          "Montant invalide (min: 500 FCFA, max: 50 000 FCFA).",
+          "Montant invalide (min: 100 FCFA, max: 50 000 FCFA).",
           "VALIDATION_ERROR",
           400
         );
@@ -83,10 +83,10 @@ class PaymentController {
       const { amountMz, paymentMethod, name, phone } = req.body;
 
       // Validation des champs
-      if (!amountMz || amountMz < 5) {
+      if (!amountMz || amountMz < 10) {
         return errorResponse(
           res,
-          "Montant minimum pour un retrait: 5 MZ.",
+          "Montant minimum pour un retrait: 10 MZ.",
           "VALIDATION_ERROR",
           400
         );
