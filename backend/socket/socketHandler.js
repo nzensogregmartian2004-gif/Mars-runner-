@@ -1,5 +1,6 @@
 // ============================================
 // backend/socket/socketHandler.js - VERSION FINALE SÉCURISÉE
+// MODIFICATION : Support détection mobile (ligne 157 uniquement)
 // ============================================
 
 const jwt = require("jsonwebtoken");
@@ -114,12 +115,16 @@ module.exports = (io) => {
 
     // =========================================
     // 🔥 ÉVÉNEMENT: Démarrer une partie - VERSION SÉCURISÉE
+    // MODIFICATION LIGNE 157 : Ajout détection plateforme
     // =========================================
     socket.on("game:start", async (data) => {
       const userId = socket.userId;
 
+      // 🔥 AJOUT : Log de la plateforme
       console.log(
-        `🎮 Demande de démarrage: User ${userId}, Bet: ${data.betAmount} MZ`
+        `🎮 Demande de démarrage: User ${userId}, Bet: ${
+          data.betAmount
+        } MZ, Platform: ${data.platform || "desktop"}`
       );
 
       // ✅ PROTECTION 1 : Vérifier s'il y a déjà une session active
@@ -161,15 +166,25 @@ module.exports = (io) => {
           return; // L'erreur a déjà été envoyée par validateGameStart()
         }
 
-        // ✅ PROTECTION 4 : Créer et stocker la session
-        const gameSession = new GameManager(userId, data.betAmount, socket, io);
+        // 🔥 MODIFICATION : Ajout du 5ème paramètre "platform"
+        const gameSession = new GameManager(
+          userId,
+          data.betAmount,
+          socket,
+          io,
+          data.platform || "desktop" // ✅ SEULE LIGNE MODIFIÉE
+        );
+
         activeSessions.set(userId, gameSession);
 
         // ✅ PROTECTION 5 : Démarrer la partie
         await gameSession.startGame();
 
+        // 🔥 AJOUT : Log avec plateforme
         console.log(
-          `✅ Partie démarrée avec succès: User ${userId}, Game #${gameSession.gameId}`
+          `✅ Partie démarrée avec succès: User ${userId}, Game #${
+            gameSession.gameId
+          }, Platform: ${data.platform || "desktop"}`
         );
       } catch (error) {
         console.error(`❌ Erreur game:start pour User ${userId}:`, error);
@@ -312,5 +327,7 @@ module.exports = (io) => {
     }
   }, 60000); // Toutes les minutes
 
-  console.log("✅ Socket Handler initialisé avec protections anti-spam");
+  console.log(
+    "✅ Socket Handler initialisé avec protections anti-spam + détection mobile"
+  );
 };

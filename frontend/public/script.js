@@ -42,8 +42,8 @@ let isGameEnding = false; // Évite les actions pendant la fin
 let gameEndTimeout = null; // Timeout de sécurité
 
 // CALIBRATION GAMING
-const BASE_SPEED = 4.2;
-const SPEED_INCREMENT = 0.0015;
+const BASE_SPEED = isMobile ? 3.8 : 4.2; // Mobile : -9.5% vitesse base
+const SPEED_INCREMENT = isMobile ? 0.0012 : 0.0015; // Mobile : -20% accélération
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
 let backgroundObjects = [];
@@ -52,9 +52,9 @@ const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
 // ESPACEMENT DYNAMIQUE
-const MIN_GAP = 250;
-const MAX_GAP = 500;
-const GAP_COEFFICIENT = 14;
+const MIN_GAP = isMobile ? 280 : 250; // Mobile : +12% espace
+const MAX_GAP = isMobile ? 550 : 500; // Mobile : +10% espace max
+const GAP_COEFFICIENT = isMobile ? 12 : 14; // Mobile : obstacles plus espacés;
 const frameInterval = 1000 / 60;
 
 // FLUCTUATION VITESSE
@@ -78,8 +78,8 @@ const isMobile =
   ) || window.innerWidth < 768;
 
 // TAILLES ADAPTÉES
-const GRAVITY = 0.5;
-const JUMP_FORCE = isMobile ? -9.5 : -11;
+const GRAVITY = isMobile ? 0.42 : 0.5;
+const JUMP_FORCE = isMobile ? -12.5 : -11;
 
 // VARIABLES CANVAS
 let martianY = 320;
@@ -634,8 +634,11 @@ function startGame() {
   console.log("🎮 Lancement de la partie - Mise:", betAmount, "MZ");
 
   disablePlayButton();
-
-  socket.emit("game:start", { betAmount });
+  // 🔥 ENVOYER la plateforme au backend
+  socket.emit("game:start", {
+    betAmount,
+    platform: isMobile ? "mobile" : "desktop", // ✅ AJOUT
+  });
 
   // TIMEOUT DE SÉCURITÉ : 8 secondes
   if (gameEndTimeout) {
@@ -835,16 +838,29 @@ function handleObstacleGeneration(deltaTime, currentTime) {
 
   if (timeSinceLastObstacle < requiredTime) return;
 
-  const obstacleWeights = {
-    rock: 30,
-    robot: 30,
-    flyingAlien: 50,
-    highDrone: 30,
-    proximityMine: 30,
-    fastMeteor: 30,
-    doubleDanger: 10,
-    rollingBall: 10,
-  };
+  const obstacleWeights = isMobile
+    ? {
+        // 🔥 Mobile : moins d'obstacles difficiles
+        rock: 45, // +33%
+        robot: 35, // +17%
+        flyingAlien: 45, // -10%
+        highDrone: 25, // -33%
+        proximityMine: 25, // -17%
+        fastMeteor: 25, // -33%
+        doubleDanger: 5, // -50%
+        rollingBall: 5, // -50%
+      }
+    : {
+        // Desktop : équilibré
+        rock: 35,
+        robot: 35,
+        flyingAlien: 50,
+        highDrone: 35,
+        proximityMine: 35,
+        fastMeteor: 35,
+        doubleDanger: 15,
+        rollingBall: 15,
+      };
 
   const totalWeight = Object.values(obstacleWeights).reduce((a, b) => a + b, 0);
   let randomWeight = Math.random() * totalWeight;
@@ -1007,8 +1023,12 @@ function checkCollision() {
   const martianRight = martianX + MARTIAN_SIZE;
   const martianBottom = martianY + MARTIAN_SIZE;
 
-  const hitboxTolerance = Math.max(4, Math.floor(6 * displayScale));
-  const proximityRangeBase = 55;
+  // 🔥 CORRECTION : Tolérance adaptée à la plateforme
+  const hitboxTolerance = isMobile
+    ? Math.max(8, Math.floor(10 * displayScale)) // Mobile : +40% tolérance
+    : Math.max(4, Math.floor(6 * displayScale));
+
+  const proximityRangeBase = isMobile ? 65 : 55; // Mobile : +18% détection mine
   const proximityRange = Math.max(
     30,
     Math.floor(proximityRangeBase * displayScale)
@@ -1037,7 +1057,7 @@ function checkCollision() {
         martianY < obsBottom + proximityRange;
 
       if (isNearProximity && martianRight > obsScreenX) {
-        speedEffectDuration = 95;
+        speedEffectDuration = isMobile ? 120 : 95; // Mobile : +26% temps ralenti
         obs.hit = true;
       }
     }

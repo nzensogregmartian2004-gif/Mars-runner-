@@ -1203,3 +1203,8 @@ canvas {
   font-weight: bold;
   font-size: 14px;
 }
+.payment-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}

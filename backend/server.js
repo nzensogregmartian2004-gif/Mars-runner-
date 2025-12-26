@@ -41,7 +41,12 @@ const server = http.createServer(app);
 // ============================================
 const io = new Server(server, {
   cors: {
-    origin: ["https://marsrunner.netlify.app/", "http://localhost:5000"],
+    origin: [
+      "https://marsrunner.netlify.app", // ✅ SANS SLASH FINAL
+      "http://localhost:5000",
+      "http://localhost:3000",
+      "http://localhost:5173",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -56,13 +61,14 @@ console.log("✅ Socket.IO initialisé avec CORS pour Netlify");
 // MIDDLEWARE GLOBAL
 // ============================================
 
-// CORS
+// CORS - Configuration corrigée
 app.use(
   cors({
     origin: [
-      "https://marsrunner.netlify.app/",
+      "https://marsrunner.netlify.app", // ✅ SANS SLASH FINAL
       "http://localhost:3000",
       "http://localhost:5173",
+      "http://localhost:5000",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
