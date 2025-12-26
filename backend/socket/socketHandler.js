@@ -7,6 +7,7 @@ const GameManager = require("./gameManager");
 const { query, transaction } = require("../config/database");
 const User = require("../models/user");
 const Referral = require("../models/referral");
+const referralHandler = require("./referralHandler");
 
 const activeSessions = new Map();
 
@@ -53,6 +54,7 @@ module.exports = (io) => {
 
   io.on("connection", (socket) => {
     console.log(`🔌 Client connecté: ${socket.userId}`);
+    referralHandler(socket); // Initialiser les handlers de parrainage
 
     // ✅ REJOINDRE UNE ROOM UTILISATEUR
     socket.join(`user_${socket.userId}`);

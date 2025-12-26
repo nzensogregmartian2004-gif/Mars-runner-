@@ -3,8 +3,8 @@
 // ============================================
 
 const User = require("../models/user");
-const Referral = require("../../models/referral");
-const { BONUS } = require("../../utils/constants");
+const Referral = require("../models/referral");
+const { BONUS } = require("../utils/constants");
 
 /**
  * ✅ Gérer les événements de parrainage via Socket.IO
