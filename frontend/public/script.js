@@ -1,5 +1,5 @@
 // =======================================================================
-// FRONTEND SOCKET.IO - script.js (VERSION CORRIGÉE)
+// FRONTEND SOCKET.IO - script.js (VERSION CORRIGÉE - ORDRE VARIABLES)
 // =======================================================================
 
 // ========================================
@@ -38,12 +38,29 @@ let legAnimation = 0;
 let isStartingGame = false;
 let startGameCooldown = false;
 let lastStartGameAttempt = 0;
-let isGameEnding = false; // Évite les actions pendant la fin
-let gameEndTimeout = null; // Timeout de sécurité
+let isGameEnding = false;
+let gameEndTimeout = null;
 
-// CALIBRATION GAMING
-const BASE_SPEED = isMobile ? 3.8 : 4.2; // Mobile : -9.5% vitesse base
-const SPEED_INCREMENT = isMobile ? 0.0012 : 0.0015; // Mobile : -20% accélération
+// 🔥 CORRECTION : Déclarer isMobile EN PREMIER (avant toute utilisation)
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  ) || window.innerWidth < 768;
+
+// 🔥 CORRECTION : Déclarer myReferralCode AVANT updateUserInfo
+let myReferralCode = "";
+let newPlayerBonus = 5;
+let sponsorBonus = 1;
+let isNewPlayerBonusLocked = false;
+let affiliatedUsers = [];
+
+// ✅ MAINTENANT on peut utiliser isMobile dans les constantes
+const GRAVITY = isMobile ? 0.42 : 0.5;
+const JUMP_FORCE = isMobile ? -12.5 : -11;
+
+// CALIBRATION GAMING (utilise isMobile)
+const BASE_SPEED = isMobile ? 3.8 : 4.2;
+const SPEED_INCREMENT = isMobile ? 0.0012 : 0.0015;
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
 let backgroundObjects = [];
@@ -51,10 +68,10 @@ let score = 0;
 const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
-// ESPACEMENT DYNAMIQUE
-const MIN_GAP = isMobile ? 280 : 250; // Mobile : +12% espace
-const MAX_GAP = isMobile ? 550 : 500; // Mobile : +10% espace max
-const GAP_COEFFICIENT = isMobile ? 12 : 14; // Mobile : obstacles plus espacés;
+// ESPACEMENT DYNAMIQUE (utilise isMobile)
+const MIN_GAP = isMobile ? 280 : 250;
+const MAX_GAP = isMobile ? 550 : 500;
+const GAP_COEFFICIENT = isMobile ? 12 : 14;
 const frameInterval = 1000 / 60;
 
 // FLUCTUATION VITESSE
@@ -65,34 +82,14 @@ let speedFluctuationTimer = 0;
 let targetGameSpeed = BASE_SPEED;
 let speedEffectDuration = 0;
 
-let myReferralCode = "";
-let newPlayerBonus = 5;
-let sponsorBonus = 1;
-let isNewPlayerBonusLocked = false;
-let affiliatedUsers = [];
-
-// Détection mobile
-const isMobile =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  ) || window.innerWidth < 768;
-
-// TAILLES ADAPTÉES
-const GRAVITY = isMobile ? 0.42 : 0.5;
-const JUMP_FORCE = isMobile ? -12.5 : -11;
-
 // VARIABLES CANVAS
 let martianY = 320;
-let martianX = 100; // POSITION HORIZONTALE DU MARTIEN
+let martianX = 100;
 let MARTIAN_SIZE = isMobile ? 45 : 50;
 let GROUND_Y = isMobile ? 260 : 320;
-// échelle d'affichage/logique (1 = normal, <1 = dézoom)
 let displayScale = 1.0;
 const PORTRAIT_SCALE = 0.7;
-
-// OFFSET CAMÉRA POUR MODE PORTRAIT
 let cameraOffsetX = 0;
-
 // ========================================
 // 3. INITIALISATION
 // ========================================
