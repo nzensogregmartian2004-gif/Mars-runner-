@@ -113,50 +113,6 @@ module.exports = (io) => {
     });
 
     // =========================================
-    // ÉVÉNEMENT: Récupérer les infos de parrainage
-    // =========================================
-    socket.on("referral:getInfo", async () => {
-      try {
-        const userId = socket.userId;
-
-        // Récupérer le code de parrainage
-        const user = await User.findById(userId);
-
-        // Récupérer les affiliés
-        const { data: affiliates } = await Referral.getSponsorReferrals(
-          userId,
-          1,
-          100
-        );
-
-        const sanitizedAffiliates = affiliates.map((aff) => ({
-          id: aff.id,
-          name: `${aff.prenom || "?"} ${(aff.nom || "?").charAt(0)}.`,
-          email: aff.email,
-          bonusEarned: parseFloat(aff.bonus_earned_mz || 0),
-          bonusUnlocked:
-            aff.bonus_unlocked === 1 || aff.bonus_unlocked === true,
-          joinedAt: aff.created_at,
-        }));
-
-        socket.emit("referral:info", {
-          referralCode: user?.referral_code,
-          affiliatedUsers: sanitizedAffiliates,
-          totalAffiliates: sanitizedAffiliates.length,
-        });
-
-        console.log(
-          `✅ Envoyé ${sanitizedAffiliates.length} affiliés au client ${userId}`
-        );
-      } catch (error) {
-        console.error("❌ Erreur referral:getInfo:", error);
-        socket.emit("referral:error", {
-          message: "Erreur lors de la récupération des affiliés",
-        });
-      }
-    });
-
-    // =========================================
     // 🔥 ÉVÉNEMENT: Démarrer une partie - VERSION SÉCURISÉE
     // =========================================
     socket.on("game:start", async (data) => {

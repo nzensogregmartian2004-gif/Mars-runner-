@@ -489,15 +489,25 @@ function connectSocket() {
     console.log("🎯 Données de parrainage reçues:", data);
     if (!data) return;
 
+    // Extraire le code de parrainage
     myReferralCode = data.referralCode || data.referral_code || "";
     console.log("✅ Code parrainage:", myReferralCode);
 
+    // Extraire les affiliés (supporter les deux formats)
     if (data.affiliatedUsers && Array.isArray(data.affiliatedUsers)) {
       affiliatedUsers = data.affiliatedUsers;
-      console.log("✅ Affiliés reçus:", affiliatedUsers.length);
+    } else if (data.affiliated_users && Array.isArray(data.affiliated_users)) {
+      affiliatedUsers = data.affiliated_users;
     } else {
       affiliatedUsers = [];
-      console.log("⚠️ Pas d'affiliés");
+    }
+
+    console.log("✅ Affiliés reçus:", affiliatedUsers.length, affiliatedUsers);
+
+    // 🔥 IMPORTANT : Rafraîchir l'affichage si le modal est ouvert
+    const modal = document.getElementById("referralModal");
+    if (modal && modal.style.display === "flex") {
+      updateReferralModalContent();
     }
   });
 
@@ -1980,6 +1990,9 @@ async function submitWithdraw() {
 /**
  * Afficher le modal de parrainage
  */
+/**
+ * Afficher le modal de parrainage
+ */
 function showReferralModal() {
   const modal = document.getElementById("referralModal");
   if (!modal) {
@@ -1990,31 +2003,48 @@ function showReferralModal() {
   // Afficher le modal
   modal.style.display = "flex";
 
-  // Afficher le code de parrainage
-  const codeElement = document.getElementById("referralCode");
-  if (codeElement) {
-    if (myReferralCode) {
-      codeElement.textContent = myReferralCode;
-    } else {
-      codeElement.textContent = "Chargement...";
-      // Demander le code au serveur si absent
-      if (socket && isConnectedToSocket) {
-        socket.emit("referral:getInfo");
-      }
-    }
+  // Demander les données au serveur
+  if (socket && isConnectedToSocket) {
+    console.log("📡 Demande des infos de parrainage au serveur");
+    socket.emit("referral:getInfo");
   }
 
-  // Afficher le lien de parrainage
+  // Afficher les données actuelles en attendant
+  updateReferralModalContent();
+
+  console.log("✅ Modal de parrainage ouvert");
+}
+
+/**
+ * Fermer le modal de parrainage
+ */
+function closeReferralModal() {
+  const modal = document.getElementById("referralModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+/**
+ * Mettre à jour le contenu du modal de parrainage
+ */
+function updateReferralModalContent() {
+  console.log("🔄 Mise à jour du modal de parrainage");
+
+  // Mettre à jour le code
+  const codeElement = document.getElementById("referralCode");
+  if (codeElement) {
+    codeElement.textContent = myReferralCode || "Chargement...";
+  }
+
+  // Mettre à jour le lien
   const linkElement = document.getElementById("referralLink");
   if (linkElement && myReferralCode) {
     const baseUrl = window.location.origin;
     linkElement.value = `${baseUrl}?ref=${myReferralCode}`;
   }
 
-  // Afficher les affiliés
-  displayAffiliatedUsers();
-
-  // Afficher les statistiques
+  // Mettre à jour les statistiques
   const statsElement = document.getElementById("referralStats");
   if (statsElement) {
     const totalAffiliates = affiliatedUsers.length || 0;
@@ -2036,17 +2066,8 @@ function showReferralModal() {
     `;
   }
 
-  console.log("✅ Modal de parrainage ouvert");
-}
-
-/**
- * Fermer le modal de parrainage
- */
-function closeReferralModal() {
-  const modal = document.getElementById("referralModal");
-  if (modal) {
-    modal.style.display = "none";
-  }
+  // Mettre à jour la liste des affiliés
+  displayAffiliatedUsers();
 }
 
 /**
@@ -2102,9 +2123,17 @@ function copyReferralLink() {
 /**
  * Afficher la liste des filleuls
  */
+/**
+ * Afficher la liste des filleuls
+ */
 function displayAffiliatedUsers() {
   const container = document.getElementById("affiliatedUsersList");
-  if (!container) return;
+  if (!container) {
+    console.warn("⚠️ Container affiliatedUsersList introuvable");
+    return;
+  }
+
+  console.log("📋 Affichage de", affiliatedUsers.length, "affiliés");
 
   if (!affiliatedUsers || affiliatedUsers.length === 0) {
     container.innerHTML = `
@@ -2119,13 +2148,32 @@ function displayAffiliatedUsers() {
   let html = '<div class="affiliates-list">';
 
   affiliatedUsers.forEach((user, index) => {
-    const userName = user.prenom
-      ? `${user.prenom} ${user.nom || ""}`.trim()
-      : user.email || `Utilisateur #${index + 1}`;
+    // Supporter différents formats de nom
+    let userName = "Utilisateur inconnu";
 
-    const joinDate = user.created_at
-      ? new Date(user.created_at).toLocaleDateString("fr-FR")
-      : "Date inconnue";
+    if (user.name) {
+      userName = user.name;
+    } else if (user.prenom) {
+      userName = `${user.prenom} ${user.nom || ""}`.trim();
+    } else if (user.email) {
+      userName = user.email.split("@")[0];
+    } else {
+      userName = `Utilisateur #${index + 1}`;
+    }
+
+    // Formater la date
+    let joinDate = "Date inconnue";
+    if (user.joinedAt || user.created_at) {
+      const dateStr = user.joinedAt || user.created_at;
+      try {
+        joinDate = new Date(dateStr).toLocaleDateString("fr-FR");
+      } catch (e) {
+        console.warn("Erreur parsing date:", e);
+      }
+    }
+
+    // Récupérer le bonus (supporter différents formats)
+    const bonus = user.bonusEarned || user.bonus_earned || sponsorBonus;
 
     html += `
       <div class="affiliate-item">
@@ -2134,15 +2182,16 @@ function displayAffiliatedUsers() {
           <div class="affiliate-name">${userName}</div>
           <div class="affiliate-date">Inscrit le ${joinDate}</div>
         </div>
-        <div class="affiliate-bonus">+${sponsorBonus} MZ</div>
+        <div class="affiliate-bonus">+${bonus} MZ</div>
       </div>
     `;
   });
 
   html += "</div>";
   container.innerHTML = html;
-}
 
+  console.log("✅ Liste des affiliés affichée");
+}
 /**
  * Partager le code de parrainage (Web Share API)
  */
