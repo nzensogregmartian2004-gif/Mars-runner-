@@ -163,7 +163,7 @@ class ReferralController {
       }
 
       const frontendUrl =
-        process.env.FRONTEND_URL || "http://192.168.1.75:5000";
+        process.env.FRONTEND_URL || "https://marsrunner.netlify.app";
       const shareableLink = `${frontendUrl}/register? ref=${user.referral_code}`;
 
       const shareMessage = `Rejoins-moi sur MARS RUNNER avec mon code ${user.referral_code} et reçois ${BONUS.NEW_PLAYER} MZ gratuits !  🚀`;
