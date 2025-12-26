@@ -136,10 +136,7 @@
           </div>
         </div>
 
-        <!-- REMPLACEZ la section .controls dans votre HTML existant par ceci: -->
-
         <div class="controls" id="betControls">
-          <!-- Mode Simple (par défaut) -->
           <div class="control-box">
             <div class="control-label">Multiplicateur</div>
             <div class="control-value value-yellow" id="multiplierDisplay">
@@ -222,11 +219,6 @@
         </ul>
       </div>
     </div>
-
-    <!-- ========================================
-     NOUVELLES MODALS DÉPÔT/RETRAIT
-     À REMPLACER dans index.html (lignes ~200-330)
-     ======================================== -->
 
     <!-- MODAL DÉPÔT - CHOIX DU MOYEN -->
     <div id="depositModal" class="modal" style="display: none">
@@ -320,7 +312,6 @@
         <span class="close" onclick="closeWithdrawModal()">&times;</span>
         <h2>💸 Choisir le moyen de retrait</h2>
 
-        <!-- Statut du bonus -->
         <div id="withdrawStatus"></div>
 
         <div class="payment-methods">
@@ -412,8 +403,72 @@
       </div>
     </div>
 
+    <!-- ========================================
+         🔥 MODAL PARRAINAGE CORRIGÉ
+         ======================================== -->
+    <div id="referralModal" class="modal" style="display: none">
+      <div class="modal-content referral-modal-content">
+        <span class="close" onclick="closeReferralModal()">&times;</span>
+        <h2>🎁 Programme de Parrainage</h2>
+
+        <!-- Section Code de Parrainage -->
+        <div class="referral-section">
+          <h3>Votre Code de Parrainage</h3>
+          <div class="referral-code-display">
+            <span id="referralCode">Chargement...</span>
+            <button onclick="copyReferralCode()" class="btn-copy">
+              📋 Copier
+            </button>
+          </div>
+        </div>
+
+        <!-- Section Lien de Parrainage -->
+        <div class="referral-section">
+          <h3>Votre Lien de Parrainage</h3>
+          <div class="referral-link-container">
+            <input type="text" id="referralLink" readonly />
+            <button onclick="copyReferralLink()" class="btn-copy">
+              📋 Copier
+            </button>
+          </div>
+          <button onclick="shareReferralCode()" class="btn-share">
+            📱 Partager
+          </button>
+        </div>
+
+        <!-- Section Statistiques -->
+        <div class="referral-section">
+          <h3>📊 Vos Statistiques</h3>
+          <div id="referralStats" class="referral-stats"></div>
+        </div>
+
+        <!-- 🔥 Section Liste des Affiliés (ÉLÉMENT MANQUANT) -->
+        <div class="referral-section">
+          <h3>👥 Vos Filleuls</h3>
+          <div
+            id="affiliatedUsersList"
+            class="affiliated-users-container"
+          ></div>
+        </div>
+
+        <!-- Section Comment ça marche -->
+        <div class="referral-section">
+          <h3>❓ Comment ça marche ?</h3>
+          <div class="referral-info">
+            <p>1️⃣ Partagez votre code avec vos amis</p>
+            <p>2️⃣ Ils reçoivent 5 MZ à l'inscription</p>
+            <p>3️⃣ Vous recevez 1 MZ par filleul inscrit</p>
+            <p>4️⃣ Gagnez des bonus illimités !</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notification-container" id="notificationContainer"></div>
+
     <!-- STYLES ADDITIONNELS -->
     <style>
+      /* Styles Payment Methods */
       .payment-methods {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -451,11 +506,6 @@
 
       .payment-icon {
         font-size: 3rem;
-        /* Si vous voulez remplacer par des images plus tard:
-    background: url('chemin-vers-logo.png') center/contain no-repeat;
-    width: 80px;
-    height: 80px;
-    */
       }
 
       .payment-name {
@@ -464,6 +514,175 @@
         color: #fff;
       }
 
+      /* 🔥 STYLES MODAL PARRAINAGE */
+      .referral-modal-content {
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .referral-section {
+        margin: 20px 0;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+      }
+
+      .referral-section h3 {
+        margin-bottom: 15px;
+        color: #fff;
+        font-size: 1.1rem;
+      }
+
+      .referral-code-display {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+      }
+
+      #referralCode {
+        font-size: 24px;
+        font-weight: bold;
+        color: #4caf50;
+        flex: 1;
+        text-align: center;
+      }
+
+      .referral-link-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      #referralLink {
+        flex: 1;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        color: #fff;
+        font-size: 0.9rem;
+      }
+
+      .btn-copy,
+      .btn-share {
+        padding: 10px 20px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.9rem;
+        transition: background 0.3s;
+      }
+
+      .btn-copy:hover,
+      .btn-share:hover {
+        background: #45a049;
+      }
+
+      .btn-share {
+        width: 100%;
+        margin-top: 5px;
+      }
+
+      .referral-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .stat-value {
+        color: #4caf50;
+        font-weight: bold;
+      }
+
+      /* Liste des affiliés */
+      .affiliated-users-container {
+        min-height: 100px;
+      }
+
+      .affiliates-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .affiliate-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        border-left: 3px solid #4caf50;
+      }
+
+      .affiliate-icon {
+        font-size: 30px;
+      }
+
+      .affiliate-info {
+        flex: 1;
+      }
+
+      .affiliate-name {
+        font-weight: bold;
+        color: #fff;
+        margin-bottom: 5px;
+      }
+
+      .affiliate-date {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .affiliate-bonus {
+        font-weight: bold;
+        color: #4caf50;
+        font-size: 16px;
+      }
+
+      .no-affiliates {
+        text-align: center;
+        padding: 40px 20px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .no-affiliates p {
+        margin: 10px 0;
+      }
+
+      .help-text {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .referral-info p {
+        margin: 10px 0;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* Mobile Responsive */
       @media (max-width: 768px) {
         .payment-methods {
           grid-template-columns: 1fr;
@@ -476,13 +695,23 @@
         .payment-icon {
           font-size: 2.5rem;
         }
-      }
 
-      .btn-secondary:hover {
-        background: #5a6268;
-      }
-      @media screen and (max-width: 768px) {
-        /* Réduire la taille des boxes d'info */
+        .referral-modal-content {
+          max-width: 95%;
+        }
+
+        #referralCode {
+          font-size: 18px;
+        }
+
+        .referral-link-container {
+          flex-direction: column;
+        }
+
+        .btn-copy {
+          width: 100%;
+        }
+
         .game-info {
           font-size: 0.75rem !important;
           padding: 0.3rem !important;
@@ -501,7 +730,6 @@
           font-size: 0.65rem !important;
         }
 
-        /* Réduire la hauteur des boutons */
         .btn-jump,
         .btn-cashout,
         .btn-replay,
@@ -511,14 +739,12 @@
           min-height: 45px !important;
         }
 
-        /* Espacer les boutons verticalement */
         #actionButtons {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
         }
 
-        /* Mode paysage : boutons côte à côte */
         @media screen and (orientation: landscape) {
           #actionButtons {
             flex-direction: row;
@@ -531,84 +757,15 @@
           }
         }
       }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
     </style>
-
-    <div class="modal" id="referralModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title">🤝 Programme de Parrainage</h2>
-          <button class="btn-close" onclick="closeReferralModal()">✕</button>
-        </div>
-        <div class="info-box" style="border-color: #00ffff">
-          <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #00ff88">
-            Partagez ce code pour gagner 2 MZ sur la première mise de chaque
-            ami!
-          </p>
-          <div style="font-size: 0.9rem; color: #aaa">
-            Votre ami gagne 5 MZ à l'inscription.
-          </div>
-        </div>
-
-        <label class="control-label">Votre Code de Parrainage</label>
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
-          <input
-            type="text"
-            id="myReferralCodeDisplay"
-            readonly
-            value="Chargement..."
-            style="margin-bottom: 0; text-align: center; font-weight: bold"
-          />
-          <button
-            class="btn-primary btn-copy"
-            onclick="copyReferralCode()"
-            style="width: auto; padding: 0.5rem 1rem"
-          >
-            📋 Copier
-          </button>
-        </div>
-
-        <h3 style="margin-top: 1.5rem; color: #ffd700">Mes Affiliés</h3>
-        <ul
-          id="affiliatedList"
-          style="
-            list-style-type: none;
-            padding-left: 0;
-            font-size: 0.9rem;
-            color: #ccc;
-          "
-        >
-          <li>Chargement de la liste...</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="notification-container" id="notificationContainer"></div>
 
     <!-- IMPORTANT: Ajouter AVANT script.js -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
-    <script src="script.js">
-      // Conversion FCFA -> MZ pour le dépôt
-      document.getElementById("depositAmount")?.addEventListener("input", function () {
-        const fcfa = parseFloat(this.value) || 0;
-        const mz = fcfa / 100;
-
-        const displayElement = document.getElementById("depositMZ");
-        if (displayElement) {
-          displayElement.textContent = mz.toFixed(2);
-        }
-      });
-
-      // Conversion MZ -> FCFA pour le retrait
-      document.getElementById("withdrawAmount")?.addEventListener("input", function () {
-        const mz = parseFloat(this.value) || 0;
-        const fcfa = mz * 100;
-
-        const fcfaElement = document.getElementById("withdrawFcfa");
-        if (fcfaElement) {
-          fcfaElement.textContent = fcfa.toFixed(0);
-        }
-      });
-    </script>
+    <script src="script.js"></script>
   </body>
 </html>
