@@ -41,7 +41,7 @@ const server = http.createServer(app);
 // ============================================
 const io = new Server(server, {
   cors: {
-    origin: ["https://marsrunner.netlify.app", "http://localhost:5000"],
+    origin: ["https://marsrunner.netlify.app/", "http://localhost:5000"],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -60,7 +60,7 @@ console.log("✅ Socket.IO initialisé avec CORS pour Netlify");
 app.use(
   cors({
     origin: [
-      "https://marsrunner.netlify.app",
+      "https://marsrunner.netlify.app/",
       "http://localhost:3000",
       "http://localhost:5173",
     ],
