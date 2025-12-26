@@ -416,18 +416,7 @@
           <h3>Votre Code de Parrainage</h3>
           <div class="referral-code-display">
             <span id="referralCode">Chargement...</span>
-            <button onclick="copyReferralCode()" class="btn-copy">
-              📋 Copier
-            </button>
-          </div>
-        </div>
-
-        <!-- Section Lien de Parrainage -->
-        <div class="referral-section">
-          <h3>Votre Lien de Parrainage</h3>
-          <div class="referral-link-container">
-            <input type="text" id="referralLink" readonly />
-            <button onclick="copyReferralLink()" class="btn-copy">
+            <button onclick="copyReferralCode()" class="btn-copy-short">
               📋 Copier
             </button>
           </div>
@@ -551,43 +540,39 @@
         text-align: center;
       }
 
-      .referral-link-container {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-
-      #referralLink {
-        flex: 1;
-        padding: 10px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 5px;
-        color: #fff;
-        font-size: 0.9rem;
-      }
-
-      .btn-copy,
-      .btn-share {
-        padding: 10px 20px;
+      .btn-copy-short {
+        padding: 8px 15px;
         background: #4caf50;
         color: white;
         border: none;
         border-radius: 5px;
         cursor: pointer;
         font-weight: bold;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         transition: background 0.3s;
+        white-space: nowrap;
       }
 
-      .btn-copy:hover,
-      .btn-share:hover {
+      .btn-copy-short:hover {
         background: #45a049;
       }
 
       .btn-share {
         width: 100%;
-        margin-top: 5px;
+        margin-top: 10px;
+        padding: 12px 20px;
+        background: #2196f3;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: background 0.3s;
+      }
+
+      .btn-share:hover {
+        background: #0b7dda;
       }
 
       .referral-stats {
@@ -704,12 +689,14 @@
           font-size: 18px;
         }
 
-        .referral-link-container {
-          flex-direction: column;
+        .btn-copy-short {
+          padding: 6px 12px;
+          font-size: 0.8rem;
         }
 
-        .btn-copy {
-          width: 100%;
+        .btn-share {
+          padding: 10px 15px;
+          font-size: 0.9rem;
         }
 
         .game-info {
