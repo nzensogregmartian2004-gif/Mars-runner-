@@ -1214,53 +1214,242 @@ canvas {
   border-radius: 12px;
   background: #000;
 }
-/* ===========================================
-   CORRECTIONS FINALES - MODE PORTRAIT
-   =========================================== */
+/* ========================================
+   🔥 OPTIMISATION MOBILE PORTRAIT
+   ======================================== */
 
-/* Canvas : dimensions fixes en portrait */
 @media (max-width: 768px) and (orientation: portrait) {
-  #gameCanvas {
-    width: 100vw !important;
-    height: 40vh !important;
-    max-height: 320px !important;
-    border: 2px solid #ff4500 !important;
-    border-radius: 15px !important;
-    display: block !important;
-    margin: 0 auto !important;
+  /* 📱 BODY & CONTAINER */
+  body {
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
+  .container {
+    padding: 0.4rem;
+    max-width: 100vw;
+  }
+
+  /* 🎯 HEADER ULTRA-COMPACT */
+  .header {
+    padding: 0.6rem;
+    margin-bottom: 0.6rem;
+    border-width: 2px;
+  }
+
+  .header-content {
+    gap: 0.4rem;
+  }
+
+  .logo-section {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .mini-logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .logo-section h2 {
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+
+  .balance-section {
+    text-align: right;
+  }
+
+  .balance-label {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+  }
+
+  .balance-amount {
+    font-size: 1.2rem;
+  }
+
+  .header-buttons {
+    margin-top: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .header-buttons button {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+    min-width: 90px;
+  }
+
+  /* 🎮 GAME AREA */
+  .game-area {
+    padding: 0.5rem;
+    border-width: 2px;
+  }
+
+  /* 🔥 CANVAS - RATIO 16:9 PARFAIT */
   .canvas-container {
-    height: 40vh !important;
-    max-height: 320px !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.6rem;
+    height: auto !important;
   }
 
-  /* Boutons d'action NORMAUX (pas fixed) */
-  .action-buttons {
-    position: relative !important;
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    background: transparent !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-}
-
-/* Mode paysage : boutons en bas */
-@media (max-width: 768px) and (orientation: landscape) {
   #gameCanvas {
-    height: 50vh !important;
-    max-height: 280px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    height: auto !important;
+    aspect-ratio: 1.54 / 1 !important; /* Ratio optimisé */
+    border-width: 2px !important;
+    margin: 0 auto !important;
+    display: block !important;
   }
 
-  /* Garder les boutons fixes uniquement en paysage */
+  /* 🎯 MULTIPLIER OVERLAY COMPACT */
+  .multiplier-overlay {
+    top: 6px;
+    left: 6px;
+    padding: 0.4rem 0.8rem;
+    border-width: 2px;
+    z-index: 50;
+  }
+
+  .multiplier-text {
+    font-size: 1rem;
+  }
+
+  /* 📊 CONTROLS - 3 COLONNES SERRÉES */
+  .controls {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .control-box {
+    padding: 0.5rem;
+    border-width: 1.5px;
+  }
+
+  .control-label {
+    font-size: 0.7rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .control-value {
+    font-size: 1rem;
+  }
+
+  #betInput {
+    font-size: 1rem;
+    padding: 0.4rem;
+  }
+
+  /* 🎮 ACTION BUTTONS - GROS POUR LE POUCE */
   .action-buttons {
-    position: fixed !important;
-    bottom: 12px !important;
-    left: 8px !important;
-    right: 8px !important;
-    z-index: 9999 !important;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    position: relative !important;
+    /* 🔥 PAS FIXED en portrait */
+  }
+
+  .action-buttons button {
+    font-size: 1rem;
+    padding: 1rem;
+    min-height: 56px; /* 56px = taille tactile Apple/Google */
+    border-radius: 10px;
+  }
+
+  /* 📈 STATS COMPACTES */
+  .stats {
+    gap: 0.4rem;
+  }
+
+  .stat-box {
+    padding: 0.5rem;
+    border-width: 1.5px;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  /* 📱 MODAL PORTRAIT */
+  .modal-content {
+    padding: 1rem;
+    margin: 0.5rem;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  /* 🔔 NOTIFICATIONS FULL-WIDTH */
+  .notification-container {
+    top: 10px;
+    left: 0.5rem;
+    right: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .notification {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+
+  /* 📖 INSTRUCTIONS RÉDUITES */
+  .instructions {
+    padding: 0.8rem;
+    margin-top: 0.8rem;
+    border-width: 2px;
+  }
+
+  .instructions h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .instructions li {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+  }
+
+  /* 🔥 AUTH SCREEN MOBILE */
+  .auth-box {
+    padding: 1rem;
+    margin: 0.5rem;
+    border-width: 2px;
+  }
+
+  .martian-logo {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 0.8rem;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  input {
+    padding: 0.7rem;
+    margin-bottom: 0.7rem;
+    font-size: 16px; /* Évite zoom iOS */
+  }
+
+  button {
+    padding: 0.8rem;
+    font-size: 0.95rem;
   }
 }

@@ -115,11 +115,12 @@ function initAudio() {
   }
 }
 
-// ===========================================
-// MODIFICATIONS POUR MODE PORTRAIT MOBILE
-// ===========================================
-
-// 🔥 REMPLACER LA FONCTION setupCanvas() EXISTANTE
+// ========================================
+// setupCanvas()
+// ========================================
+// ========================================
+// setupCanvas() - VERSION OPTIMISÉE PORTRAIT
+// ========================================
 function setupCanvas() {
   canvas = document.getElementById("gameCanvas");
   if (!canvas) {
@@ -138,16 +139,16 @@ function setupCanvas() {
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // 🔥 MODE PORTRAIT MOBILE - DIMENSIONS CORRECTES
+    // 🔥 MODE PORTRAIT MOBILE - OPTIMISÉ
     if (isMobile && !isLandscape) {
-      displayScale = 1.0;
+      displayScale = 1.0; // Pas de dézoom
 
-      // Canvas : 100% largeur, 40% hauteur
-      canvas.width = windowWidth;
-      canvas.height = Math.floor(windowHeight * 0.4);
+      // Canvas prend 70% de la hauteur disponible
+      const availableHeight = windowHeight * 0.7;
+      canvas.width = Math.min(windowWidth * 0.96, 450);
+      canvas.height = Math.min(availableHeight, 700);
 
-      // Martien très proche du bord gauche
-      martianX = Math.floor(canvas.width * 0.12);
+      martianX = canvas.width * 0.2;
       cameraOffsetX = 0;
 
       // MODE PAYSAGE MOBILE
@@ -167,9 +168,9 @@ function setupCanvas() {
       cameraOffsetX = 0;
     }
 
-    // 🎯 PARAMÈTRES CRITIQUES
-    GROUND_Y = Math.floor(canvas.height * 0.82); // Sol à 82%
-    MARTIAN_SIZE = Math.floor(canvas.height * 0.15); // Martien 15% hauteur
+    // Calcul GROUND_Y adapté
+    GROUND_Y = canvas.height - Math.floor(100 * displayScale);
+    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale));
 
     // Réinitialisation
     obstacles = [];
@@ -188,12 +189,10 @@ function setupCanvas() {
       canvas.height,
       "| martianX:",
       martianX,
-      "| MARTIAN_SIZE:",
+      "| martianSize:",
       MARTIAN_SIZE,
       "| GROUND_Y:",
-      GROUND_Y,
-      "| Ratio sol:",
-      ((GROUND_Y / canvas.height) * 100).toFixed(0) + "%"
+      GROUND_Y
     );
   }
 
@@ -245,6 +244,18 @@ window.addEventListener("DOMContentLoaded", () => {
       handleForgot();
     });
   }
+
+  window.addEventListener("resize", () => {
+    if (window.__resizeGameCanvas) window.__resizeGameCanvas();
+    drawGame();
+  });
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(() => {
+      if (window.__resizeGameCanvas) window.__resizeGameCanvas();
+      drawGame();
+    }, 100);
+  });
 });
 
 document.addEventListener("keydown", (e) => {
@@ -812,7 +823,7 @@ function handleObstacleGeneration(deltaTime, currentTime) {
   );
   const timeSinceLastObstacle = currentTime - lastObstacleTime;
   const requiredTime = Math.max(
-    1100,
+    1200,
     (MIN_GAP_CURRENT / gameSpeed) * frameInterval
   );
 
@@ -833,14 +844,14 @@ function handleObstacleGeneration(deltaTime, currentTime) {
   const obstacleWeights = isMobile
     ? {
         // 🔥 Mobile : moins d'obstacles difficiles
-        rock: 45, // +33%
-        robot: 35, // +17%
+        rock: 55, // +33%
+        robot: 55, // +17%
         flyingAlien: 45, // -10%
         highDrone: 25, // -33%
         proximityMine: 25, // -17%
         fastMeteor: 25, // -33%
-        doubleDanger: 5, // -50%
-        rollingBall: 5, // -50%
+        doubleDanger: 10, // -50%
+        rollingBall: 10, // -50%
       }
     : {
         // Desktop : équilibré
