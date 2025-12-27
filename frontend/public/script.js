@@ -116,9 +116,6 @@ function initAudio() {
 }
 
 // ========================================
-// setupCanvas()
-// ========================================
-// ========================================
 // setupCanvas() - VERSION OPTIMISÉE PORTRAIT
 // ========================================
 function setupCanvas() {
@@ -139,40 +136,75 @@ function setupCanvas() {
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // 🔥 MODE PORTRAIT MOBILE - OPTIMISÉ
+    // 🔥 MODE PORTRAIT MOBILE
     if (isMobile && !isLandscape) {
-      displayScale = 1.0; // Pas de dézoom
+      displayScale = 1.0;
 
-      // Canvas prend 70% de la hauteur disponible
-      const availableHeight = windowHeight * 0.7;
-      canvas.width = Math.min(windowWidth * 0.96, 450);
-      canvas.height = Math.min(availableHeight, 700);
+      // 📐 Ratio desktop exact: 1.74:1
+      const maxWidth = Math.min(windowWidth * 0.96, 420);
+      canvas.width = maxWidth;
+      canvas.height = Math.floor(maxWidth / 1.74);
 
-      martianX = canvas.width * 0.2;
+      // 📍 Martien à 15% (comme desktop: 180/1180)
+      martianX = Math.floor(canvas.width * 0.15);
+
+      // 📏 Taille martien: 10% (plus visible sur mobile)
+      MARTIAN_SIZE = Math.max(42, Math.floor(canvas.width * 0.1));
+
+      // 🌍 Ground à 90% (comme desktop: 615/680)
+      GROUND_Y = Math.floor(canvas.height * 0.9);
+
       cameraOffsetX = 0;
 
-      // MODE PAYSAGE MOBILE
+      console.log("📱 PORTRAIT:", {
+        canvas: `${canvas.width}x${canvas.height}`,
+        ratio: (canvas.width / canvas.height).toFixed(2),
+        martianX: `${martianX}px (${((martianX / canvas.width) * 100).toFixed(
+          1
+        )}%)`,
+        martianSize: `${MARTIAN_SIZE}px (${(
+          (MARTIAN_SIZE / canvas.width) *
+          100
+        ).toFixed(1)}%)`,
+        groundY: `${GROUND_Y}px (${((GROUND_Y / canvas.height) * 100).toFixed(
+          1
+        )}%)`,
+      });
     } else if (isMobile && isLandscape) {
+      // 🔥 MODE PAYSAGE - CIEL RÉDUIT À 85%
       displayScale = 1.0;
-      canvas.width = Math.min(windowWidth * 0.95, 900);
-      canvas.height = Math.min(windowHeight * 0.65, 350);
-      martianX = 120;
+
+      const maxWidth = Math.min(windowWidth * 0.96, 850);
+      canvas.width = maxWidth;
+      // Ratio 2.8:1 (plus large pour paysage)
+      canvas.height = Math.floor(maxWidth / 2.8);
+
+      // Martien à 12% (plus proche du bord)
+      martianX = Math.floor(canvas.width * 0.12);
+      MARTIAN_SIZE = Math.max(38, Math.floor(canvas.width * 0.055));
+
+      // Ground à 85% (moins de ciel inutile)
+      GROUND_Y = Math.floor(canvas.height * 0.85);
+
       cameraOffsetX = 0;
 
-      // MODE DESKTOP
+      console.log("🌄 PAYSAGE:", {
+        canvas: `${canvas.width}x${canvas.height}`,
+        ratio: (canvas.width / canvas.height).toFixed(2),
+        martianX: `${martianX}px`,
+        groundY: `${GROUND_Y}px (85%)`,
+      });
     } else {
+      // 🖥️ MODE DESKTOP - RÉFÉRENCE
       displayScale = 1.0;
-      canvas.width = 900;
-      canvas.height = 450;
-      martianX = 100;
+      canvas.width = 1180; // ✅ Mesure exacte
+      canvas.height = 680; // ✅ Mesure exacte
+      martianX = 180; // ✅ 15%
+      MARTIAN_SIZE = 55;
+      GROUND_Y = 615; // ✅ 90%
       cameraOffsetX = 0;
     }
 
-    // Calcul GROUND_Y adapté
-    GROUND_Y = canvas.height - Math.floor(100 * displayScale);
-    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale));
-
-    // Réinitialisation
     obstacles = [];
     backgroundObjects = [];
     lastObstacleTime = Date.now();
@@ -181,19 +213,6 @@ function setupCanvas() {
     if (gameState === "menu" || gameState === "gameover") {
       martianY = GROUND_Y;
     }
-
-    console.log(
-      "📐 Canvas:",
-      canvas.width,
-      "x",
-      canvas.height,
-      "| martianX:",
-      martianX,
-      "| martianSize:",
-      MARTIAN_SIZE,
-      "| GROUND_Y:",
-      GROUND_Y
-    );
   }
 
   resizeCanvas();
