@@ -138,44 +138,24 @@ function setupCanvas() {
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // 🔥 MODE PORTRAIT MOBILE - DIMENSIONS EXACTES DE L'IMAGE
-    if (isMobile && !isLandscape) {
-      displayScale = 1.0;
-
-      // Canvas : 100% largeur, 35% hauteur (plus court)
-      canvas.width = windowWidth;
-      canvas.height = Math.floor(windowHeight * 0.35);
-
-      martianX = Math.floor(canvas.width * 0.15); // 15% depuis la gauche
-      cameraOffsetX = 0;
-
-      // MODE PAYSAGE MOBILE
-    } else if (isMobile && isLandscape) {
-      displayScale = 1.0;
-      canvas.width = Math.min(windowWidth * 0.95, 900);
-      canvas.height = Math.min(windowHeight * 0.65, 350);
-      martianX = 120;
-      cameraOffsetX = 0;
-
-      // MODE DESKTOP
+    if (isMobile) {
+      if (isLandscape) {
+        canvas.width = Math.min(windowWidth * 0.95, 900);
+        canvas.height = Math.min(windowHeight * 0.65, 350);
+      } else {
+        canvas.width = Math.min(windowWidth * 0.95, 450);
+        canvas.height = Math.floor(canvas.width * 0.75);
+      }
     } else {
-      displayScale = 1.0;
-      canvas.width = 900;
-      canvas.height = 450;
-      martianX = 100;
-      cameraOffsetX = 0;
+      canvas.width = 800;
+      canvas.height = 400;
     }
 
-    // Calcul GROUND_Y adapté
-    GROUND_Y = canvas.height - Math.floor(80 * displayScale);
-    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 18) * displayScale));
+    // 🔥 CORRECTION : Recalculer les variables globales
+    GROUND_Y = canvas.height - 80;
+    MARTIAN_SIZE = Math.max(35, Math.floor(canvas.width / 20));
 
-    // Réinitialisation
-    obstacles = [];
-    backgroundObjects = [];
-    lastObstacleTime = Date.now();
-    score = 0;
-
+    // Réinitialiser martianY uniquement si pas en jeu
     if (gameState === "menu" || gameState === "gameover") {
       martianY = GROUND_Y;
     }
@@ -185,17 +165,23 @@ function setupCanvas() {
       canvas.width,
       "x",
       canvas.height,
-      "| martianX:",
-      martianX,
-      "| martianSize:",
-      MARTIAN_SIZE,
       "| GROUND_Y:",
-      GROUND_Y
+      GROUND_Y,
+      "| MARTIAN_SIZE:",
+      MARTIAN_SIZE
     );
   }
 
   resizeCanvas();
-  window.__resizeGameCanvas = resizeCanvas;
+  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("orientationchange", () => {
+    setTimeout(resizeCanvas, 100);
+  });
+
+  // 🔥 INITIALISER martianY APRÈS LE PREMIER RESIZE
+  martianY = GROUND_Y;
+
+  drawGame();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
