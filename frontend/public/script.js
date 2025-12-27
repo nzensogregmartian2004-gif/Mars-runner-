@@ -55,11 +55,11 @@ let isNewPlayerBonusLocked = false;
 let affiliatedUsers = [];
 
 // ✅ MAINTENANT on peut utiliser isMobile dans les constantes
-const GRAVITY = isMobile ? 0.42 : 0.5;
-const JUMP_FORCE = isMobile ? -12.5 : -11;
+const GRAVITY = isMobile ? 0.45 : 0.5;
+const JUMP_FORCE = isMobile ? -12 : -11;
 
 // CALIBRATION GAMING (utilise isMobile)
-const BASE_SPEED = isMobile ? 3.9 : 4.2;
+const BASE_SPEED = isMobile ? 4 : 4.2;
 const SPEED_INCREMENT = isMobile ? 0.0013 : 0.0015;
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
@@ -840,8 +840,8 @@ function handleObstacleGeneration(deltaTime, currentTime) {
         highDrone: 25, // -33%
         proximityMine: 25, // -17%
         fastMeteor: 25, // -33%
-        doubleDanger: 10, // -50%
-        rollingBall: 10, // -50%
+        doubleDanger: 15, // -50%
+        rollingBall: 15, // -50%
       }
     : {
         // Desktop : équilibré
