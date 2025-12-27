@@ -55,8 +55,8 @@ let isNewPlayerBonusLocked = false;
 let affiliatedUsers = [];
 
 // ✅ MAINTENANT on peut utiliser isMobile dans les constantes
-const GRAVITY = isMobile ? 0.42 : 0.5;
-const JUMP_FORCE = isMobile ? -12.5 : -11;
+const GRAVITY = isMobile ? 0.48 : 0.5;
+const JUMP_FORCE = isMobile ? -11.9 : -11;
 
 // CALIBRATION GAMING (utilise isMobile)
 const BASE_SPEED = isMobile ? 3.9 : 4.2;
@@ -139,45 +139,24 @@ function setupCanvas() {
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // 🔥 MODE PORTRAIT MOBILE - OPTIMISÉ
-    if (isMobile && !isLandscape) {
-      displayScale = 1.0; // Pas de dézoom
-
-      // Canvas prend 70% de la hauteur disponible
-      const availableHeight = windowHeight * 0.7;
-      canvas.width = Math.min(windowWidth * 0.96, 450);
-      canvas.height = Math.min(availableHeight, 700);
-
-      martianX = canvas.width * 0.2;
-      cameraOffsetX = 0;
-
-      // MODE PAYSAGE MOBILE
-    } else if (isMobile && isLandscape) {
-      displayScale = 1.0;
-      canvas.width = Math.min(windowWidth * 0.95, 900);
-      canvas.height = Math.min(windowHeight * 0.65, 350);
-      martianX = 120;
-      cameraOffsetX = 0;
-
-      // MODE DESKTOP
+    if (isMobile) {
+      if (isLandscape) {
+        canvas.width = Math.min(windowWidth * 0.95, 900);
+        canvas.height = Math.min(windowHeight * 0.65, 350);
+      } else {
+        canvas.width = Math.min(windowWidth * 0.95, 450);
+        canvas.height = Math.floor(canvas.width * 0.75);
+      }
     } else {
-      displayScale = 1.0;
-      canvas.width = 900;
-      canvas.height = 450;
-      martianX = 100;
-      cameraOffsetX = 0;
+      canvas.width = 800;
+      canvas.height = 400;
     }
 
-    // Calcul GROUND_Y adapté
-    GROUND_Y = canvas.height - Math.floor(100 * displayScale);
-    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale));
+    // 🔥 CORRECTION : Recalculer les variables globales
+    GROUND_Y = canvas.height - 80;
+    MARTIAN_SIZE = Math.max(35, Math.floor(canvas.width / 20));
 
-    // Réinitialisation
-    obstacles = [];
-    backgroundObjects = [];
-    lastObstacleTime = Date.now();
-    score = 0;
-
+    // Réinitialiser martianY uniquement si pas en jeu
     if (gameState === "menu" || gameState === "gameover") {
       martianY = GROUND_Y;
     }
@@ -187,17 +166,23 @@ function setupCanvas() {
       canvas.width,
       "x",
       canvas.height,
-      "| martianX:",
-      martianX,
-      "| martianSize:",
-      MARTIAN_SIZE,
       "| GROUND_Y:",
-      GROUND_Y
+      GROUND_Y,
+      "| MARTIAN_SIZE:",
+      MARTIAN_SIZE
     );
   }
 
   resizeCanvas();
-  window.__resizeGameCanvas = resizeCanvas;
+  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("orientationchange", () => {
+    setTimeout(resizeCanvas, 100);
+  });
+
+  // 🔥 INITIALISER martianY APRÈS LE PREMIER RESIZE
+  martianY = GROUND_Y;
+
+  drawGame();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -1830,7 +1815,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 5 MZ (500 FCFA) | Balance: ${balance.toFixed(
+          <small>💡 Minimum: 10 MZ (1000 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -1905,8 +1890,8 @@ async function submitWithdraw() {
 
   const fcfa = amount * 100;
 
-  if (!amount || fcfa < 500) {
-    showNotification("Retrait minimum: 500 FCFA (5 MZ)", "error");
+  if (!amount || fcfa < 100) {
+    showNotification("Retrait minimum: 1000 FCFA (5 MZ)", "error");
     return;
   }
 
