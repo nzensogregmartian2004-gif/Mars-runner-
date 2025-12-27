@@ -50,7 +50,7 @@ const isMobile =
 // 🔥 CORRECTION : Déclarer myReferralCode AVANT updateUserInfo
 let myReferralCode = "";
 let newPlayerBonus = 5;
-let sponsorBonus = 1;
+let sponsorBonus = 2;
 let isNewPlayerBonusLocked = false;
 let affiliatedUsers = [];
 
@@ -59,8 +59,8 @@ const GRAVITY = isMobile ? 0.42 : 0.5;
 const JUMP_FORCE = isMobile ? -12.5 : -11;
 
 // CALIBRATION GAMING (utilise isMobile)
-const BASE_SPEED = isMobile ? 3.8 : 4.2;
-const SPEED_INCREMENT = isMobile ? 0.0012 : 0.0015;
+const BASE_SPEED = isMobile ? 3.9 : 4.2;
+const SPEED_INCREMENT = isMobile ? 0.0013 : 0.0015;
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
 let backgroundObjects = [];
@@ -69,9 +69,9 @@ const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
 // ESPACEMENT DYNAMIQUE (utilise isMobile)
-const MIN_GAP = isMobile ? 280 : 250;
-const MAX_GAP = isMobile ? 550 : 500;
-const GAP_COEFFICIENT = isMobile ? 12 : 14;
+const MIN_GAP = isMobile ? 265 : 250;
+const MAX_GAP = isMobile ? 515 : 500;
+const GAP_COEFFICIENT = isMobile ? 13 : 14;
 const frameInterval = 1000 / 60;
 
 // FLUCTUATION VITESSE
@@ -118,6 +118,9 @@ function initAudio() {
 // ========================================
 // setupCanvas()
 // ========================================
+// ========================================
+// setupCanvas() - VERSION OPTIMISÉE PORTRAIT
+// ========================================
 function setupCanvas() {
   canvas = document.getElementById("gameCanvas");
   if (!canvas) {
@@ -136,19 +139,26 @@ function setupCanvas() {
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // Détection portrait mobile pour appliquer dézoom
+    // 🔥 MODE PORTRAIT MOBILE (Image 2 - Style optimal)
     if (isMobile && !isLandscape) {
-      displayScale = PORTRAIT_SCALE;
+      displayScale = 1.0; // ✅ Pas de dézoom en portrait
+
+      // 🔥 HAUTEUR OPTIMALE : 80% de l'écran (comme Image 2)
       canvas.width = Math.min(windowWidth * 0.96, 450);
-      canvas.height = Math.min(windowHeight * 0.6, 700);
-      martianX = canvas.width * 0.2;
-      cameraOffsetX = canvas.width * 0.12;
+      canvas.height = Math.min(windowHeight * 0.8, 850); // ✅ Augmenté de 60% → 80%
+
+      martianX = canvas.width * 0.25; // Position horizontale du martien
+      cameraOffsetX = 0; // Pas de décalage caméra en portrait
+
+      // MODE PAYSAGE MOBILE
     } else if (isMobile && isLandscape) {
       displayScale = 1.0;
       canvas.width = Math.min(windowWidth * 0.95, 900);
       canvas.height = Math.min(windowHeight * 0.65, 350);
       martianX = 120;
       cameraOffsetX = 0;
+
+      // MODE DESKTOP
     } else {
       displayScale = 1.0;
       canvas.width = 900;
@@ -157,9 +167,9 @@ function setupCanvas() {
       cameraOffsetX = 0;
     }
 
-    // GROUND_Y et MARTIAN_SIZE tiennent compte de displayScale
-    GROUND_Y = canvas.height - Math.floor(80 * displayScale);
-    MARTIAN_SIZE = Math.max(35, Math.floor((canvas.width / 18) * displayScale));
+    // 🔥 CALCUL GROUND_Y ET MARTIAN_SIZE
+    GROUND_Y = canvas.height - Math.floor(100 * displayScale); // ✅ Plus d'espace en bas
+    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale)); // ✅ Taille ajustée
 
     // Réinitialisation d'état visible après rotation/resize
     obstacles = [];
@@ -183,14 +193,16 @@ function setupCanvas() {
       "| cameraOffsetX:",
       cameraOffsetX,
       "| displayScale:",
-      displayScale
+      displayScale,
+      "| GROUND_Y:",
+      GROUND_Y
     );
   }
 
-  // appel initial pour dimensionner le canvas
+  // Appel initial pour dimensionner le canvas
   resizeCanvas();
 
-  // assurer que resizeCanvas est accessible depuis l'extérieur si besoin
+  // Assurer que resizeCanvas est accessible depuis l'extérieur
   window.__resizeGameCanvas = resizeCanvas;
 }
 
