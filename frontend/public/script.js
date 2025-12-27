@@ -69,8 +69,8 @@ const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
 // ESPACEMENT DYNAMIQUE (utilise isMobile)
-const MIN_GAP = isMobile ? 265 : 250;
-const MAX_GAP = isMobile ? 515 : 500;
+const MIN_GAP = isMobile ? 250 : 230;
+const MAX_GAP = isMobile ? 500 : 480;
 const GAP_COEFFICIENT = isMobile ? 13 : 14;
 const frameInterval = 1000 / 60;
 
@@ -838,10 +838,10 @@ function handleObstacleGeneration(deltaTime, currentTime) {
         robot: 55, // +17%
         flyingAlien: 45, // -10%
         highDrone: 25, // -33%
-        proximityMine: 25, // -17%
-        fastMeteor: 25, // -33%
-        doubleDanger: 15, // -50%
-        rollingBall: 15, // -50%
+        proximityMine: 35, // -17%
+        fastMeteor: 35, // -33%
+        doubleDanger: 25, // -50%
+        rollingBall: 25, // -50%
       }
     : {
         // Desktop : équilibré

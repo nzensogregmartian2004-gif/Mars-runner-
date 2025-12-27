@@ -130,10 +130,10 @@ class PaymentController {
       console.log("📤 Données reçues pour retrait:", req.body);
 
       // Validation
-      if (!amountMz || amountMz < 5) {
+      if (!amountMz || amountMz < 10) {
         return errorResponse(
           res,
-          "Montant minimum pour un retrait: 5 MZ.",
+          "Montant minimum pour un retrait: 10 MZ.",
           "VALIDATION_ERROR",
           400
         );
