@@ -1184,6 +1184,109 @@ function jump() {
   }
 }
 
+function cashOut() {
+  // Vérifier si on est bien en train de jouer
+  if (gameState !== "playing") {
+    console.warn("⚠️ Impossible de retirer : partie non active");
+    showNotification("Aucune partie en cours", "warning");
+    return;
+  }
+
+  // Vérifier si le retrait est autorisé
+  if (!canWithdraw) {
+    console.warn("⚠️ Retrait non autorisé : multiplicateur trop bas");
+    showNotification(
+      `Multiplicateur minimum requis : x${MIN_CASHOUT_MULTIPLIER}`,
+      "warning"
+    );
+    return;
+  }
+
+  // Vérifier si le multiplicateur est suffisant
+  if (multiplier < MIN_CASHOUT_MULTIPLIER) {
+    console.warn(`⚠️ Multiplicateur insuffisant : x${multiplier.toFixed(2)}`);
+    showNotification(
+      `Attendez x${MIN_CASHOUT_MULTIPLIER} minimum pour retirer`,
+      "warning"
+    );
+    return;
+  }
+
+  // Vérifier la connexion socket
+  if (!socket || !isConnectedToSocket) {
+    console.error("❌ Socket non connecté");
+    showNotification("Connexion au serveur perdue", "error");
+    return;
+  }
+
+  // Vérifier qu'on a un ID de partie
+  if (!currentGameId) {
+    console.error("❌ Aucun ID de partie");
+    showNotification("Erreur : partie invalide", "error");
+    return;
+  }
+
+  // Empêcher les doubles retraits
+  if (isGameEnding) {
+    console.warn("⚠️ Retrait déjà en cours");
+    return;
+  }
+
+  // Bloquer la collision pendant le cashout
+  isGameEnding = true;
+  collisionDetected = true;
+
+  console.log("💰 Demande de cashout:", {
+    gameId: currentGameId,
+    multiplier: multiplier.toFixed(2),
+    betAmount: betAmount,
+    potentialWin: potentialWin.toFixed(2),
+  });
+
+  // Désactiver immédiatement le bouton pour éviter les doubles clics
+  const cashoutBtn = document.getElementById("btnCashout");
+  if (cashoutBtn) {
+    cashoutBtn.disabled = true;
+    cashoutBtn.textContent = "⏳ Retrait...";
+    cashoutBtn.style.opacity = "0.5";
+  }
+
+  // Envoyer la demande au serveur
+  try {
+    socket.emit("game:cashout", {
+      gameId: currentGameId,
+      multiplier: multiplier.toFixed(2),
+    });
+
+    // Notification de confirmation
+    showNotification(
+      `🎯 Retrait en cours... x${multiplier.toFixed(2)}`,
+      "info"
+    );
+
+    // Timeout de sécurité : si pas de réponse en 5 secondes
+    setTimeout(() => {
+      if (gameState === "playing" || isGameEnding) {
+        console.warn("⏰ Timeout cashout - pas de réponse serveur");
+        showNotification("Le serveur met du temps à répondre...", "warning");
+      }
+    }, 5000);
+  } catch (error) {
+    console.error("❌ Erreur lors du cashout:", error);
+    showNotification("Erreur lors du retrait", "error");
+
+    // Réinitialiser en cas d'erreur
+    isGameEnding = false;
+    collisionDetected = false;
+
+    if (cashoutBtn) {
+      cashoutBtn.disabled = !canWithdraw;
+      cashoutBtn.textContent = "💰 Retirer";
+      cashoutBtn.style.opacity = canWithdraw ? "1" : "0.5";
+    }
+  }
+}
+
 // Gestion du touch global améliorée
 function globalTouchHandler(e) {
   if (gameState !== "playing") {
