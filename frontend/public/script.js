@@ -843,19 +843,19 @@ function handleObstacleGeneration(deltaTime, currentTime) {
         highDrone: 25, // -33%
         proximityMine: 25, // -17%
         fastMeteor: 25, // -33%
-        doubleDanger: 5, // -50%
-        rollingBall: 5, // -50%
+        doubleDanger: 10, // -50%
+        rollingBall: 10, // -50%
       }
     : {
         // Desktop : équilibré
-        rock: 35,
-        robot: 35,
+        rock: 45,
+        robot: 45,
         flyingAlien: 50,
         highDrone: 35,
         proximityMine: 35,
         fastMeteor: 35,
-        doubleDanger: 15,
-        rollingBall: 15,
+        doubleDanger: 25,
+        rollingBall: 25,
       };
 
   const totalWeight = Object.values(obstacleWeights).reduce((a, b) => a + b, 0);
