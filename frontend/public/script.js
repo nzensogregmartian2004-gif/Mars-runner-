@@ -56,10 +56,10 @@ let affiliatedUsers = [];
 
 // ✅ MAINTENANT on peut utiliser isMobile dans les constantes
 const GRAVITY = isMobile ? 0.48 : 0.5;
-const JUMP_FORCE = isMobile ? -11.5 : -11;
+const JUMP_FORCE = isMobile ? -11.9 : -11;
 
 // CALIBRATION GAMING (utilise isMobile)
-const BASE_SPEED = isMobile ? 4.1 : 4.2;
+const BASE_SPEED = isMobile ? 4 : 4.2;
 const SPEED_INCREMENT = isMobile ? 0.0014 : 0.0015;
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
@@ -69,8 +69,8 @@ const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
 // ESPACEMENT DYNAMIQUE (utilise isMobile)
-const MIN_GAP = isMobile ? 230 : 230;
-const MAX_GAP = isMobile ? 480 : 480;
+const MIN_GAP = isMobile ? 250 : 230;
+const MAX_GAP = isMobile ? 500 : 480;
 const GAP_COEFFICIENT = isMobile ? 13 : 14;
 const frameInterval = 1000 / 60;
 
@@ -466,15 +466,28 @@ function connectSocket() {
     }
   });
 
+  // À ajouter dans socket.on("wallet:balance")
   socket.on("wallet:balance", (data) => {
     if (!data) return;
 
     const newBalance = parseFloat(
       data.balance || data.balance_mz || balance || 0
     );
-    if (newBalance >= 0) {
-      balance = newBalance;
+
+    // 🔥 CORRECTION : Arrondir avant de comparer
+    const roundedNewBalance = Math.round(newBalance * 100) / 100;
+
+    if (roundedNewBalance >= 0) {
+      balance = roundedNewBalance;
       updateBalance();
+
+      // Afficher notification si balance = 0
+      if (balance === 0) {
+        showNotification(
+          "⚠️ Votre balance est à 0. Effectuez un dépôt pour continuer.",
+          "warning"
+        );
+      }
     }
   });
 
@@ -609,8 +622,31 @@ function startGame() {
   const betInputElement = document.getElementById("betInput");
   betAmount = Math.max(1, parseFloat(betInputElement?.value || 1));
 
-  if (betAmount > balance) {
-    showNotification("Solde insuffisant!", "error");
+  // 🔥 CORRECTION : Vérification stricte du solde avec arrondi
+  const roundedBalance = Math.floor(balance * 100) / 100; // Arrondir à 2 décimales
+  const roundedBet = Math.floor(betAmount * 100) / 100;
+
+  console.log("💰 Vérification balance:", {
+    balance: balance,
+    roundedBalance: roundedBalance,
+    betAmount: betAmount,
+    roundedBet: roundedBet,
+  });
+
+  if (roundedBet > roundedBalance) {
+    showNotification(
+      `Solde insuffisant! Balance: ${roundedBalance.toFixed(2)} MZ`,
+      "error"
+    );
+    return;
+  }
+
+  // 🔥 CORRECTION : Empêcher mise si balance = 0
+  if (roundedBalance <= 0) {
+    showNotification(
+      "Balance insuffisante. Veuillez effectuer un dépôt.",
+      "error"
+    );
     return;
   }
 
@@ -624,16 +660,20 @@ function startGame() {
   startGameCooldown = true;
   lastStartGameAttempt = now;
 
-  console.log("🎮 Lancement de la partie - Mise:", betAmount, "MZ");
+  console.log(
+    "🎮 Lancement de la partie - Mise:",
+    betAmount,
+    "MZ | Balance:",
+    balance,
+    "MZ"
+  );
 
   disablePlayButton();
-  // 🔥 ENVOYER la plateforme au backend
   socket.emit("game:start", {
-    betAmount,
-    platform: isMobile ? "mobile" : "desktop", // ✅ AJOUT
+    betAmount: roundedBet, // Envoyer montant arrondi
+    platform: isMobile ? "mobile" : "desktop",
   });
 
-  // TIMEOUT DE SÉCURITÉ : 8 secondes
   if (gameEndTimeout) {
     clearTimeout(gameEndTimeout);
     gameEndTimeout = null;
@@ -840,8 +880,8 @@ function handleObstacleGeneration(deltaTime, currentTime) {
         highDrone: 25, // -33%
         proximityMine: 35, // -17%
         fastMeteor: 35, // -33%
-        doubleDanger: 25, // -50%
-        rollingBall: 25, // -50%
+        doubleDanger: 5, // -50%
+        rollingBall: 10, // -50%
       }
     : {
         // Desktop : équilibré
@@ -1300,35 +1340,43 @@ function updateBalance(data = null) {
 // updateUserInfo()
 // ============================================
 
-function updateUserInfo(user) {
-  console.log("👤 Mise à jour infos utilisateur:", user);
-  if (!user) return;
-
-  const userNameElement = document.getElementById("userName");
-  if (userNameElement) {
-    userNameElement.textContent =
-      `${user.prenom || ""} ${user.nom || ""}`.trim() || user.email || "Joueur";
+function updateBalance(data = null) {
+  if (data) {
+    if (typeof data === "number") {
+      balance = parseFloat(data);
+    } else if (data.balance !== undefined && data.balance !== null) {
+      balance = parseFloat(data.balance);
+    } else if (data.balance_mz !== undefined && data.balance_mz !== null) {
+      balance = parseFloat(data.balance_mz);
+    } else if (data.newBalance !== undefined && data.newBalance !== null) {
+      balance = parseFloat(data.newBalance);
+    }
   }
 
-  if (user.referral_code || user.referralCode) {
-    myReferralCode = user.referral_code || user.referralCode;
-    console.log("🎯 Code de parrainage récupéré:", myReferralCode);
+  // 🔥 CORRECTION : Gérer les valeurs invalides
+  if (balance === undefined || balance === null || isNaN(balance)) {
+    balance = 0;
   }
 
-  if (user.affiliated_users || user.affiliatedUsers) {
-    affiliatedUsers = user.affiliated_users || user.affiliatedUsers;
-    console.log("👥 Affiliés récupérés:", affiliatedUsers);
+  // 🔥 CORRECTION : Arrondir à 2 décimales pour éviter les erreurs de virgule flottante
+  balance = Math.round(parseFloat(balance) * 100) / 100;
+
+  // 🔥 CORRECTION : Forcer à 0 si négatif (sécurité)
+  if (balance < 0) {
+    console.warn("⚠️ Balance négative détectée, correction à 0");
+    balance = 0;
   }
 
-  if (user.balance_mz !== undefined) {
-    balance = parseFloat(user.balance_mz);
-    updateBalance();
-  } else if (user.balance !== undefined) {
-    balance = parseFloat(user.balance);
-    updateBalance();
+  // Mettre à jour l'affichage
+  const balanceElement = document.getElementById("balance");
+  if (balanceElement) {
+    balanceElement.textContent = balance.toFixed(2);
   }
 
   console.log("💰 Balance mise à jour:", balance);
+
+  // 🔥 CORRECTION : Désactiver le bouton Jouer si balance insuffisante
+  updatePlayButtonState();
 }
 
 function showGameInterface() {
