@@ -396,13 +396,18 @@ function connectSocket() {
   // game:progress
 
   socket.on("game:progress", (data) => {
+    // 🔥 CORRECTION : Ignorer les updates si on est en train de cash out
+    if (isGameEnding) {
+      return;
+    }
+
     if (gameState !== "playing" && gameState !== "waiting") return;
     if (!data) return;
 
     multiplier = parseFloat(data.multiplier || 1.0);
     potentialWin = parseFloat(betAmount * multiplier);
 
-    // 🔥 CORRECTION : Activer le bouton cashout au bon moment
+    // Activer le bouton cashout au bon moment
     if (multiplier >= MIN_CASHOUT_MULTIPLIER && !canWithdraw) {
       canWithdraw = true;
 
@@ -424,8 +429,8 @@ function connectSocket() {
       );
     }
 
-    // 🔥 CORRECTION : Mettre à jour le texte du bouton en temps réel
-    if (canWithdraw && gameState === "playing") {
+    // Mettre à jour le texte du bouton en temps réel
+    if (canWithdraw && gameState === "playing" && !isGameEnding) {
       const cashoutBtn = document.getElementById("btnCashout");
       if (cashoutBtn && !cashoutBtn.disabled) {
         cashoutBtn.textContent = `💰 Retirer x${multiplier.toFixed(
@@ -440,21 +445,34 @@ function connectSocket() {
   // 🔥 REMPLACER le socket.on("game:cashedOut") existant (ligne ~445) par :
 
   socket.on("game:cashedOut", (data) => {
-    console.log("💰 Cash Out réussi:", data);
+    console.log("💰 Cash Out réussi - Données serveur:", data);
+
     if (!data) {
       console.error("❌ Données cashout manquantes");
       return;
     }
 
-    if (isGameEnding) {
-      console.warn("⚠️ Cash out déjà en cours de traitement");
+    // 🔥 CORRECTION : Accepter l'événement même si isGameEnding = true
+    // Car c'est la réponse attendue du serveur
+    if (gameState === "gameover" || gameState === "menu") {
+      console.warn("⚠️ Cash out reçu mais jeu déjà terminé - ignoré");
       return;
     }
-    isGameEnding = true;
+
+    console.log("✅ Traitement du cashout serveur");
+
+    // Arrêter la game loop si elle tourne encore
+    if (gameLoop) {
+      cancelAnimationFrame(gameLoop);
+      gameLoop = null;
+    }
 
     const winAmount = parseFloat(data.winAmount || 0);
     const finalMultiplier = parseFloat(data.multiplier || multiplier);
-    balance = parseFloat(data.balance || balance || 0);
+    const newBalance = parseFloat(data.balance || balance || 0);
+
+    // Mettre à jour la balance
+    balance = newBalance;
     isNewPlayerBonusLocked = false;
 
     // Débloquer le bonus nouveau joueur après première mise
@@ -465,22 +483,19 @@ function connectSocket() {
 
     updateBalance();
 
-    // Arrêter la boucle de jeu
-    if (gameLoop) {
-      cancelAnimationFrame(gameLoop);
-      gameLoop = null;
-    }
-
-    console.log("🎉 Gains:", {
+    console.log("🎉 Gains finaux:", {
       multiplier: finalMultiplier.toFixed(2),
       winAmount: winAmount.toFixed(2),
-      newBalance: balance.toFixed(2),
+      newBalance: newBalance.toFixed(2),
     });
 
-    setTimeout(() => {
-      showGameOverScreen(true, winAmount, null, finalMultiplier);
-      isGameEnding = false;
-    }, 300);
+    // 🔥 CORRECTION : Afficher immédiatement l'écran de victoire
+    // Sans délai supplémentaire
+    showGameOverScreen(true, winAmount, null, finalMultiplier);
+
+    // Réinitialiser les flags
+    isGameEnding = false;
+    gameState = "gameover";
   });
 
   socket.on("game:over", (data) => {
@@ -748,6 +763,7 @@ function startLocalGameLoop() {
     "| MARTIAN_SIZE:",
     MARTIAN_SIZE
   );
+
   martianY = GROUND_Y;
   velocity = 0;
   obstacles = [];
@@ -763,10 +779,18 @@ function startLocalGameLoop() {
   let lastTime = Date.now();
 
   const gameLoopFunction = () => {
-    if (gameState !== "playing" && gameState !== "waiting") {
+    // 🔥 CORRECTION : Vérifier isGameEnding aussi
+    if (gameState !== "playing" || isGameEnding) {
       if (gameLoop) {
         cancelAnimationFrame(gameLoop);
         gameLoop = null;
+        console.log(
+          "🛑 Game loop arrêtée (état:",
+          gameState,
+          "| ending:",
+          isGameEnding,
+          ")"
+        );
       }
       return;
     }
@@ -777,7 +801,8 @@ function startLocalGameLoop() {
 
     updateGameLogic(deltaTime, currentTime);
 
-    if (checkCollision()) {
+    // Vérifier collision uniquement si pas en cours de cashout
+    if (checkCollision() && !isGameEnding) {
       if (!collisionDetected) {
         collisionDetected = true;
 
@@ -798,7 +823,7 @@ function startLocalGameLoop() {
       return;
     }
 
-    if (gameState === "playing" && !collisionDetected) {
+    if (gameState === "playing" && !collisionDetected && !isGameEnding) {
       score++;
       const scoreDisplay = document.getElementById("scoreDisplay");
       if (scoreDisplay) scoreDisplay.textContent = score;
@@ -1309,22 +1334,40 @@ function cashOut() {
     return;
   }
 
-  // Bloquer la collision pendant le cashout
+  // 🔥 CORRECTION CRITIQUE : Arrêter IMMÉDIATEMENT le jeu
+  console.log("💰 CASHOUT INITIÉ - Arrêt du jeu");
+
+  // Bloquer toutes les interactions
   isGameEnding = true;
   collisionDetected = true;
+  canWithdraw = false;
+
+  // 🔥 Changer l'état AVANT d'envoyer au serveur
+  gameState = "waiting"; // Bloque la game loop
+
+  // Arrêter la boucle de jeu IMMÉDIATEMENT
+  if (gameLoop) {
+    cancelAnimationFrame(gameLoop);
+    gameLoop = null;
+    console.log("✅ Game loop arrêtée");
+  }
+
+  // Sauvegarder le multiplicateur actuel
+  const currentMultiplier = multiplier;
+  const currentPotentialWin = potentialWin;
 
   console.log("💰 Demande de cashout:", {
     gameId: currentGameId,
-    multiplier: multiplier.toFixed(2),
+    multiplier: currentMultiplier.toFixed(2),
     betAmount: betAmount,
-    potentialWin: potentialWin.toFixed(2),
+    potentialWin: currentPotentialWin.toFixed(2),
   });
 
   // Désactiver immédiatement le bouton pour éviter les doubles clics
   const cashoutBtn = document.getElementById("btnCashout");
   if (cashoutBtn) {
     cashoutBtn.disabled = true;
-    cashoutBtn.textContent = "⏳ Retrait...";
+    cashoutBtn.textContent = "⏳ Retrait en cours...";
     cashoutBtn.style.opacity = "0.5";
   }
 
@@ -1332,22 +1375,32 @@ function cashOut() {
   try {
     socket.emit("game:cashout", {
       gameId: currentGameId,
-      multiplier: multiplier.toFixed(2),
+      multiplier: currentMultiplier.toFixed(2),
     });
 
     // Notification de confirmation
     showNotification(
-      `🎯 Retrait en cours... x${multiplier.toFixed(2)}`,
+      `🎯 Retrait en cours... x${currentMultiplier.toFixed(2)}`,
       "info"
     );
 
-    // Timeout de sécurité : si pas de réponse en 5 secondes
+    // 🔥 CORRECTION : Timeout réduit et mieux géré
     setTimeout(() => {
-      if (gameState === "playing" || isGameEnding) {
-        console.warn("⏰ Timeout cashout - pas de réponse serveur");
-        showNotification("Le serveur met du temps à répondre...", "warning");
+      // Si après 8 secondes on n'a pas de réponse ET qu'on est toujours en attente
+      if (gameState === "waiting" && isGameEnding) {
+        console.warn("⏰ Timeout cashout - forcer l'affichage game over");
+
+        // Forcer l'affichage de l'écran de fin avec les données locales
+        const estimatedWin = currentPotentialWin;
+        balance = Math.round((balance + estimatedWin - betAmount) * 100) / 100;
+
+        updateBalance();
+        showGameOverScreen(true, estimatedWin, null, currentMultiplier);
+
+        isGameEnding = false;
+        gameState = "gameover";
       }
-    }, 5000);
+    }, 8000);
   } catch (error) {
     console.error("❌ Erreur lors du cashout:", error);
     showNotification("Erreur lors du retrait", "error");
@@ -1355,11 +1408,17 @@ function cashOut() {
     // Réinitialiser en cas d'erreur
     isGameEnding = false;
     collisionDetected = false;
+    gameState = "playing";
 
     if (cashoutBtn) {
-      cashoutBtn.disabled = !canWithdraw;
+      cashoutBtn.disabled = false;
       cashoutBtn.textContent = "💰 Retirer";
-      cashoutBtn.style.opacity = canWithdraw ? "1" : "0.5";
+      cashoutBtn.style.opacity = "1";
+    }
+
+    // Redémarrer la game loop si nécessaire
+    if (!gameLoop && gameState === "playing") {
+      startLocalGameLoop();
     }
   }
 }
@@ -1487,6 +1546,32 @@ function updateBalance(data = null) {
   // Mettre à jour l'état du bouton
   if (typeof updatePlayButtonState === "function") {
     updatePlayButtonState();
+  }
+}
+
+function updatePlayButtonState() {
+  const btnPlay = document.getElementById("btnPlay");
+  const betInputElement = document.getElementById("betInput");
+
+  if (!btnPlay) return;
+
+  const currentBet = Math.max(1, parseFloat(betInputElement?.value || 1));
+  const roundedBalance = Math.round(balance * 100) / 100;
+
+  if (roundedBalance < currentBet || roundedBalance <= 0) {
+    btnPlay.disabled = true;
+    btnPlay.style.opacity = "0.5";
+    btnPlay.style.cursor = "not-allowed";
+    btnPlay.textContent = "💰 Solde insuffisant";
+  } else if (gameState !== "menu" && gameState !== "gameover") {
+    btnPlay.disabled = true;
+    btnPlay.style.opacity = "0.5";
+    btnPlay.style.cursor = "not-allowed";
+  } else {
+    btnPlay.disabled = false;
+    btnPlay.style.opacity = "1";
+    btnPlay.style.cursor = "pointer";
+    btnPlay.textContent = `🚀 Jouer (${currentBet} MZ)`;
   }
 }
 
