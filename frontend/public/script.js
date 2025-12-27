@@ -55,12 +55,12 @@ let isNewPlayerBonusLocked = false;
 let affiliatedUsers = [];
 
 // ✅ MAINTENANT on peut utiliser isMobile dans les constantes
-const GRAVITY = isMobile ? 0.45 : 0.5;
-const JUMP_FORCE = isMobile ? -12 : -11;
+const GRAVITY = isMobile ? 0.48 : 0.5;
+const JUMP_FORCE = isMobile ? -11.5 : -11;
 
 // CALIBRATION GAMING (utilise isMobile)
-const BASE_SPEED = isMobile ? 4 : 4.2;
-const SPEED_INCREMENT = isMobile ? 0.0013 : 0.0015;
+const BASE_SPEED = isMobile ? 4.1 : 4.2;
+const SPEED_INCREMENT = isMobile ? 0.0014 : 0.0015;
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
 let backgroundObjects = [];
@@ -69,14 +69,14 @@ const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
 // ESPACEMENT DYNAMIQUE (utilise isMobile)
-const MIN_GAP = isMobile ? 250 : 230;
-const MAX_GAP = isMobile ? 500 : 480;
+const MIN_GAP = isMobile ? 230 : 230;
+const MAX_GAP = isMobile ? 480 : 480;
 const GAP_COEFFICIENT = isMobile ? 13 : 14;
 const frameInterval = 1000 / 60;
 
 // FLUCTUATION VITESSE
-const MAX_SPEED_FACTOR = 1.8;
-const MIN_SPEED_FACTOR = 0.6;
+const MAX_SPEED_FACTOR = 1.9;
+const MIN_SPEED_FACTOR = 0.5;
 const FLUCTUATION_DURATION = 100;
 let speedFluctuationTimer = 0;
 let targetGameSpeed = BASE_SPEED;
@@ -1820,7 +1820,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 5 MZ (500 FCFA) | Balance: ${balance.toFixed(
+          <small>💡 Minimum: 10 MZ (1000 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -1895,8 +1895,8 @@ async function submitWithdraw() {
 
   const fcfa = amount * 100;
 
-  if (!amount || fcfa < 500) {
-    showNotification("Retrait minimum: 500 FCFA (5 MZ)", "error");
+  if (!amount || fcfa < 1000) {
+    showNotification("Retrait minimum: 1000 FCFA (10 MZ)", "error");
     return;
   }
 
