@@ -55,12 +55,12 @@ let isNewPlayerBonusLocked = false;
 let affiliatedUsers = [];
 
 // ✅ MAINTENANT on peut utiliser isMobile dans les constantes
-const GRAVITY = isMobile ? 0.48 : 0.5;
-const JUMP_FORCE = isMobile ? -11.9 : -11;
+const GRAVITY = isMobile ? 0.42 : 0.5;
+const JUMP_FORCE = isMobile ? -12.5 : -11;
 
 // CALIBRATION GAMING (utilise isMobile)
-const BASE_SPEED = isMobile ? 4 : 4.2;
-const SPEED_INCREMENT = isMobile ? 0.0014 : 0.0015;
+const BASE_SPEED = isMobile ? 3.9 : 4.2;
+const SPEED_INCREMENT = isMobile ? 0.0013 : 0.0015;
 let gameSpeed = BASE_SPEED;
 let obstacles = [];
 let backgroundObjects = [];
@@ -69,14 +69,14 @@ const MIN_CASHOUT_MULTIPLIER = 1.5;
 let lastObstacleTime = 0;
 
 // ESPACEMENT DYNAMIQUE (utilise isMobile)
-const MIN_GAP = isMobile ? 250 : 230;
-const MAX_GAP = isMobile ? 500 : 480;
+const MIN_GAP = isMobile ? 265 : 250;
+const MAX_GAP = isMobile ? 515 : 500;
 const GAP_COEFFICIENT = isMobile ? 13 : 14;
 const frameInterval = 1000 / 60;
 
 // FLUCTUATION VITESSE
-const MAX_SPEED_FACTOR = 1.9;
-const MIN_SPEED_FACTOR = 0.9;
+const MAX_SPEED_FACTOR = 1.8;
+const MIN_SPEED_FACTOR = 0.6;
 const FLUCTUATION_DURATION = 100;
 let speedFluctuationTimer = 0;
 let targetGameSpeed = BASE_SPEED;
@@ -116,6 +116,9 @@ function initAudio() {
 }
 
 // ========================================
+// setupCanvas()
+// ========================================
+// ========================================
 // setupCanvas() - VERSION OPTIMISÉE PORTRAIT
 // ========================================
 function setupCanvas() {
@@ -131,26 +134,32 @@ function setupCanvas() {
     return;
   }
 
-  // --- REMPLACER la fonction resizeCanvas() DANS setupCanvas() PAR CETTE VERSION ---
   function resizeCanvas() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // Détection portrait mobile pour appliquer dézoom
+    // 🔥 MODE PORTRAIT MOBILE - OPTIMISÉ
     if (isMobile && !isLandscape) {
-      displayScale = PORTRAIT_SCALE;
-      // canvas plus large en portrait mais reste adapté
+      displayScale = 1.0; // Pas de dézoom
+
+      // Canvas prend 70% de la hauteur disponible
+      const availableHeight = windowHeight * 0.7;
       canvas.width = Math.min(windowWidth * 0.96, 450);
-      canvas.height = Math.min(windowHeight * 0.6, 700);
+      canvas.height = Math.min(availableHeight, 700);
+
       martianX = canvas.width * 0.2;
-      cameraOffsetX = canvas.width * 0.12;
+      cameraOffsetX = 0;
+
+      // MODE PAYSAGE MOBILE
     } else if (isMobile && isLandscape) {
-      displayScale = 1.0; // on annule le dézoom en paysage
+      displayScale = 1.0;
       canvas.width = Math.min(windowWidth * 0.95, 900);
       canvas.height = Math.min(windowHeight * 0.65, 350);
       martianX = 120;
       cameraOffsetX = 0;
+
+      // MODE DESKTOP
     } else {
       displayScale = 1.0;
       canvas.width = 900;
@@ -159,11 +168,11 @@ function setupCanvas() {
       cameraOffsetX = 0;
     }
 
-    // GROUND_Y et MARTIAN_SIZE tiennent compte de displayScale
-    GROUND_Y = canvas.height - Math.floor(80 * displayScale);
-    MARTIAN_SIZE = Math.max(35, Math.floor((canvas.width / 18) * displayScale));
+    // Calcul GROUND_Y adapté
+    GROUND_Y = canvas.height - Math.floor(100 * displayScale);
+    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale));
 
-    // Pour éviter incohérences après rotation/resize, on réinitialise obstacles visibles
+    // Réinitialisation
     obstacles = [];
     backgroundObjects = [];
     lastObstacleTime = Date.now();
@@ -182,12 +191,13 @@ function setupCanvas() {
       martianX,
       "| martianSize:",
       MARTIAN_SIZE,
-      "| cameraOffsetX:",
-      cameraOffsetX,
-      "| displayScale:",
-      displayScale
+      "| GROUND_Y:",
+      GROUND_Y
     );
   }
+
+  resizeCanvas();
+  window.__resizeGameCanvas = resizeCanvas;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -466,7 +476,6 @@ function connectSocket() {
     }
   });
 
-  // À ajouter dans socket.on("wallet:balance")
   socket.on("wallet:balance", (data) => {
     if (!data) return;
 
@@ -835,25 +844,25 @@ function handleObstacleGeneration(deltaTime, currentTime) {
   const obstacleWeights = isMobile
     ? {
         // 🔥 Mobile : moins d'obstacles difficiles
-        rock: 55, // +33%
-        robot: 55, // +17%
+        rock: 45, // +33%
+        robot: 35, // +17%
         flyingAlien: 45, // -10%
         highDrone: 25, // -33%
-        proximityMine: 35, // -17%
-        fastMeteor: 35, // -33%
+        proximityMine: 25, // -17%
+        fastMeteor: 25, // -33%
         doubleDanger: 5, // -50%
-        rollingBall: 10, // -50%
+        rollingBall: 5, // -50%
       }
     : {
         // Desktop : équilibré
-        rock: 45,
-        robot: 45,
+        rock: 35,
+        robot: 35,
         flyingAlien: 50,
         highDrone: 35,
         proximityMine: 35,
         fastMeteor: 35,
-        doubleDanger: 25,
-        rollingBall: 25,
+        doubleDanger: 15,
+        rollingBall: 15,
       };
 
   const totalWeight = Object.values(obstacleWeights).reduce((a, b) => a + b, 0);
@@ -1301,43 +1310,35 @@ function updateBalance(data = null) {
 // updateUserInfo()
 // ============================================
 
-function updateBalance(data = null) {
-  if (data) {
-    if (typeof data === "number") {
-      balance = parseFloat(data);
-    } else if (data.balance !== undefined && data.balance !== null) {
-      balance = parseFloat(data.balance);
-    } else if (data.balance_mz !== undefined && data.balance_mz !== null) {
-      balance = parseFloat(data.balance_mz);
-    } else if (data.newBalance !== undefined && data.newBalance !== null) {
-      balance = parseFloat(data.newBalance);
-    }
+function updateUserInfo(user) {
+  console.log("👤 Mise à jour infos utilisateur:", user);
+  if (!user) return;
+
+  const userNameElement = document.getElementById("userName");
+  if (userNameElement) {
+    userNameElement.textContent =
+      `${user.prenom || ""} ${user.nom || ""}`.trim() || user.email || "Joueur";
   }
 
-  // 🔥 CORRECTION : Gérer les valeurs invalides
-  if (balance === undefined || balance === null || isNaN(balance)) {
-    balance = 0;
+  if (user.referral_code || user.referralCode) {
+    myReferralCode = user.referral_code || user.referralCode;
+    console.log("🎯 Code de parrainage récupéré:", myReferralCode);
   }
 
-  // 🔥 CORRECTION : Arrondir à 2 décimales pour éviter les erreurs de virgule flottante
-  balance = Math.round(parseFloat(balance) * 100) / 100;
-
-  // 🔥 CORRECTION : Forcer à 0 si négatif (sécurité)
-  if (balance < 0) {
-    console.warn("⚠️ Balance négative détectée, correction à 0");
-    balance = 0;
+  if (user.affiliated_users || user.affiliatedUsers) {
+    affiliatedUsers = user.affiliated_users || user.affiliatedUsers;
+    console.log("👥 Affiliés récupérés:", affiliatedUsers);
   }
 
-  // Mettre à jour l'affichage
-  const balanceElement = document.getElementById("balance");
-  if (balanceElement) {
-    balanceElement.textContent = balance.toFixed(2);
+  if (user.balance_mz !== undefined) {
+    balance = parseFloat(user.balance_mz);
+    updateBalance();
+  } else if (user.balance !== undefined) {
+    balance = parseFloat(user.balance);
+    updateBalance();
   }
 
   console.log("💰 Balance mise à jour:", balance);
-
-  // 🔥 CORRECTION : Désactiver le bouton Jouer si balance insuffisante
-  updatePlayButtonState();
 }
 
 function showGameInterface() {
@@ -1829,7 +1830,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 10 MZ (1000 FCFA) | Balance: ${balance.toFixed(
+          <small>💡 Minimum: 5 MZ (500 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -1904,8 +1905,8 @@ async function submitWithdraw() {
 
   const fcfa = amount * 100;
 
-  if (!amount || fcfa < 1000) {
-    showNotification("Retrait minimum: 1000 FCFA (10 MZ)", "error");
+  if (!amount || fcfa < 500) {
+    showNotification("Retrait minimum: 500 FCFA (5 MZ)", "error");
     return;
   }
 
