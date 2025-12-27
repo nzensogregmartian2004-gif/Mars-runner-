@@ -1214,3 +1214,53 @@ canvas {
   border-radius: 12px;
   background: #000;
 }
+/* ===========================================
+   CORRECTIONS FINALES - MODE PORTRAIT
+   =========================================== */
+
+/* Canvas : dimensions fixes en portrait */
+@media (max-width: 768px) and (orientation: portrait) {
+  #gameCanvas {
+    width: 100vw !important;
+    height: 40vh !important;
+    max-height: 320px !important;
+    border: 2px solid #ff4500 !important;
+    border-radius: 15px !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  .canvas-container {
+    height: 40vh !important;
+    max-height: 320px !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Boutons d'action NORMAUX (pas fixed) */
+  .action-buttons {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Mode paysage : boutons en bas */
+@media (max-width: 768px) and (orientation: landscape) {
+  #gameCanvas {
+    height: 50vh !important;
+    max-height: 280px !important;
+  }
+
+  /* Garder les boutons fixes uniquement en paysage */
+  .action-buttons {
+    position: fixed !important;
+    bottom: 12px !important;
+    left: 8px !important;
+    right: 8px !important;
+    z-index: 9999 !important;
+  }
+}
