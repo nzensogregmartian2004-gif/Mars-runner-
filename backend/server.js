@@ -42,7 +42,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "https://runnermars.netlify.app/", // ✅ SANS SLASH FINAL
+      "https://runnermars.netlify.app", // ✅ SANS SLASH FINAL
       "http://localhost:5000",
       "http://localhost:3000",
       "http://localhost:5173",
@@ -65,7 +65,7 @@ console.log("✅ Socket.IO initialisé avec CORS pour Netlify");
 app.use(
   cors({
     origin: [
-      "https://runnermars.netlify.app/", // ✅ SANS SLASH FINAL
+      "https://runnermars.netlify.app", // ✅ SANS SLASH FINAL
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:5000",
