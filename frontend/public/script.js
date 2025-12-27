@@ -622,31 +622,8 @@ function startGame() {
   const betInputElement = document.getElementById("betInput");
   betAmount = Math.max(1, parseFloat(betInputElement?.value || 1));
 
-  // 🔥 CORRECTION : Vérification stricte du solde avec arrondi
-  const roundedBalance = Math.floor(balance * 100) / 100; // Arrondir à 2 décimales
-  const roundedBet = Math.floor(betAmount * 100) / 100;
-
-  console.log("💰 Vérification balance:", {
-    balance: balance,
-    roundedBalance: roundedBalance,
-    betAmount: betAmount,
-    roundedBet: roundedBet,
-  });
-
-  if (roundedBet > roundedBalance) {
-    showNotification(
-      `Solde insuffisant! Balance: ${roundedBalance.toFixed(2)} MZ`,
-      "error"
-    );
-    return;
-  }
-
-  // 🔥 CORRECTION : Empêcher mise si balance = 0
-  if (roundedBalance <= 0) {
-    showNotification(
-      "Balance insuffisante. Veuillez effectuer un dépôt.",
-      "error"
-    );
+  if (betAmount > balance) {
+    showNotification("Solde insuffisant!", "error");
     return;
   }
 
@@ -660,20 +637,16 @@ function startGame() {
   startGameCooldown = true;
   lastStartGameAttempt = now;
 
-  console.log(
-    "🎮 Lancement de la partie - Mise:",
-    betAmount,
-    "MZ | Balance:",
-    balance,
-    "MZ"
-  );
+  console.log("🎮 Lancement de la partie - Mise:", betAmount, "MZ");
 
   disablePlayButton();
+  // 🔥 ENVOYER la plateforme au backend
   socket.emit("game:start", {
-    betAmount: roundedBet, // Envoyer montant arrondi
-    platform: isMobile ? "mobile" : "desktop",
+    betAmount,
+    platform: isMobile ? "mobile" : "desktop", // ✅ AJOUT
   });
 
+  // TIMEOUT DE SÉCURITÉ : 8 secondes
   if (gameEndTimeout) {
     clearTimeout(gameEndTimeout);
     gameEndTimeout = null;
