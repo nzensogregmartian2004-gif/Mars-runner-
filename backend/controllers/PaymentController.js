@@ -1,5 +1,5 @@
 // ============================================
-// controllers/PaymentController.js - VERSION ADAPTÉE À VOTRE BDD
+// controllers/PaymentController.js - VERSION FINALE
 // ============================================
 
 const { query } = require("../config/database");
@@ -14,10 +14,17 @@ class PaymentController {
   static async createDeposit(req, res, next) {
     try {
       const userId = req.user.id;
-      const { amountFcfa, amountMz, paymentMethod, nom, prenom, telephone } =
-        req.body;
+      const {
+        amountFcfa,
+        amountMz,
+        paymentMethod,
+        nom,
+        prenom,
+        email,
+        telephone,
+      } = req.body;
 
-      console.log("📥 Données reçues pour dépôt:", req.body);
+      console.log("🔥 Données reçues pour dépôt:", req.body);
 
       // Validation
       if (!amountFcfa || amountFcfa < 500 || amountFcfa > 50000) {
@@ -38,13 +45,13 @@ class PaymentController {
         );
       }
 
-      // 🔥 Construire le nom complet (prenom + nom)
+      // 🔥 CONSTRUIRE LE NOM COMPLET
       const fullName =
         prenom && nom
           ? `${prenom} ${nom}`.trim()
           : nom || prenom || "Utilisateur";
 
-      // 🔥 INSERTION AVEC SEULEMENT name ET phone
+      // 🔥 INSERTION AVEC amount_fcfa, amount_mz, name, phone
       const sql = `
         INSERT INTO deposits (
           user_id, 
@@ -71,7 +78,7 @@ class PaymentController {
       const depositId = result.insertId;
 
       console.log(
-        `✅ [DÉPÔT] ID: ${depositId}, User: ${userId}, Montant: ${amountFcfa} FCFA`
+        `✅ [DÉPÔT] ID: ${depositId}, User: ${userId}, Montant: ${amountFcfa} FCFA (${amountMz} MZ)`
       );
 
       return successResponse(
@@ -117,7 +124,8 @@ class PaymentController {
   static async createWithdrawal(req, res, next) {
     try {
       const userId = req.user.id;
-      const { amountMz, paymentMethod, nom, prenom, telephone } = req.body;
+      const { amountMz, paymentMethod, nom, prenom, email, telephone } =
+        req.body;
 
       console.log("📤 Données reçues pour retrait:", req.body);
 
@@ -168,7 +176,7 @@ class PaymentController {
         );
       }
 
-      // 🔥 Construire le nom complet
+      // 🔥 CONSTRUIRE LE NOM COMPLET
       const fullName =
         prenom && nom
           ? `${prenom} ${nom}`.trim()
@@ -176,10 +184,11 @@ class PaymentController {
 
       const amountFcfa = parseFloat(amountMz) * 100;
 
-      // 🔥 INSERTION AVEC SEULEMENT name ET phone
+      // 🔥 INSERTION AVEC amount_fcfa, amount_mz, name, phone
       const sql = `
         INSERT INTO withdrawals (
           user_id, 
+          amount_fcfa,
           amount_mz, 
           payment_method, 
           name,
@@ -187,11 +196,12 @@ class PaymentController {
           status, 
           created_at
         )
-        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
       `;
 
       const result = await query(sql, [
         userId,
+        parseFloat(amountFcfa),
         parseFloat(amountMz),
         paymentMethod || "mobile_money",
         fullName,
@@ -201,7 +211,7 @@ class PaymentController {
       const withdrawalId = result.insertId;
 
       console.log(
-        `✅ [RETRAIT] ID: ${withdrawalId}, User: ${userId}, Montant: ${amountMz} MZ`
+        `✅ [RETRAIT] ID: ${withdrawalId}, User: ${userId}, Montant: ${amountMz} MZ (${amountFcfa} FCFA)`
       );
 
       return successResponse(
@@ -211,6 +221,9 @@ class PaymentController {
       );
     } catch (error) {
       console.error("❌ Erreur création retrait:", error);
+      console.error("SQL Error Code:", error.code);
+      console.error("SQL Message:", error.sqlMessage);
+
       return errorResponse(
         res,
         "Erreur lors de l'enregistrement du retrait.",
@@ -255,7 +268,7 @@ class PaymentController {
 
       const sql = `
         SELECT 
-          id, amount_mz, payment_method,
+          id, amount_fcfa, amount_mz, payment_method,
           name, phone,
           status, created_at, processed_at, reject_reason
         FROM withdrawals
