@@ -473,21 +473,9 @@ function connectSocket() {
     const newBalance = parseFloat(
       data.balance || data.balance_mz || balance || 0
     );
-
-    // 🔥 CORRECTION : Arrondir avant de comparer
-    const roundedNewBalance = Math.round(newBalance * 100) / 100;
-
-    if (roundedNewBalance >= 0) {
-      balance = roundedNewBalance;
+    if (newBalance >= 0) {
+      balance = newBalance;
       updateBalance();
-
-      // Afficher notification si balance = 0
-      if (balance === 0) {
-        showNotification(
-          "⚠️ Votre balance est à 0. Effectuez un dépôt pour continuer.",
-          "warning"
-        );
-      }
     }
   });
 
