@@ -89,7 +89,8 @@ let MARTIAN_SIZE = isMobile ? 45 : 50;
 let GROUND_Y = isMobile ? 260 : 320;
 let displayScale = 1.0;
 const PORTRAIT_SCALE = 0.7;
-let cameraOffsetX = 0;
+let cameraOffsetX = 120;
+const screenX = player.x - cameraOffsetX;
 // ========================================
 // 3. INITIALISATION
 // ========================================
@@ -122,82 +123,25 @@ function initAudio() {
 // setupCanvas() - VERSION OPTIMISÉE PORTRAIT
 // ========================================
 function setupCanvas() {
-  canvas = document.getElementById("gameCanvas");
-  if (!canvas) {
-    console.error("❌ Canvas non trouvé !");
-    return;
+  const isMobile = window.innerWidth < 768;
+  const dpr = window.devicePixelRatio || 1;
+
+  if (isMobile) {
+    // 🎯 Taille VISUELLE (comme sur ta photo)
+    canvas.style.width = "100%";
+    canvas.style.maxWidth = "420px"; // empêche trop large
+    canvas.style.height = "260px"; // hauteur idéale vue obstacles
+
+    // 🎯 Taille LOGIQUE (caméra reculée)
+    canvas.width = 420 * dpr;
+    canvas.height = 260 * dpr;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  } else {
+    // Desktop
+    canvas.width = 900;
+    canvas.height = 350;
   }
-
-  ctx = canvas.getContext("2d");
-  if (!ctx) {
-    console.error("❌ Context 2D non disponible !");
-    return;
-  }
-
-  function resizeCanvas() {
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    const isLandscape = windowWidth > windowHeight;
-
-    // 🔥 MODE PORTRAIT MOBILE - OPTIMISÉ
-    if (isMobile && !isLandscape) {
-      displayScale = 1.0; // Pas de dézoom
-
-      // Canvas prend 70% de la hauteur disponible
-      const availableHeight = windowHeight * 0.7;
-      canvas.width = Math.min(windowWidth * 0.96, 450);
-      canvas.height = Math.min(availableHeight, 700);
-
-      martianX = canvas.width * 0.2;
-      cameraOffsetX = 0;
-
-      // MODE PAYSAGE MOBILE
-    } else if (isMobile && isLandscape) {
-      displayScale = 1.0;
-      canvas.width = Math.min(windowWidth * 0.95, 900);
-      canvas.height = Math.min(windowHeight * 0.65, 350);
-      martianX = 120;
-      cameraOffsetX = 0;
-
-      // MODE DESKTOP
-    } else {
-      displayScale = 1.0;
-      canvas.width = 900;
-      canvas.height = 450;
-      martianX = 100;
-      cameraOffsetX = 0;
-    }
-
-    // Calcul GROUND_Y adapté
-    GROUND_Y = canvas.height - Math.floor(100 * displayScale);
-    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale));
-
-    // Réinitialisation
-    obstacles = [];
-    backgroundObjects = [];
-    lastObstacleTime = Date.now();
-    score = 0;
-
-    if (gameState === "menu" || gameState === "gameover") {
-      martianY = GROUND_Y;
-    }
-
-    console.log(
-      "📐 Canvas:",
-      canvas.width,
-      "x",
-      canvas.height,
-      "| martianX:",
-      martianX,
-      "| martianSize:",
-      MARTIAN_SIZE,
-      "| GROUND_Y:",
-      GROUND_Y
-    );
-  }
-
-  resizeCanvas();
-  window.__resizeGameCanvas = resizeCanvas;
 }
 
 window.addEventListener("DOMContentLoaded", () => {

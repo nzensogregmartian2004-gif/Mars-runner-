@@ -1208,3 +1208,9 @@ canvas {
   height: 32px;
   object-fit: contain;
 }
+#gameCanvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: #000;
+}
