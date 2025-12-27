@@ -336,6 +336,8 @@ function connectSocket() {
   });
 
   // Gestion événement game:started
+  // 🔥 REMPLACER le socket.on("game:started") existant (ligne ~365) par :
+
   socket.on("game:started", (data) => {
     console.log("🎮 Partie démarrée - Data:", data);
 
@@ -367,11 +369,14 @@ function connectSocket() {
     updateBalance();
     showNotification("Partie démarrée! Bonne chance.", "success");
 
+    // 🔥 CORRECTION : Boutons mis à jour avec cashOut
     const actionButtons = document.getElementById("actionButtons");
     if (actionButtons) {
       actionButtons.innerHTML = `
       <button class="btn-jump" onclick="jump()">⬆️ Sauter</button>
-      <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>💰 Retirer</button>
+      <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>
+        💰 Retirer (Min. x${MIN_CASHOUT_MULTIPLIER})
+      </button>
     `;
     }
 
@@ -389,6 +394,7 @@ function connectSocket() {
   });
 
   // game:progress
+
   socket.on("game:progress", (data) => {
     if (gameState !== "playing" && gameState !== "waiting") return;
     if (!data) return;
@@ -396,20 +402,49 @@ function connectSocket() {
     multiplier = parseFloat(data.multiplier || 1.0);
     potentialWin = parseFloat(betAmount * multiplier);
 
+    // 🔥 CORRECTION : Activer le bouton cashout au bon moment
     if (multiplier >= MIN_CASHOUT_MULTIPLIER && !canWithdraw) {
       canWithdraw = true;
+
       const cashoutBtn = document.getElementById("btnCashout");
-      if (cashoutBtn) cashoutBtn.disabled = false;
+      if (cashoutBtn) {
+        cashoutBtn.disabled = false;
+        cashoutBtn.textContent = `💰 Retirer (x${multiplier.toFixed(2)})`;
+        cashoutBtn.style.opacity = "1";
+        cashoutBtn.style.cursor = "pointer";
+      }
+
       const minWarning = document.getElementById("minWarning");
       if (minWarning) minWarning.classList.add("hidden");
+
+      // Notification visuelle
+      showNotification(
+        `✅ Vous pouvez maintenant retirer vos gains!`,
+        "success"
+      );
+    }
+
+    // 🔥 CORRECTION : Mettre à jour le texte du bouton en temps réel
+    if (canWithdraw && gameState === "playing") {
+      const cashoutBtn = document.getElementById("btnCashout");
+      if (cashoutBtn && !cashoutBtn.disabled) {
+        cashoutBtn.textContent = `💰 Retirer x${multiplier.toFixed(
+          2
+        )} (${potentialWin.toFixed(2)} MZ)`;
+      }
     }
 
     updateMultiplierDisplay();
   });
 
+  // 🔥 REMPLACER le socket.on("game:cashedOut") existant (ligne ~445) par :
+
   socket.on("game:cashedOut", (data) => {
     console.log("💰 Cash Out réussi:", data);
-    if (!data) return;
+    if (!data) {
+      console.error("❌ Données cashout manquantes");
+      return;
+    }
 
     if (isGameEnding) {
       console.warn("⚠️ Cash out déjà en cours de traitement");
@@ -418,13 +453,32 @@ function connectSocket() {
     isGameEnding = true;
 
     const winAmount = parseFloat(data.winAmount || 0);
+    const finalMultiplier = parseFloat(data.multiplier || multiplier);
     balance = parseFloat(data.balance || balance || 0);
     isNewPlayerBonusLocked = false;
 
+    // Débloquer le bonus nouveau joueur après première mise
+    if (data.bonusUnlocked || data.bonus_unlocked) {
+      isNewPlayerBonusLocked = false;
+      console.log("🎉 Bonus nouveau joueur débloqué!");
+    }
+
     updateBalance();
 
+    // Arrêter la boucle de jeu
+    if (gameLoop) {
+      cancelAnimationFrame(gameLoop);
+      gameLoop = null;
+    }
+
+    console.log("🎉 Gains:", {
+      multiplier: finalMultiplier.toFixed(2),
+      winAmount: winAmount.toFixed(2),
+      newBalance: balance.toFixed(2),
+    });
+
     setTimeout(() => {
-      showGameOverScreen(true, winAmount);
+      showGameOverScreen(true, winAmount, null, finalMultiplier);
       isGameEnding = false;
     }, 300);
   });
@@ -1069,7 +1123,12 @@ function stopGame() {
   }
 }
 
-function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
+function showGameOverScreen(
+  isWin,
+  winAmount,
+  notificationMessage = null,
+  finalMultiplier = null
+) {
   if (gameEndTimeout) {
     clearTimeout(gameEndTimeout);
     gameEndTimeout = null;
@@ -1085,8 +1144,11 @@ function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
     gameOverSound.play().catch((e) => console.log("Erreur son:", e));
   }
 
-  if (multiplier > highScore) {
-    highScore = multiplier;
+  // Utiliser le multiplicateur final si fourni
+  const displayMultiplier = finalMultiplier || multiplier;
+
+  if (displayMultiplier > highScore) {
+    highScore = displayMultiplier;
     const highScoreDisplay = document.getElementById("highScoreDisplay");
     if (highScoreDisplay)
       highScoreDisplay.textContent = "x" + highScore.toFixed(2);
@@ -1108,14 +1170,16 @@ function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
     showNotification(notificationMessage, "error");
   } else if (isWin) {
     showNotification(
-      `🎉 VICTOIRE! Multiplicateur x${multiplier.toFixed(
-        2
-      )}, vous avez gagné ${winAmount.toFixed(2)} MZ!`,
+      `🎉 VICTOIRE! Multiplicateur x${displayMultiplier.toFixed(2)}\n` +
+        `💰 Vous avez gagné ${winAmount.toFixed(2)} MZ!\n` +
+        `💵 Nouvelle balance: ${balance.toFixed(2)} MZ`,
       "success"
     );
   } else {
     showNotification(
-      `💀 GAME OVER! Multiplicateur atteint: x${multiplier.toFixed(2)}`,
+      `💀 GAME OVER! Multiplicateur atteint: x${displayMultiplier.toFixed(
+        2
+      )}\n` + `💵 Balance: ${balance.toFixed(2)} MZ`,
       "error"
     );
   }
@@ -1126,6 +1190,19 @@ function showGameOverScreen(isWin, winAmount, notificationMessage = null) {
     isStartingGame = false;
     startGameCooldown = false;
     isGameEnding = false;
+
+    // 🔥 CORRECTION : Vérifier balance après game over
+    updatePlayButtonState();
+
+    const roundedBalance = Math.round(balance * 100) / 100;
+    if (roundedBalance === 0) {
+      setTimeout(() => {
+        showNotification(
+          "💰 Balance épuisée! Effectuez un dépôt pour continuer.",
+          "info"
+        );
+      }, 2000);
+    }
   }, 1500);
 
   drawGame();
@@ -1385,21 +1462,32 @@ function updateBalance(data = null) {
     }
   }
 
-  // 🔥 CORRECTION : Accepter 0 comme valeur valide
+  // Gérer les valeurs invalides
   if (balance === undefined || balance === null || isNaN(balance)) {
     balance = 0;
   }
 
-  // Forcer conversion en number
-  balance = parseFloat(balance) || 0;
+  // Arrondir à 2 décimales
+  balance = Math.round(parseFloat(balance) * 100) / 100;
 
-  // 🔥 CORRECTION : Toujours mettre à jour l'affichage, même si balance = 0
+  // Forcer à 0 si négatif
+  if (balance < 0) {
+    console.warn("⚠️ Balance négative détectée, correction à 0");
+    balance = 0;
+  }
+
+  // Mettre à jour l'affichage
   const balanceElement = document.getElementById("balance");
   if (balanceElement) {
     balanceElement.textContent = balance.toFixed(2);
   }
 
-  console.log("💰 Balance affichée:", balance);
+  console.log("💰 Balance mise à jour:", balance);
+
+  // Mettre à jour l'état du bouton
+  if (typeof updatePlayButtonState === "function") {
+    updatePlayButtonState();
+  }
 }
 
 // ============================================
