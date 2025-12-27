@@ -76,7 +76,7 @@ const frameInterval = 1000 / 60;
 
 // FLUCTUATION VITESSE
 const MAX_SPEED_FACTOR = 1.9;
-const MIN_SPEED_FACTOR = 0.5;
+const MIN_SPEED_FACTOR = 0.9;
 const FLUCTUATION_DURATION = 100;
 let speedFluctuationTimer = 0;
 let targetGameSpeed = BASE_SPEED;
