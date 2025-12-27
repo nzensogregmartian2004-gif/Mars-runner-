@@ -1,11 +1,11 @@
 // ============================================
-// controllers/PaymentController.js - VERSION CORRIGÉE
+// controllers/PaymentController.js - VERSION ADAPTÉE À VOTRE BDD
 // ============================================
 
-const { query, transaction } = require("../config/database");
+const { query } = require("../config/database");
 const { successResponse, errorResponse } = require("../utils/helpers");
 
-const BONUS_LOCKED_AMOUNT = 5; // Bonus verrouillé pour les nouveaux joueurs
+const BONUS_LOCKED_AMOUNT = 5;
 
 class PaymentController {
   /**
@@ -14,17 +14,12 @@ class PaymentController {
   static async createDeposit(req, res, next) {
     try {
       const userId = req.user.id;
-      const {
-        amountFcfa,
-        amountMz,
-        paymentMethod,
-        nom,
-        prenom,
-        email,
-        telephone,
-      } = req.body;
+      const { amountFcfa, amountMz, paymentMethod, nom, prenom, telephone } =
+        req.body;
 
-      // Validation des champs
+      console.log("📥 Données reçues pour dépôt:", req.body);
+
+      // Validation
       if (!amountFcfa || amountFcfa < 500 || amountFcfa > 50000) {
         return errorResponse(
           res,
@@ -34,15 +29,6 @@ class PaymentController {
         );
       }
 
-      if (!nom || !prenom) {
-        return errorResponse(
-          res,
-          "Nom et prénom requis.",
-          "VALIDATION_ERROR",
-          400
-        );
-      }
-
       if (!telephone) {
         return errorResponse(
           res,
@@ -52,49 +38,76 @@ class PaymentController {
         );
       }
 
-      // Construire le nom complet
-      const fullName = `${prenom} ${nom}`.trim();
+      // 🔥 Construire le nom complet (prenom + nom)
+      const fullName =
+        prenom && nom
+          ? `${prenom} ${nom}`.trim()
+          : nom || prenom || "Utilisateur";
 
-      // Insertion du dépôt
+      // 🔥 INSERTION AVEC SEULEMENT name ET phone
       const sql = `
         INSERT INTO deposits (
           user_id, 
           amount_fcfa, 
           amount_mz, 
           payment_method, 
-          name, 
+          name,
           phone,
-          email,
           status, 
           created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
       `;
 
       const result = await query(sql, [
         userId,
-        amountFcfa,
-        amountMz || amountFcfa / 100,
+        parseFloat(amountFcfa),
+        parseFloat(amountMz || amountFcfa / 100),
         paymentMethod || "mobile_money",
         fullName,
         telephone,
-        email || null,
       ]);
 
       const depositId = result.insertId;
 
       console.log(
-        `✅ [DÉPÔT] ID: ${depositId} pour l'utilisateur ${userId} - ${amountFcfa} FCFA`
+        `✅ [DÉPÔT] ID: ${depositId}, User: ${userId}, Montant: ${amountFcfa} FCFA`
       );
 
       return successResponse(
         res,
         { depositId },
-        "Demande de dépôt enregistrée. En attente de validation par l'administrateur."
+        "Demande de dépôt enregistrée. En attente de validation."
       );
     } catch (error) {
-      console.error("❌ Erreur lors de la création du dépôt:", error);
-      next(error);
+      console.error("❌ Erreur création dépôt:", error);
+      console.error("SQL Error Code:", error.code);
+      console.error("SQL Message:", error.sqlMessage);
+
+      if (error.code === "ER_NO_SUCH_TABLE") {
+        return errorResponse(
+          res,
+          "Table 'deposits' introuvable.",
+          "DATABASE_ERROR",
+          500
+        );
+      }
+
+      if (error.code === "ER_BAD_FIELD_ERROR") {
+        return errorResponse(
+          res,
+          `Colonne introuvable: ${error.sqlMessage}`,
+          "DATABASE_ERROR",
+          500
+        );
+      }
+
+      return errorResponse(
+        res,
+        "Erreur lors de l'enregistrement du dépôt.",
+        "SERVER_ERROR",
+        500
+      );
     }
   }
 
@@ -104,23 +117,15 @@ class PaymentController {
   static async createWithdrawal(req, res, next) {
     try {
       const userId = req.user.id;
-      const { amountMz, paymentMethod, nom, prenom, email, telephone } =
-        req.body;
+      const { amountMz, paymentMethod, nom, prenom, telephone } = req.body;
 
-      // Validation des champs
+      console.log("📤 Données reçues pour retrait:", req.body);
+
+      // Validation
       if (!amountMz || amountMz < 5) {
         return errorResponse(
           res,
           "Montant minimum pour un retrait: 5 MZ.",
-          "VALIDATION_ERROR",
-          400
-        );
-      }
-
-      if (!nom || !prenom) {
-        return errorResponse(
-          res,
-          "Nom et prénom requis.",
           "VALIDATION_ERROR",
           400
         );
@@ -135,11 +140,9 @@ class PaymentController {
         );
       }
 
-      // Vérifier le solde de l'utilisateur
+      // Vérifier le solde
       const userSql = `
-        SELECT 
-          balance_mz, 
-          new_player_bonus_locked
+        SELECT balance_mz, new_player_bonus_locked
         FROM users 
         WHERE id = ?
       `;
@@ -150,8 +153,6 @@ class PaymentController {
       }
 
       const user = users[0];
-
-      // Calculer le solde disponible
       const availableBalance =
         user.balance_mz -
         (user.new_player_bonus_locked ? BONUS_LOCKED_AMOUNT : 0);
@@ -159,53 +160,63 @@ class PaymentController {
       if (amountMz > availableBalance) {
         return errorResponse(
           res,
-          `Solde insuffisant. Montant maximum retirable: ${availableBalance} MZ.`,
+          `Solde insuffisant. Montant maximum retirable: ${availableBalance.toFixed(
+            2
+          )} MZ.`,
           "INSUFFICIENT_FUNDS",
           400
         );
       }
 
-      // Construire le nom complet
-      const fullName = `${prenom} ${nom}`.trim();
+      // 🔥 Construire le nom complet
+      const fullName =
+        prenom && nom
+          ? `${prenom} ${nom}`.trim()
+          : nom || prenom || "Utilisateur";
 
-      // Insertion de la demande de retrait
+      const amountFcfa = parseFloat(amountMz) * 100;
+
+      // 🔥 INSERTION AVEC SEULEMENT name ET phone
       const sql = `
         INSERT INTO withdrawals (
           user_id, 
           amount_mz, 
           payment_method, 
-          name, 
+          name,
           phone,
-          email,
           status, 
           created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
       `;
 
       const result = await query(sql, [
         userId,
-        amountMz,
+        parseFloat(amountMz),
         paymentMethod || "mobile_money",
         fullName,
         telephone,
-        email || null,
       ]);
 
       const withdrawalId = result.insertId;
 
       console.log(
-        `✅ [RETRAIT] ID: ${withdrawalId} pour l'utilisateur ${userId} - ${amountMz} MZ`
+        `✅ [RETRAIT] ID: ${withdrawalId}, User: ${userId}, Montant: ${amountMz} MZ`
       );
 
       return successResponse(
         res,
         { withdrawalId },
-        "Demande de retrait enregistrée. Vous recevrez un message de confirmation."
+        "Demande de retrait enregistrée. Vous recevrez une confirmation."
       );
     } catch (error) {
-      console.error("❌ Erreur lors de la création du retrait:", error);
-      next(error);
+      console.error("❌ Erreur création retrait:", error);
+      return errorResponse(
+        res,
+        "Erreur lors de l'enregistrement du retrait.",
+        "SERVER_ERROR",
+        500
+      );
     }
   }
 
@@ -218,17 +229,9 @@ class PaymentController {
 
       const sql = `
         SELECT 
-          id,
-          amount_fcfa,
-          amount_mz,
-          payment_method,
-          name,
-          phone,
-          email,
-          status,
-          created_at,
-          processed_at,
-          reject_reason
+          id, amount_fcfa, amount_mz, payment_method,
+          name, phone,
+          status, created_at, processed_at, reject_reason
         FROM deposits
         WHERE user_id = ?
         ORDER BY created_at DESC
@@ -236,10 +239,9 @@ class PaymentController {
       `;
 
       const deposits = await query(sql, [userId]);
-
       return successResponse(res, deposits, "Liste des dépôts récupérée.");
     } catch (error) {
-      console.error("❌ Erreur lors de la récupération des dépôts:", error);
+      console.error("❌ Erreur récupération dépôts:", error);
       next(error);
     }
   }
@@ -253,16 +255,9 @@ class PaymentController {
 
       const sql = `
         SELECT 
-          id,
-          amount_mz,
-          payment_method,
-          name,
-          phone,
-          email,
-          status,
-          created_at,
-          processed_at,
-          reject_reason
+          id, amount_mz, payment_method,
+          name, phone,
+          status, created_at, processed_at, reject_reason
         FROM withdrawals
         WHERE user_id = ?
         ORDER BY created_at DESC
@@ -270,10 +265,9 @@ class PaymentController {
       `;
 
       const withdrawals = await query(sql, [userId]);
-
       return successResponse(res, withdrawals, "Liste des retraits récupérée.");
     } catch (error) {
-      console.error("❌ Erreur lors de la récupération des retraits:", error);
+      console.error("❌ Erreur récupération retraits:", error);
       next(error);
     }
   }

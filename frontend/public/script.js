@@ -139,16 +139,17 @@ function setupCanvas() {
     const windowHeight = window.innerHeight;
     const isLandscape = windowWidth > windowHeight;
 
-    // 🔥 MODE PORTRAIT MOBILE (Image 2 - Style optimal)
+    // 🔥 MODE PORTRAIT MOBILE - OPTIMISÉ
     if (isMobile && !isLandscape) {
-      displayScale = 1.0; // ✅ Pas de dézoom en portrait
+      displayScale = 1.0; // Pas de dézoom
 
-      // 🔥 HAUTEUR OPTIMALE : 80% de l'écran (comme Image 2)
+      // Canvas prend 70% de la hauteur disponible
+      const availableHeight = windowHeight * 0.7;
       canvas.width = Math.min(windowWidth * 0.96, 450);
-      canvas.height = Math.min(windowHeight * 0.8, 850); // ✅ Augmenté de 60% → 80%
+      canvas.height = Math.min(availableHeight, 700);
 
-      martianX = canvas.width * 0.25; // Position horizontale du martien
-      cameraOffsetX = 0; // Pas de décalage caméra en portrait
+      martianX = canvas.width * 0.2;
+      cameraOffsetX = 0;
 
       // MODE PAYSAGE MOBILE
     } else if (isMobile && isLandscape) {
@@ -167,11 +168,11 @@ function setupCanvas() {
       cameraOffsetX = 0;
     }
 
-    // 🔥 CALCUL GROUND_Y ET MARTIAN_SIZE
-    GROUND_Y = canvas.height - Math.floor(100 * displayScale); // ✅ Plus d'espace en bas
-    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale)); // ✅ Taille ajustée
+    // Calcul GROUND_Y adapté
+    GROUND_Y = canvas.height - Math.floor(100 * displayScale);
+    MARTIAN_SIZE = Math.max(40, Math.floor((canvas.width / 16) * displayScale));
 
-    // Réinitialisation d'état visible après rotation/resize
+    // Réinitialisation
     obstacles = [];
     backgroundObjects = [];
     lastObstacleTime = Date.now();
@@ -190,19 +191,12 @@ function setupCanvas() {
       martianX,
       "| martianSize:",
       MARTIAN_SIZE,
-      "| cameraOffsetX:",
-      cameraOffsetX,
-      "| displayScale:",
-      displayScale,
       "| GROUND_Y:",
       GROUND_Y
     );
   }
 
-  // Appel initial pour dimensionner le canvas
   resizeCanvas();
-
-  // Assurer que resizeCanvas est accessible depuis l'extérieur
   window.__resizeGameCanvas = resizeCanvas;
 }
 
@@ -1295,14 +1289,15 @@ function updateBalance(data = null) {
     }
   }
 
-  if (isNaN(balance) || balance === undefined || balance === null) {
+  // 🔥 CORRECTION : Accepter 0 comme valeur valide
+  if (balance === undefined || balance === null || isNaN(balance)) {
     balance = 0;
   }
 
-  if (typeof balance !== "number") {
-    balance = parseFloat(balance) || 0;
-  }
+  // Forcer conversion en number
+  balance = parseFloat(balance) || 0;
 
+  // 🔥 CORRECTION : Toujours mettre à jour l'affichage, même si balance = 0
   const balanceElement = document.getElementById("balance");
   if (balanceElement) {
     balanceElement.textContent = balance.toFixed(2);
