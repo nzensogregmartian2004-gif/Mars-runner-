@@ -284,11 +284,11 @@ function connectSocket() {
   authToken = localStorage.getItem("authToken");
 
   if (!authToken || typeof io === "undefined") {
-    console.warn("â›” Token ou Socket.IO indisponible");
+    console.warn("Token ou Socket.IO indisponible");
     return;
   }
 
-  console.log("ðŸ”Œ Tentative de connexion Socket.IO...");
+  console.log("Tentative de connexion Socket.IO...");
 
   if (socket) {
     if (socket.connected) return;
@@ -478,12 +478,12 @@ function connectSocket() {
     // Débloquer le bonus nouveau joueur après première mise
     if (data.bonusUnlocked || data.bonus_unlocked) {
       isNewPlayerBonusLocked = false;
-      console.log("ðŸŽ‰ Bonus nouveau joueur débloqué!");
+      console.log(" Bonus nouveau joueur débloqué!");
     }
 
     updateBalance();
 
-    console.log("ðŸŽ‰ Gains finaux:", {
+    console.log(" Gains finaux:", {
       multiplier: finalMultiplier.toFixed(2),
       winAmount: winAmount.toFixed(2),
       newBalance: newBalance.toFixed(2),
@@ -577,7 +577,7 @@ function connectSocket() {
   });
 
   socket.on("user:info", (data) => {
-    console.log("ðŸ‘¤ Infos utilisateur:", data);
+    console.log("Infos utilisateur:", data);
     if (!data) return;
 
     if (data.balance !== undefined && data.balance !== null) {
@@ -618,7 +618,7 @@ function connectSocket() {
   });
 
   socket.on("referral:code", (data) => {
-    console.log("ðŸŽ¯ Code de parrainage reà§u:", data);
+    console.log(" Code de parrainage recu:", data);
     if (data && (data.referralCode || data.referral_code)) {
       myReferralCode = data.referralCode || data.referral_code;
     }
@@ -712,7 +712,7 @@ function startGame() {
   }
   gameEndTimeout = setTimeout(() => {
     if (gameState === "waiting") {
-      console.error("â° Timeout: Pas de réponse du serveur");
+      console.error(" Timeout: Pas de réponse du serveur");
       showNotification("Le serveur ne répond pas. Réessayez.", "error");
       isStartingGame = false;
       isGameEnding = false;
@@ -735,7 +735,7 @@ function disablePlayButton() {
   const btnPlay = document.getElementById("btnPlay");
   if (btnPlay) {
     btnPlay.disabled = true;
-    btnPlay.textContent = "â³ Démarrage...";
+    btnPlay.textContent = " Démarrage...";
     btnPlay.style.opacity = "0.5";
     btnPlay.style.cursor = "not-allowed";
   }
@@ -785,7 +785,7 @@ function startLocalGameLoop() {
         cancelAnimationFrame(gameLoop);
         gameLoop = null;
         console.log(
-          "ðŸ›‘ Game loop arrêtée (état:",
+          " Game loop arrêtée (état:",
           gameState,
           "| ending:",
           isGameEnding,
@@ -1182,7 +1182,7 @@ function showGameOverScreen(
   const actionButtons = document.getElementById("actionButtons");
   if (actionButtons) {
     actionButtons.innerHTML = `
-      <button class="btn-replay" onclick="replayGame()">ðŸ”„ Rejouer</button>
+      <button class="btn-replay" onclick="replayGame()"> Rejouer</button>
     `;
   }
 
@@ -1195,16 +1195,16 @@ function showGameOverScreen(
     showNotification(notificationMessage, "error");
   } else if (isWin) {
     showNotification(
-      `ðŸŽ‰ VICTOIRE! Multiplicateur x${displayMultiplier.toFixed(2)}\n` +
+      ` VICTOIRE! Multiplicateur x${displayMultiplier.toFixed(2)}\n` +
         `💰 Vous avez gagné ${winAmount.toFixed(2)} MZ!\n` +
-        `ðŸ’µ Nouvelle balance: ${balance.toFixed(2)} MZ`,
+        ` Nouvelle balance: ${balance.toFixed(2)} MZ`,
       "success"
     );
   } else {
     showNotification(
-      `ðŸ’€ GAME OVER! Multiplicateur atteint: x${displayMultiplier.toFixed(
+      `€ GAME OVER! Multiplicateur atteint: x${displayMultiplier.toFixed(
         2
-      )}\n` + `ðŸ’µ Balance: ${balance.toFixed(2)} MZ`,
+      )}\n` + `Balance: ${balance.toFixed(2)} MZ`,
       "error"
     );
   }
@@ -1223,7 +1223,7 @@ function showGameOverScreen(
     if (roundedBalance === 0) {
       setTimeout(() => {
         showNotification(
-          "💰 Balance épuisée! Effectuez un dépà´t pour continuer.",
+          "💰 Balance épuisée! Effectuez un depot pour continuer.",
           "info"
         );
       }, 2000);
@@ -1335,7 +1335,7 @@ function cashOut() {
   }
 
   // ðŸ”¥ CORRECTION CRITIQUE : Arrêter IMMà‰DIATEMENT le jeu
-  console.log("💰 CASHOUT INITIà‰ - Arrêt du jeu");
+  console.log("💰 CASHOUT  - Arrêt du jeu");
 
   // Bloquer toutes les interactions
   isGameEnding = true;
@@ -1367,7 +1367,7 @@ function cashOut() {
   const cashoutBtn = document.getElementById("btnCashout");
   if (cashoutBtn) {
     cashoutBtn.disabled = true;
-    cashoutBtn.textContent = "â³ Retrait en cours...";
+    cashoutBtn.textContent = " Retrait en cours...";
     cashoutBtn.style.opacity = "0.5";
   }
 
@@ -1380,7 +1380,7 @@ function cashOut() {
 
     // Notification de confirmation
     showNotification(
-      `ðŸŽ¯ Retrait en cours... x${currentMultiplier.toFixed(2)}`,
+      `Retrait en cours... x${currentMultiplier.toFixed(2)}`,
       "info"
     );
 
@@ -1388,7 +1388,7 @@ function cashOut() {
     setTimeout(() => {
       // Si après 8 secondes on n'a pas de réponse ET qu'on est toujours en attente
       if (gameState === "waiting" && isGameEnding) {
-        console.warn("â° Timeout cashout - forcer l'affichage game over");
+        console.warn(" Timeout cashout - forcer l'affichage game over");
 
         // Forcer l'affichage de l'écran de fin avec les données locales
         const estimatedWin = currentPotentialWin;
@@ -1488,20 +1488,15 @@ function debugPortraitMode() {
   const isLandscape = window.innerWidth > window.innerHeight;
   console.log("🎮 MODE:", isLandscape ? "PAYSAGE" : "PORTRAIT");
   console.log("📱 Canvas:", canvas.width, "x", canvas.height);
-  console.log("ðŸ‘½ Martien X:", martianX, "| Size:", MARTIAN_SIZE);
-  console.log("ðŸ“· Camera Offset:", cameraOffsetX);
-  console.log("ðŸŽ¯ Ground Y:", GROUND_Y);
-  console.log("ðŸš§ Obstacles:", obstacles.length);
+  console.log("Martien X:", martianX, "| Size:", MARTIAN_SIZE);
+  console.log(" Camera Offset:", cameraOffsetX);
+  console.log(" Ground Y:", GROUND_Y);
+  console.log(" Obstacles:", obstacles.length);
 
   if (obstacles.length > 0) {
     const firstObs = obstacles[0];
-    console.log(
-      "  â†’ Premier obstacle X:",
-      firstObs.x,
-      "| Type:",
-      firstObs.type
-    );
-    console.log("  â†’ Position écran:", firstObs.x - cameraOffsetX);
+    console.log("   Premier obstacle X:", firstObs.x, "| Type:", firstObs.type);
+    console.log("   Position écran:", firstObs.x - cameraOffsetX);
   }
 }
 
@@ -1591,7 +1586,7 @@ function updateUserInfo(user) {
 
   if (user.referral_code || user.referralCode) {
     myReferralCode = user.referral_code || user.referralCode;
-    console.log("ðŸŽ¯ Code de parrainage récupéré:", myReferralCode);
+    console.log(" Code de parrainage récupéré:", myReferralCode);
   }
 
   if (user.affiliated_users || user.affiliatedUsers) {
@@ -1749,7 +1744,7 @@ async function handleRegister() {
       connectSocket();
 
       showNotification(
-        `Bienvenue ${prenom}! Vous avez reà§u ${balance.toFixed(2)} MZ.`,
+        `Bienvenue ${prenom}! Vous avez recu ${balance.toFixed(2)} MZ.`,
         "success"
       );
     } else {
@@ -1829,12 +1824,12 @@ async function apiCall(endpoint, method = "GET", data = null) {
   }
 
   try {
-    console.log(`[API] ðŸ“¤ ${method} ${endpoint}`);
+    console.log(`[API]  ${method} ${endpoint}`);
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
     const result = await response.json();
 
-    console.log(`[API] ðŸ”¥ Réponse:`, result);
+    console.log(`[API] Réponse:`, result);
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -2000,12 +1995,12 @@ async function submitDeposit() {
   const telephone = document.getElementById("depositTelephone").value.trim();
 
   if (!amount || amount < 500) {
-    showNotification("Dépà´t minimum: 500 FCFA", "error");
+    showNotification("Depot minimum: 500 FCFA", "error");
     return;
   }
 
   if (amount > 50000) {
-    showNotification("Dépà´t maximum: 50000 FCFA", "error");
+    showNotification("Depot maximum: 50000 FCFA", "error");
     return;
   }
 
@@ -2061,7 +2056,7 @@ async function submitDeposit() {
     closeDepositFormModal();
 
     showNotification(
-      `✅ Demande de dépà´t enregistrée!\n\n` +
+      `✅ Demande de depot enregistrée!\n\n` +
         `Montant: ${amount} FCFA (${mz.toFixed(2)} MZ)\n` +
         `Moyen: ${
           selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
@@ -2099,7 +2094,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>ðŸ’¡ Minimum: 20 MZ (2000 FCFA) | Balance: ${balance.toFixed(
+          <small> Minimum: 20 MZ (2000 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -2218,7 +2213,7 @@ async function submitWithdraw() {
   }
 
   try {
-    console.log("ðŸ“¤ Envoi demande de retrait:", {
+    console.log("Envoi demande de retrait:", {
       amount,
       paymentMethod: selectedPaymentMethod,
       nom,
@@ -2294,7 +2289,7 @@ function showReferralModal() {
 
   // Demander les données au serveur
   if (socket && isConnectedToSocket) {
-    console.log("ðŸ“¡ Demande des infos de parrainage au serveur");
+    console.log(" Demande des infos de parrainage au serveur");
     socket.emit("referral:getInfo");
   }
 
@@ -2318,7 +2313,7 @@ function closeReferralModal() {
  * Mettre à  jour le contenu du modal de parrainage
  */
 function updateReferralModalContent() {
-  console.log("ðŸ”„ Mise à  jour du modal de parrainage");
+  console.log(" Mise à  jour du modal de parrainage");
 
   // Mettre à  jour le code
   const codeElement = document.getElementById("referralCode");
