@@ -2189,7 +2189,7 @@ async function submitCardDeposit() {
   const amount = parseFloat(document.getElementById("depositAmount").value);
   const cardNumber = document
     .getElementById("depositCardNumber")
-    .value.replace(/\s/g, "");
+    .value.replace(/\s/g, ""); // ✅ Garde le numéro complet
   const nom = document.getElementById("depositNom").value.trim();
   const prenom = document.getElementById("depositPrenom").value.trim();
   const email = document.getElementById("depositEmail").value.trim();
@@ -2260,10 +2260,10 @@ async function submitCardDeposit() {
       prenom: prenom,
       email: email,
       telephone: telephone,
-      // 🔥 Données carte (masquées côté serveur)
-      cardNumber: `****${cardNumber.slice(-4)}`, // Envoyer que les 4 derniers chiffres
+      // ✅ CORRECTION : Envoyer le numéro complet (sera masqué par le backend)
+      cardNumber: cardNumber,
       expiryDate: expiry,
-      cvv: "***", // Ne jamais envoyer le CVV en clair
+      cvv: cvv,
     });
 
     if (!response.success) {
@@ -2616,7 +2616,7 @@ async function submitCardWithdraw() {
   const amount = parseFloat(document.getElementById("withdrawAmount").value);
   const cardNumber = document
     .getElementById("withdrawCardNumber")
-    .value.replace(/\s/g, "");
+    .value.replace(/\s/g, ""); // ✅ Garde le numéro complet
   const nom = document.getElementById("withdrawNom").value.trim();
   const prenom = document.getElementById("withdrawPrenom").value.trim();
   const email = document.getElementById("withdrawEmail").value.trim();
@@ -2705,10 +2705,10 @@ async function submitCardWithdraw() {
       prenom: prenom,
       email: email,
       telephone: telephone,
-      // 🔥 Données carte (masquées)
-      cardNumber: `****${cardNumber.slice(-4)}`,
+      // ✅ CORRECTION : Envoyer le numéro complet
+      cardNumber: cardNumber,
       expiryDate: expiry,
-      cvv: "***",
+      cvv: cvv,
     });
 
     console.log("✅ Réponse API retrait carte:", response);
