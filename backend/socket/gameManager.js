@@ -45,7 +45,7 @@ class GameManager {
     this.crashed = false;
 
     // 🚀 VITESSE DU MULTIPLICATEUR
-    this.baseIncrement = 0.0179;
+    this.baseIncrement = 0.0185;
     this.tickRate = 45;
 
     this.seed = crypto.randomBytes(32).toString("hex");
