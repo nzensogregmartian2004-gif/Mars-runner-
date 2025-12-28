@@ -2099,7 +2099,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 10 MZ (1000 FCFA) | Balance: ${balance.toFixed(
+          <small>💡 Minimum: 20 MZ (2000 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -2175,7 +2175,7 @@ async function submitWithdraw() {
   const fcfa = amount * 100;
 
   if (!amount || fcfa < 100) {
-    showNotification("Retrait minimum: 1000 FCFA (5 MZ)", "error");
+    showNotification("Retrait minimum: 2000 FCFA (5 MZ)", "error");
     return;
   }
 
