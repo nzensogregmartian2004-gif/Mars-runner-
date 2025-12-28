@@ -597,7 +597,7 @@ function connectSocket() {
     balance = parseFloat(data.balance || balance);
     updateBalance();
     showNotification(
-      `✅ Dépà´t confirmé! ${data.amount} MZ ajoutés.`,
+      `✅ Depot confirmé! ${data.amount} MZ ajoutés.`,
       "success"
     );
   });
@@ -1952,8 +1952,8 @@ function showDepositForm(method) {
   if (title) {
     title.textContent =
       method === "airtel"
-        ? "💰 Dépà´t via Airtel Money"
-        : "💰 Dépà´t via Moov Money";
+        ? "💰 Depot via Airtel Money"
+        : "💰 Depot via Moov Money";
   }
 
   const userEmail = localStorage.getItem("userEmail") || "";
@@ -2051,7 +2051,7 @@ async function submitDeposit() {
       return;
     }
 
-    console.log("✅ Demande de dépà´t enregistrée:", response.data);
+    console.log("✅ Demande de depot enregistrée:", response.data);
 
     closeDepositFormModal();
 
@@ -2070,7 +2070,7 @@ async function submitDeposit() {
   } catch (error) {
     console.error("❌ Erreur submitDeposit:", error);
     showNotification(
-      "Erreur lors de la demande de dépà´t: " + (error.message || error),
+      "Erreur lors de la demande de depot: " + (error.message || error),
       "error"
     );
   }
