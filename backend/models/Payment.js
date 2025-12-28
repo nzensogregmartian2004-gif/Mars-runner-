@@ -1,12 +1,12 @@
-// ============================================
-// models/Payment.js - VERSION VISA/MASTERCARD
+/// ============================================
+// models/Payment.js - VERSION CORRIGÃ‰E
 // ============================================
 
 const { query } = require("../config/database");
 
 class Payment {
   /**
-   * ✅ CRÉER UNE DEMANDE DE DÉPÔT (AVEC CARTES BANCAIRES)
+   * âœ… CRÃ‰ER UNE DEMANDE DE DÃ‰PÃ”T
    */
   static async createDeposit(userId, depositData) {
     const {
@@ -17,13 +17,7 @@ class Payment {
       prenom,
       email,
       telephone,
-      cardNumber,
-      expiryDate,
-      cvv,
     } = depositData;
-
-    // 🔥 Extraire les 4 derniers chiffres de la carte
-    const cardLast4 = cardNumber ? cardNumber.slice(-4) : null;
 
     const sql = `
       INSERT INTO deposits (
@@ -35,10 +29,9 @@ class Payment {
         prenom,
         email,
         telephone,
-        card_last4,
         status,
         created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
     `;
 
     const result = await query(sql, [
@@ -49,39 +42,24 @@ class Payment {
       nom,
       prenom,
       email,
-      telephone || null,
-      cardLast4,
+      telephone,
     ]);
 
     console.log(
-      `💰 Demande de dépôt créée - ID: ${result.insertId}, User: ${userId}, ` +
-        `Montant: ${amountFcfa} FCFA (${amountMz} MZ), Méthode: ${paymentMethod}` +
-        (cardLast4 ? `, Carte: ****${cardLast4}` : "")
+      `ðŸ“¥ Demande de dÃ©pÃ´t crÃ©Ã©e - ID: ${result.insertId}, User: ${userId}, Montant: ${amountFcfa} FCFA`
     );
 
     return result.insertId;
   }
 
   /**
-   * ✅ CRÉER UNE DEMANDE DE RETRAIT (AVEC CARTES BANCAIRES)
+   * âœ… CRÃ‰ER UNE DEMANDE DE RETRAIT
    */
   static async createWithdrawal(userId, withdrawalData) {
-    const {
-      amountMz,
-      paymentMethod,
-      nom,
-      prenom,
-      email,
-      telephone,
-      cardNumber,
-      expiryDate,
-      cvv,
-    } = withdrawalData;
+    const { amountMz, paymentMethod, nom, prenom, email, telephone } =
+      withdrawalData;
 
     const amountFcfa = parseFloat(amountMz) * 100;
-
-    // 🔥 Extraire les 4 derniers chiffres de la carte
-    const cardLast4 = cardNumber ? cardNumber.slice(-4) : null;
 
     const sql = `
       INSERT INTO withdrawals (
@@ -93,10 +71,9 @@ class Payment {
         prenom,
         email,
         telephone,
-        card_last4,
         status,
         created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
     `;
 
     const result = await query(sql, [
@@ -107,29 +84,22 @@ class Payment {
       nom,
       prenom,
       email,
-      telephone || null,
-      cardLast4,
+      telephone,
     ]);
 
     console.log(
-      `💸 Demande de retrait créée - ID: ${result.insertId}, User: ${userId}, ` +
-        `Montant: ${amountMz} MZ (${amountFcfa} FCFA), Méthode: ${paymentMethod}` +
-        (cardLast4 ? `, Carte: ****${cardLast4}` : "")
+      `ðŸ“¤ Demande de retrait crÃ©Ã©e - ID: ${result.insertId}, User: ${userId}, Montant: ${amountFcfa} FCFA`
     );
 
     return result.insertId;
   }
 
   /**
-   * ✅ RÉCUPÉRER LES DÉPÔTS D'UN UTILISATEUR (AVEC INFO CARTE)
+   * âœ… RÃ‰CUPÃ‰RER LES DÃ‰PÃ”TS D'UN UTILISATEUR
    */
   static async getDepositsByUser(userId) {
     const sql = `
-      SELECT 
-        id, amount_fcfa, amount_mz, payment_method,
-        nom, prenom, email, telephone, card_last4,
-        status, created_at, processed_at, reject_reason
-      FROM deposits 
+      SELECT * FROM deposits 
       WHERE user_id = ? 
       ORDER BY created_at DESC
     `;
@@ -138,15 +108,11 @@ class Payment {
   }
 
   /**
-   * ✅ RÉCUPÉRER LES RETRAITS D'UN UTILISATEUR (AVEC INFO CARTE)
+   * âœ… RÃ‰CUPÃ‰RER LES RETRAITS D'UN UTILISATEUR
    */
   static async getWithdrawalsByUser(userId) {
     const sql = `
-      SELECT 
-        id, amount_fcfa, amount_mz, payment_method,
-        nom, prenom, email, telephone, card_last4,
-        status, created_at, processed_at, reject_reason
-      FROM withdrawals 
+      SELECT * FROM withdrawals 
       WHERE user_id = ? 
       ORDER BY created_at DESC
     `;
@@ -155,22 +121,14 @@ class Payment {
   }
 
   /**
-   * ✅ RÉCUPÉRER TOUS LES DÉPÔTS (ADMIN) - AVEC INFO CARTE
+   * âœ… RÃ‰CUPÃ‰RER TOUS LES DÃ‰PÃ”TS (ADMIN)
    */
   static async getAllDeposits() {
     const sql = `
       SELECT 
         d.*, 
-        u.nom as user_nom, 
-        u.prenom as user_prenom, 
-        u.email as user_email, 
-        u.telephone as user_telephone,
-        CONCAT(u.prenom, ' ', u.nom) as user_name,
-        CASE 
-          WHEN d.card_last4 IS NOT NULL 
-          THEN CONCAT(d.payment_method, ' ****', d.card_last4)
-          ELSE d.payment_method
-        END as payment_info
+        u.nom, u.prenom, u.email, u.telephone,
+        CONCAT(u.prenom, ' ', u.nom) as user_name
       FROM deposits d
       LEFT JOIN users u ON d.user_id = u.id
       ORDER BY d.created_at DESC
@@ -180,22 +138,14 @@ class Payment {
   }
 
   /**
-   * ✅ RÉCUPÉRER TOUS LES RETRAITS (ADMIN) - AVEC INFO CARTE
+   * âœ… RÃ‰CUPÃ‰RER TOUS LES RETRAITS (ADMIN)
    */
   static async getAllWithdrawals() {
     const sql = `
       SELECT 
         w.*, 
-        u.nom as user_nom, 
-        u.prenom as user_prenom, 
-        u.email as user_email, 
-        u.telephone as user_telephone,
-        CONCAT(u.prenom, ' ', u.nom) as user_name,
-        CASE 
-          WHEN w.card_last4 IS NOT NULL 
-          THEN CONCAT(w.payment_method, ' ****', w.card_last4)
-          ELSE w.payment_method
-        END as payment_info
+        u.nom, u.prenom, u.email, u.telephone,
+        CONCAT(u.prenom, ' ', u.nom) as user_name
       FROM withdrawals w
       LEFT JOIN users u ON w.user_id = u.id
       ORDER BY w.created_at DESC
@@ -205,17 +155,11 @@ class Payment {
   }
 
   /**
-   * ✅ RÉCUPÉRER UN DÉPÔT PAR ID
+   * âœ… RÃ‰CUPÃ‰RER UN DÃ‰PÃ”T PAR ID
    */
   static async getDepositById(depositId) {
     const sql = `
-      SELECT 
-        d.*, 
-        u.balance_mz,
-        u.nom as user_nom,
-        u.prenom as user_prenom,
-        u.email as user_email,
-        u.telephone as user_telephone
+      SELECT d.*, u.balance_mz 
       FROM deposits d
       LEFT JOIN users u ON d.user_id = u.id
       WHERE d.id = ?
@@ -226,17 +170,11 @@ class Payment {
   }
 
   /**
-   * ✅ RÉCUPÉRER UN RETRAIT PAR ID
+   * âœ… RÃ‰CUPÃ‰RER UN RETRAIT PAR ID
    */
   static async getWithdrawalById(withdrawalId) {
     const sql = `
-      SELECT 
-        w.*, 
-        u.balance_mz,
-        u.nom as user_nom,
-        u.prenom as user_prenom,
-        u.email as user_email,
-        u.telephone as user_telephone
+      SELECT w.*, u.balance_mz 
       FROM withdrawals w
       LEFT JOIN users u ON w.user_id = u.id
       WHERE w.id = ?
@@ -247,7 +185,7 @@ class Payment {
   }
 
   /**
-   * ✅ APPROUVER UN DÉPÔT
+   * âœ… APPROUVER UN DÃ‰PÃ”T
    */
   static async approveDeposit(depositId) {
     const sql = `
@@ -257,12 +195,12 @@ class Payment {
     `;
 
     await query(sql, [depositId]);
-    console.log(`✅ Dépôt #${depositId} approuvé`);
+    console.log(`âœ… DÃ©pÃ´t #${depositId} approuvÃ©`);
     return true;
   }
 
   /**
-   * ✅ REJETER UN DÉPÔT
+   * âœ… REJETER UN DÃ‰PÃ”T
    */
   static async rejectDeposit(depositId, reason = null) {
     const sql = `
@@ -272,12 +210,12 @@ class Payment {
     `;
 
     await query(sql, [reason, depositId]);
-    console.log(`❌ Dépôt #${depositId} rejeté`);
+    console.log(`âŒ DÃ©pÃ´t #${depositId} rejetÃ©`);
     return true;
   }
 
   /**
-   * ✅ APPROUVER UN RETRAIT
+   * âœ… APPROUVER UN RETRAIT
    */
   static async approveWithdrawal(withdrawalId) {
     const sql = `
@@ -287,12 +225,12 @@ class Payment {
     `;
 
     await query(sql, [withdrawalId]);
-    console.log(`✅ Retrait #${withdrawalId} approuvé`);
+    console.log(`âœ… Retrait #${withdrawalId} approuvÃ©`);
     return true;
   }
 
   /**
-   * ✅ REJETER UN RETRAIT
+   * âœ… REJETER UN RETRAIT
    */
   static async rejectWithdrawal(withdrawalId, reason = null) {
     const sql = `
@@ -302,43 +240,8 @@ class Payment {
     `;
 
     await query(sql, [reason, withdrawalId]);
-    console.log(`❌ Retrait #${withdrawalId} rejeté`);
+    console.log(`âŒ Retrait #${withdrawalId} rejetÃ©`);
     return true;
-  }
-
-  /**
-   * 🔥 NOUVELLE FONCTION: Statistiques par méthode de paiement
-   */
-  static async getPaymentMethodStats() {
-    const depositsSql = `
-      SELECT 
-        payment_method,
-        COUNT(*) as count,
-        SUM(amount_mz) as total_mz,
-        SUM(amount_fcfa) as total_fcfa
-      FROM deposits
-      WHERE status = 'approved'
-      GROUP BY payment_method
-    `;
-
-    const withdrawalsSql = `
-      SELECT 
-        payment_method,
-        COUNT(*) as count,
-        SUM(amount_mz) as total_mz,
-        SUM(amount_fcfa) as total_fcfa
-      FROM withdrawals
-      WHERE status = 'approved'
-      GROUP BY payment_method
-    `;
-
-    const deposits = await query(depositsSql);
-    const withdrawals = await query(withdrawalsSql);
-
-    return {
-      deposits,
-      withdrawals,
-    };
   }
 }
 

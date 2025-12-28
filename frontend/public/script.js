@@ -1,5 +1,5 @@
 // =======================================================================
-// FRONTEND SOCKET.IO - script.js (VERSION CORRIGÉE - ORDRE VARIABLES)
+// FRONTEND SOCKET.IO - script.js (VERSION CORRIGà‰E - ORDRE VARIABLES)
 // =======================================================================
 
 // ========================================
@@ -41,13 +41,13 @@ let lastStartGameAttempt = 0;
 let isGameEnding = false;
 let gameEndTimeout = null;
 
-// 🔥 CORRECTION : Déclarer isMobile EN PREMIER (avant toute utilisation)
+// ðŸ”¥ CORRECTION : Déclarer isMobile EN PREMIER (avant toute utilisation)
 const isMobile =
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
   ) || window.innerWidth < 768;
 
-// 🔥 CORRECTION : Déclarer myReferralCode AVANT updateUserInfo
+// ðŸ”¥ CORRECTION : Déclarer myReferralCode AVANT updateUserInfo
 let myReferralCode = "";
 let newPlayerBonus = 5;
 let sponsorBonus = 2;
@@ -119,7 +119,7 @@ function initAudio() {
 // setupCanvas()
 // ========================================
 // ========================================
-// setupCanvas() - VERSION OPTIMISÉE PORTRAIT
+// setupCanvas() - VERSION OPTIMISà‰E PORTRAIT
 // ========================================
 function setupCanvas() {
   canvas = document.getElementById("gameCanvas");
@@ -177,7 +177,7 @@ function setupCanvas() {
     }
 
     console.log(
-      "📐 Canvas:",
+      "ðŸ“ Canvas:",
       canvas.width,
       "x",
       canvas.height,
@@ -212,7 +212,7 @@ window.addEventListener("DOMContentLoaded", () => {
     connectSocket();
     showGameInterface();
   } else {
-    showLogin(); // AFFICHER LOGIN AU DÉMARRAGE
+    showLogin(); // AFFICHER LOGIN AU Dà‰MARRAGE
   }
 
   // Empêcher soumission par défaut
@@ -284,11 +284,11 @@ function connectSocket() {
   authToken = localStorage.getItem("authToken");
 
   if (!authToken || typeof io === "undefined") {
-    console.warn("⛔ Token ou Socket.IO indisponible");
+    console.warn("â›” Token ou Socket.IO indisponible");
     return;
   }
 
-  console.log("🔌 Tentative de connexion Socket.IO...");
+  console.log("ðŸ”Œ Tentative de connexion Socket.IO...");
 
   if (socket) {
     if (socket.connected) return;
@@ -317,7 +317,7 @@ function connectSocket() {
     isConnectedToSocket = false;
     console.log("❌ Socket déconnecté:", reason);
 
-    // RÉINITIALISER LES FLAGS ANTI-SPAM
+    // Rà‰INITIALISER LES FLAGS ANTI-SPAM
     isStartingGame = false;
     startGameCooldown = false;
 
@@ -330,13 +330,13 @@ function connectSocket() {
     console.error("❌ Erreur connexion Socket.IO:", error);
     showNotification("Erreur de connexion au serveur", "error");
 
-    // RÉINITIALISER EN CAS D'ERREUR
+    // Rà‰INITIALISER EN CAS D'ERREUR
     isStartingGame = false;
     startGameCooldown = false;
   });
 
   // Gestion événement game:started
-  // 🔥 REMPLACER le socket.on("game:started") existant (ligne ~365) par :
+  // ðŸ”¥ REMPLACER le socket.on("game:started") existant (ligne ~365) par :
 
   socket.on("game:started", (data) => {
     console.log("🎮 Partie démarrée - Data:", data);
@@ -349,9 +349,9 @@ function connectSocket() {
       return;
     }
 
-    // Éviter les démarrages multiples
+    // à‰viter les démarrages multiples
     if (gameState === "playing") {
-      console.warn("⚠️ Partie déjà en cours, ignoring duplicate start");
+      console.warn("⚠️ Partie déjà  en cours, ignoring duplicate start");
       return;
     }
 
@@ -363,17 +363,17 @@ function connectSocket() {
     collisionDetected = false;
     isGameEnding = false;
 
-    // Débloquer APRÈS succès
+    // Débloquer APRàˆS succès
     isStartingGame = false;
 
     updateBalance();
     showNotification("Partie démarrée! Bonne chance.", "success");
 
-    // 🔥 CORRECTION : Boutons mis à jour avec cashOut
+    // ðŸ”¥ CORRECTION : Boutons mis à  jour avec cashOut
     const actionButtons = document.getElementById("actionButtons");
     if (actionButtons) {
       actionButtons.innerHTML = `
-      <button class="btn-jump" onclick="jump()">⬆️ Sauter</button>
+      <button class="btn-jump" onclick="jump()">â¬†ï¸ Sauter</button>
       <button class="btn-cashout" id="btnCashout" onclick="cashOut()" disabled>
         💰 Retirer (Min. x${MIN_CASHOUT_MULTIPLIER})
       </button>
@@ -396,7 +396,7 @@ function connectSocket() {
   // game:progress
 
   socket.on("game:progress", (data) => {
-    // 🔥 CORRECTION : Ignorer les updates si on est en train de cash out
+    // ðŸ”¥ CORRECTION : Ignorer les updates si on est en train de cash out
     if (isGameEnding) {
       return;
     }
@@ -429,7 +429,7 @@ function connectSocket() {
       );
     }
 
-    // Mettre à jour le texte du bouton en temps réel
+    // Mettre à  jour le texte du bouton en temps réel
     if (canWithdraw && gameState === "playing" && !isGameEnding) {
       const cashoutBtn = document.getElementById("btnCashout");
       if (cashoutBtn && !cashoutBtn.disabled) {
@@ -442,7 +442,7 @@ function connectSocket() {
     updateMultiplierDisplay();
   });
 
-  // 🔥 REMPLACER le socket.on("game:cashedOut") existant (ligne ~445) par :
+  // ðŸ”¥ REMPLACER le socket.on("game:cashedOut") existant (ligne ~445) par :
 
   socket.on("game:cashedOut", (data) => {
     console.log("💰 Cash Out réussi - Données serveur:", data);
@@ -452,10 +452,10 @@ function connectSocket() {
       return;
     }
 
-    // 🔥 CORRECTION : Accepter l'événement même si isGameEnding = true
+    // ðŸ”¥ CORRECTION : Accepter l'événement même si isGameEnding = true
     // Car c'est la réponse attendue du serveur
     if (gameState === "gameover" || gameState === "menu") {
-      console.warn("⚠️ Cash out reçu mais jeu déjà terminé - ignoré");
+      console.warn("⚠️ Cash out reà§u mais jeu déjà  terminé - ignoré");
       return;
     }
 
@@ -471,25 +471,25 @@ function connectSocket() {
     const finalMultiplier = parseFloat(data.multiplier || multiplier);
     const newBalance = parseFloat(data.balance || balance || 0);
 
-    // Mettre à jour la balance
+    // Mettre à  jour la balance
     balance = newBalance;
     isNewPlayerBonusLocked = false;
 
     // Débloquer le bonus nouveau joueur après première mise
     if (data.bonusUnlocked || data.bonus_unlocked) {
       isNewPlayerBonusLocked = false;
-      console.log("🎉 Bonus nouveau joueur débloqué!");
+      console.log("ðŸŽ‰ Bonus nouveau joueur débloqué!");
     }
 
     updateBalance();
 
-    console.log("🎉 Gains finaux:", {
+    console.log("ðŸŽ‰ Gains finaux:", {
       multiplier: finalMultiplier.toFixed(2),
       winAmount: winAmount.toFixed(2),
       newBalance: newBalance.toFixed(2),
     });
 
-    // 🔥 CORRECTION : Afficher immédiatement l'écran de victoire
+    // ðŸ”¥ CORRECTION : Afficher immédiatement l'écran de victoire
     // Sans délai supplémentaire
     showGameOverScreen(true, winAmount, null, finalMultiplier);
 
@@ -502,7 +502,7 @@ function connectSocket() {
     console.log("📊 Game Over:", data);
 
     if (isGameEnding) {
-      console.warn("⚠️ Game over déjà en cours de traitement");
+      console.warn("⚠️ Game over déjà  en cours de traitement");
       return;
     }
     isGameEnding = true;
@@ -529,7 +529,7 @@ function connectSocket() {
     const message = data?.message || "Erreur inconnue";
     showNotification(message, "error");
 
-    // DÉBLOQUER LE BOUTON EN CAS D'ERREUR
+    // Dà‰BLOQUER LE BOUTON EN CAS D'ERREUR
     isStartingGame = false;
     resetPlayButton();
 
@@ -551,7 +551,7 @@ function connectSocket() {
   });
 
   socket.on("referral:info", (data) => {
-    console.log("🎯 Données de parrainage reçues:", data);
+    console.log("ðŸŽ¯ Données de parrainage reà§ues:", data);
     if (!data) return;
 
     // Extraire le code de parrainage
@@ -567,9 +567,9 @@ function connectSocket() {
       affiliatedUsers = [];
     }
 
-    console.log("✅ Affiliés reçus:", affiliatedUsers.length, affiliatedUsers);
+    console.log("✅ Affiliés reà§us:", affiliatedUsers.length, affiliatedUsers);
 
-    // 🔥 IMPORTANT : Rafraîchir l'affichage si le modal est ouvert
+    // ðŸ”¥ IMPORTANT : Rafraà®chir l'affichage si le modal est ouvert
     const modal = document.getElementById("referralModal");
     if (modal && modal.style.display === "flex") {
       updateReferralModalContent();
@@ -577,7 +577,7 @@ function connectSocket() {
   });
 
   socket.on("user:info", (data) => {
-    console.log("👤 Infos utilisateur:", data);
+    console.log("ðŸ‘¤ Infos utilisateur:", data);
     if (!data) return;
 
     if (data.balance !== undefined && data.balance !== null) {
@@ -597,7 +597,7 @@ function connectSocket() {
     balance = parseFloat(data.balance || balance);
     updateBalance();
     showNotification(
-      `✅ Dépôt confirmé! ${data.amount} MZ ajoutés.`,
+      `✅ Dépà´t confirmé! ${data.amount} MZ ajoutés.`,
       "success"
     );
   });
@@ -618,7 +618,7 @@ function connectSocket() {
   });
 
   socket.on("referral:code", (data) => {
-    console.log("🎯 Code de parrainage reçu:", data);
+    console.log("ðŸŽ¯ Code de parrainage reà§u:", data);
     if (data && (data.referralCode || data.referral_code)) {
       myReferralCode = data.referralCode || data.referral_code;
     }
@@ -639,7 +639,7 @@ function disconnectSocket() {
     socket.disconnect();
     isConnectedToSocket = false;
     socket = null;
-    console.log("🔌 Socket déconnecté manuellement.");
+    console.log("ðŸ”Œ Socket déconnecté manuellement.");
   }
 }
 
@@ -652,8 +652,8 @@ function disconnectSocket() {
  */
 function startGame() {
   if (gameState === "playing" || gameState === "waiting") {
-    console.warn("⚠️ Une partie est déjà en cours");
-    showNotification("Une partie est déjà en cours", "warning");
+    console.warn("⚠️ Une partie est déjà  en cours");
+    showNotification("Une partie est déjà  en cours", "warning");
     return;
   }
 
@@ -664,7 +664,7 @@ function startGame() {
   }
 
   if (isStartingGame) {
-    console.warn("⚠️ Démarrage déjà en cours");
+    console.warn("⚠️ Démarrage déjà  en cours");
     return;
   }
 
@@ -673,7 +673,7 @@ function startGame() {
     const remainingTime = Math.ceil(
       (2000 - (now - lastStartGameAttempt)) / 1000
     );
-    console.warn(`⏳ Cooldown actif: ${remainingTime}s`);
+    console.warn(`â³ Cooldown actif: ${remainingTime}s`);
     showNotification(`Attendez ${remainingTime}s avant de rejouer`, "warning");
     return;
   }
@@ -699,20 +699,20 @@ function startGame() {
   console.log("🎮 Lancement de la partie - Mise:", betAmount, "MZ");
 
   disablePlayButton();
-  // 🔥 ENVOYER la plateforme au backend
+  // ðŸ”¥ ENVOYER la plateforme au backend
   socket.emit("game:start", {
     betAmount,
     platform: isMobile ? "mobile" : "desktop", // ✅ AJOUT
   });
 
-  // TIMEOUT DE SÉCURITÉ : 8 secondes
+  // TIMEOUT DE Sà‰CURITà‰ : 8 secondes
   if (gameEndTimeout) {
     clearTimeout(gameEndTimeout);
     gameEndTimeout = null;
   }
   gameEndTimeout = setTimeout(() => {
     if (gameState === "waiting") {
-      console.error("⏰ Timeout: Pas de réponse du serveur");
+      console.error("â° Timeout: Pas de réponse du serveur");
       showNotification("Le serveur ne répond pas. Réessayez.", "error");
       isStartingGame = false;
       isGameEnding = false;
@@ -735,7 +735,7 @@ function disablePlayButton() {
   const btnPlay = document.getElementById("btnPlay");
   if (btnPlay) {
     btnPlay.disabled = true;
-    btnPlay.textContent = "⏳ Démarrage...";
+    btnPlay.textContent = "â³ Démarrage...";
     btnPlay.style.opacity = "0.5";
     btnPlay.style.cursor = "not-allowed";
   }
@@ -779,13 +779,13 @@ function startLocalGameLoop() {
   let lastTime = Date.now();
 
   const gameLoopFunction = () => {
-    // 🔥 CORRECTION : Vérifier isGameEnding aussi
+    // ðŸ”¥ CORRECTION : Vérifier isGameEnding aussi
     if (gameState !== "playing" || isGameEnding) {
       if (gameLoop) {
         cancelAnimationFrame(gameLoop);
         gameLoop = null;
         console.log(
-          "🛑 Game loop arrêtée (état:",
+          "ðŸ›‘ Game loop arrêtée (état:",
           gameState,
           "| ending:",
           isGameEnding,
@@ -915,7 +915,7 @@ function handleObstacleGeneration(deltaTime, currentTime) {
 
   const obstacleWeights = isMobile
     ? {
-        // 🔥 Mobile : moins d'obstacles difficiles
+        // ðŸ”¥ Mobile : moins d'obstacles difficiles
         rock: 45, // +33%
         robot: 35, // +17%
         flyingAlien: 45, // -10%
@@ -1098,7 +1098,7 @@ function checkCollision() {
   const martianRight = martianX + MARTIAN_SIZE;
   const martianBottom = martianY + MARTIAN_SIZE;
 
-  // 🔥 CORRECTION : Tolérance adaptée à la plateforme
+  // ðŸ”¥ CORRECTION : Tolérance adaptée à  la plateforme
   const hitboxTolerance = isMobile
     ? Math.max(8, Math.floor(10 * displayScale)) // Mobile : +40% tolérance
     : Math.max(4, Math.floor(6 * displayScale));
@@ -1182,7 +1182,7 @@ function showGameOverScreen(
   const actionButtons = document.getElementById("actionButtons");
   if (actionButtons) {
     actionButtons.innerHTML = `
-      <button class="btn-replay" onclick="replayGame()">🔄 Rejouer</button>
+      <button class="btn-replay" onclick="replayGame()">ðŸ”„ Rejouer</button>
     `;
   }
 
@@ -1195,16 +1195,16 @@ function showGameOverScreen(
     showNotification(notificationMessage, "error");
   } else if (isWin) {
     showNotification(
-      `🎉 VICTOIRE! Multiplicateur x${displayMultiplier.toFixed(2)}\n` +
+      `ðŸŽ‰ VICTOIRE! Multiplicateur x${displayMultiplier.toFixed(2)}\n` +
         `💰 Vous avez gagné ${winAmount.toFixed(2)} MZ!\n` +
-        `💵 Nouvelle balance: ${balance.toFixed(2)} MZ`,
+        `ðŸ’µ Nouvelle balance: ${balance.toFixed(2)} MZ`,
       "success"
     );
   } else {
     showNotification(
-      `💀 GAME OVER! Multiplicateur atteint: x${displayMultiplier.toFixed(
+      `ðŸ’€ GAME OVER! Multiplicateur atteint: x${displayMultiplier.toFixed(
         2
-      )}\n` + `💵 Balance: ${balance.toFixed(2)} MZ`,
+      )}\n` + `ðŸ’µ Balance: ${balance.toFixed(2)} MZ`,
       "error"
     );
   }
@@ -1216,14 +1216,14 @@ function showGameOverScreen(
     startGameCooldown = false;
     isGameEnding = false;
 
-    // 🔥 CORRECTION : Vérifier balance après game over
+    // ðŸ”¥ CORRECTION : Vérifier balance après game over
     updatePlayButtonState();
 
     const roundedBalance = Math.round(balance * 100) / 100;
     if (roundedBalance === 0) {
       setTimeout(() => {
         showNotification(
-          "💰 Balance épuisée! Effectuez un dépôt pour continuer.",
+          "💰 Balance épuisée! Effectuez un dépà´t pour continuer.",
           "info"
         );
       }, 2000);
@@ -1330,22 +1330,22 @@ function cashOut() {
 
   // Empêcher les doubles retraits
   if (isGameEnding) {
-    console.warn("⚠️ Retrait déjà en cours");
+    console.warn("⚠️ Retrait déjà  en cours");
     return;
   }
 
-  // 🔥 CORRECTION CRITIQUE : Arrêter IMMÉDIATEMENT le jeu
-  console.log("💰 CASHOUT INITIÉ - Arrêt du jeu");
+  // ðŸ”¥ CORRECTION CRITIQUE : Arrêter IMMà‰DIATEMENT le jeu
+  console.log("💰 CASHOUT INITIà‰ - Arrêt du jeu");
 
   // Bloquer toutes les interactions
   isGameEnding = true;
   collisionDetected = true;
   canWithdraw = false;
 
-  // 🔥 Changer l'état AVANT d'envoyer au serveur
+  // ðŸ”¥ Changer l'état AVANT d'envoyer au serveur
   gameState = "waiting"; // Bloque la game loop
 
-  // Arrêter la boucle de jeu IMMÉDIATEMENT
+  // Arrêter la boucle de jeu IMMà‰DIATEMENT
   if (gameLoop) {
     cancelAnimationFrame(gameLoop);
     gameLoop = null;
@@ -1367,7 +1367,7 @@ function cashOut() {
   const cashoutBtn = document.getElementById("btnCashout");
   if (cashoutBtn) {
     cashoutBtn.disabled = true;
-    cashoutBtn.textContent = "⏳ Retrait en cours...";
+    cashoutBtn.textContent = "â³ Retrait en cours...";
     cashoutBtn.style.opacity = "0.5";
   }
 
@@ -1380,15 +1380,15 @@ function cashOut() {
 
     // Notification de confirmation
     showNotification(
-      `🎯 Retrait en cours... x${currentMultiplier.toFixed(2)}`,
+      `ðŸŽ¯ Retrait en cours... x${currentMultiplier.toFixed(2)}`,
       "info"
     );
 
-    // 🔥 CORRECTION : Timeout réduit et mieux géré
+    // ðŸ”¥ CORRECTION : Timeout réduit et mieux géré
     setTimeout(() => {
       // Si après 8 secondes on n'a pas de réponse ET qu'on est toujours en attente
       if (gameState === "waiting" && isGameEnding) {
-        console.warn("⏰ Timeout cashout - forcer l'affichage game over");
+        console.warn("â° Timeout cashout - forcer l'affichage game over");
 
         // Forcer l'affichage de l'écran de fin avec les données locales
         const estimatedWin = currentPotentialWin;
@@ -1488,20 +1488,20 @@ function debugPortraitMode() {
   const isLandscape = window.innerWidth > window.innerHeight;
   console.log("🎮 MODE:", isLandscape ? "PAYSAGE" : "PORTRAIT");
   console.log("📱 Canvas:", canvas.width, "x", canvas.height);
-  console.log("👽 Martien X:", martianX, "| Size:", MARTIAN_SIZE);
-  console.log("📷 Camera Offset:", cameraOffsetX);
-  console.log("🎯 Ground Y:", GROUND_Y);
-  console.log("🚧 Obstacles:", obstacles.length);
+  console.log("ðŸ‘½ Martien X:", martianX, "| Size:", MARTIAN_SIZE);
+  console.log("ðŸ“· Camera Offset:", cameraOffsetX);
+  console.log("ðŸŽ¯ Ground Y:", GROUND_Y);
+  console.log("ðŸš§ Obstacles:", obstacles.length);
 
   if (obstacles.length > 0) {
     const firstObs = obstacles[0];
     console.log(
-      "  → Premier obstacle X:",
+      "  â†’ Premier obstacle X:",
       firstObs.x,
       "| Type:",
       firstObs.type
     );
-    console.log("  → Position écran:", firstObs.x - cameraOffsetX);
+    console.log("  â†’ Position écran:", firstObs.x - cameraOffsetX);
   }
 }
 
@@ -1526,24 +1526,24 @@ function updateBalance(data = null) {
     balance = 0;
   }
 
-  // Arrondir à 2 décimales
+  // Arrondir à  2 décimales
   balance = Math.round(parseFloat(balance) * 100) / 100;
 
-  // Forcer à 0 si négatif
+  // Forcer à  0 si négatif
   if (balance < 0) {
-    console.warn("⚠️ Balance négative détectée, correction à 0");
+    console.warn("⚠️ Balance négative détectée, correction à  0");
     balance = 0;
   }
 
-  // Mettre à jour l'affichage
+  // Mettre à  jour l'affichage
   const balanceElement = document.getElementById("balance");
   if (balanceElement) {
     balanceElement.textContent = balance.toFixed(2);
   }
 
-  console.log("💰 Balance mise à jour:", balance);
+  console.log("💰 Balance mise à  jour:", balance);
 
-  // Mettre à jour l'état du bouton
+  // Mettre à  jour l'état du bouton
   if (typeof updatePlayButtonState === "function") {
     updatePlayButtonState();
   }
@@ -1580,7 +1580,7 @@ function updatePlayButtonState() {
 // ============================================
 
 function updateUserInfo(user) {
-  console.log("👤 Mise à jour infos utilisateur:", user);
+  console.log("ðŸ‘¤ Mise à  jour infos utilisateur:", user);
   if (!user) return;
 
   const userNameElement = document.getElementById("userName");
@@ -1591,7 +1591,7 @@ function updateUserInfo(user) {
 
   if (user.referral_code || user.referralCode) {
     myReferralCode = user.referral_code || user.referralCode;
-    console.log("🎯 Code de parrainage récupéré:", myReferralCode);
+    console.log("ðŸŽ¯ Code de parrainage récupéré:", myReferralCode);
   }
 
   if (user.affiliated_users || user.affiliatedUsers) {
@@ -1607,7 +1607,7 @@ function updateUserInfo(user) {
     updateBalance();
   }
 
-  console.log("💰 Balance mise à jour:", balance);
+  console.log("💰 Balance mise à  jour:", balance);
 }
 
 function showGameInterface() {
@@ -1667,7 +1667,7 @@ async function handleLogin(event) {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    console.log("🔐 Tentative de login:", email);
+    console.log("ðŸ” Tentative de login:", email);
 
     const result = await apiCall("/auth/login", "POST", { email, password });
     const data = result.data;
@@ -1715,7 +1715,7 @@ async function handleRegister() {
   }
 
   try {
-    console.log("🔐 Tentative d'inscription:", { nom, prenom, email });
+    console.log("ðŸ” Tentative d'inscription:", { nom, prenom, email });
 
     const result = await apiCall("/auth/register", "POST", {
       nom,
@@ -1727,7 +1727,7 @@ async function handleRegister() {
       referralCode: referralCode || undefined,
     });
 
-    console.log("🔥 Réponse register:", result);
+    console.log("ðŸ”¥ Réponse register:", result);
 
     if (result.success && result.data && result.data.token) {
       console.log("✅ Inscription réussie:", result.data);
@@ -1749,7 +1749,7 @@ async function handleRegister() {
       connectSocket();
 
       showNotification(
-        `Bienvenue ${prenom}! Vous avez reçu ${balance.toFixed(2)} MZ.`,
+        `Bienvenue ${prenom}! Vous avez reà§u ${balance.toFixed(2)} MZ.`,
         "success"
       );
     } else {
@@ -1829,12 +1829,12 @@ async function apiCall(endpoint, method = "GET", data = null) {
   }
 
   try {
-    console.log(`[API] 📤 ${method} ${endpoint}`);
+    console.log(`[API] ðŸ“¤ ${method} ${endpoint}`);
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
     const result = await response.json();
 
-    console.log(`[API] 🔥 Réponse:`, result);
+    console.log(`[API] ðŸ”¥ Réponse:`, result);
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -1887,7 +1887,7 @@ function simulateApiCall(endpoint, method, data) {
           },
         });
       } else if (endpoint === "/payment/deposit") {
-        // 🔥 CORRIGÉ
+        // ðŸ”¥ CORRIGà‰
         resolve({
           success: true,
           data: {
@@ -1895,7 +1895,7 @@ function simulateApiCall(endpoint, method, data) {
           },
         });
       } else if (endpoint === "/payment/withdrawal") {
-        // 🔥 CORRIGÉ
+        // ðŸ”¥ CORRIGà‰
         resolve({
           success: true,
           data: {
@@ -1950,353 +1950,25 @@ function closeDepositModal() {
 
 function showDepositForm(method) {
   selectedPaymentMethod = method;
+
   closeDepositModal();
 
   const title = document.getElementById("depositFormTitle");
-
-  // 🔥 Gérer les 4 moyens de paiement
   if (title) {
-    switch (method) {
-      case "airtel":
-        title.textContent = "💰 Dépôt via Airtel Money";
-        break;
-      case "moov":
-        title.textContent = "💰 Dépôt via Moov Money";
-        break;
-      case "visa":
-        title.textContent = "💳 Dépôt via Visa";
-        break;
-      case "mastercard":
-        title.textContent = "💳 Dépôt via Mastercard";
-        break;
-    }
+    title.textContent =
+      method === "airtel"
+        ? "💰 Dépà´t via Airtel Money"
+        : "💰 Dépà´t via Moov Money";
   }
 
-  // Pré-remplir l'email si disponible
   const userEmail = localStorage.getItem("userEmail") || "";
   if (userEmail) {
     const depositEmailEl = document.getElementById("depositEmail");
     if (depositEmailEl) depositEmailEl.value = userEmail;
   }
 
-  // 🔥 Afficher le bon formulaire selon le moyen
-  if (method === "visa" || method === "mastercard") {
-    renderCardDepositForm(method);
-  } else {
-    renderMobileMoneyDepositForm();
-  }
-
   const modal = document.getElementById("depositFormModal");
   if (modal) modal.style.display = "flex";
-}
-
-function renderMobileMoneyDepositForm() {
-  const modalBody = document.querySelector("#depositFormModal .modal-body");
-  if (!modalBody) return;
-
-  modalBody.innerHTML = `
-    <label for="depositAmount">Montant en FCFA:</label>
-    <input
-      type="number"
-      id="depositAmount"
-      placeholder="Min: 500 FCFA - Max: 50000 FCFA"
-      min="500"
-      max="50000"
-    />
-
-    <p class="conversion-display">
-      = <span id="depositMZ">0.00</span> MZ
-    </p>
-
-    <label for="depositNom">Nom:</label>
-    <input type="text" id="depositNom" placeholder="Votre nom" required />
-
-    <label for="depositPrenom">Prénom:</label>
-    <input
-      type="text"
-      id="depositPrenom"
-      placeholder="Votre prénom"
-      required
-    />
-
-    <label for="depositEmail">Email:</label>
-    <input
-      type="email"
-      id="depositEmail"
-      placeholder="votre@email.com"
-      required
-    />
-
-    <label for="depositTelephone">Numéro de téléphone:</label>
-    <input
-      type="tel"
-      id="depositTelephone"
-      placeholder="Ex: 066837517"
-      required
-    />
-
-    <p class="info-note">
-      ⚠️ <strong>Important:</strong> Vérifiez que toutes les informations
-      sont correctes.
-    </p>
-
-    <button class="btn-primary" onclick="submitDeposit()">
-      ✅ Valider le dépôt
-    </button>
-
-    <button class="btn-secondary" onclick="closeDepositFormModal()">
-      Annuler
-    </button>
-  `;
-
-  // Conversion FCFA -> MZ
-  const depositAmountEl = document.getElementById("depositAmount");
-  if (depositAmountEl) {
-    depositAmountEl.addEventListener("input", function () {
-      const fcfa = parseFloat(this.value) || 0;
-      const mz = fcfa / 100;
-      const displayElement = document.getElementById("depositMZ");
-      if (displayElement) {
-        displayElement.textContent = mz.toFixed(2);
-      }
-    });
-  }
-}
-
-// 🔥 ÉTAPE 3.3 : NOUVELLE FONCTION - Formulaire Carte Bancaire
-function renderCardDepositForm(cardType) {
-  const modalBody = document.querySelector("#depositFormModal .modal-body");
-  if (!modalBody) return;
-
-  const isMastercard = cardType === "mastercard";
-
-  modalBody.innerHTML = `
-    <label for="depositAmount">Montant en FCFA:</label>
-    <input
-      type="number"
-      id="depositAmount"
-      placeholder="Min: 6600 FCFA - Max: 100000 FCFA"
-      min="6600"
-      max="100000"
-    />
-
-    <p class="conversion-display">
-      = <span id="depositMZ">0.00</span> MZ
-    </p>
-
-    <hr style="margin: 20px 0; border-color: #444;">
-
-    <label for="depositCardNumber">Numéro de carte:</label>
-    <input 
-      type="text" 
-      id="depositCardNumber" 
-      placeholder="1234 5678 9012 3456" 
-      maxlength="19"
-      required 
-    />
-
-    <label for="depositNom">Nom (tel que figurant sur la carte):</label>
-    <input type="text" id="depositNom" placeholder="DUPONT" required />
-
-    <label for="depositPrenom">Prénom (tel que figurant sur la carte):</label>
-    <input type="text" id="depositPrenom" placeholder="Jean" required />
-
-    <label for="depositEmail">Email:</label>
-    <input type="email" id="depositEmail" placeholder="votre@email.com" required />
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <div>
-        <label for="depositExpiry">Date d'expiration:</label>
-        <input 
-          type="text" 
-          id="depositExpiry" 
-          placeholder="MM/AA" 
-          maxlength="5"
-          required 
-        />
-      </div>
-      <div>
-        <label for="depositCvv">CVV/CVC:</label>
-        <input 
-          type="text" 
-          id="depositCvv" 
-          placeholder="123" 
-          maxlength="4"
-          required 
-        />
-      </div>
-    </div>
-
-    ${
-      isMastercard
-        ? `
-      <label for="depositTelephone">Numéro de téléphone:</label>
-      <input type="tel" id="depositTelephone" placeholder="Ex: 066837517" required />
-    `
-        : ""
-    }
-
-    <p class="info-note">
-      🔒 <strong>Sécurisé:</strong> Vos données bancaires sont cryptées et sécurisées.
-    </p>
-
-    <button class="btn-primary" onclick="submitCardDeposit()">
-      ✅ Valider le dépôt
-    </button>
-
-    <button class="btn-secondary" onclick="closeDepositFormModal()">
-      Annuler
-    </button>
-  `;
-
-  // 🔥 Formatage automatique du numéro de carte
-  const cardNumberInput = document.getElementById("depositCardNumber");
-  if (cardNumberInput) {
-    cardNumberInput.addEventListener("input", function (e) {
-      let value = e.target.value.replace(/\s/g, "");
-      let formattedValue = value.match(/.{1,4}/g)?.join(" ") || value;
-      e.target.value = formattedValue;
-    });
-  }
-
-  // 🔥 Formatage automatique de la date d'expiration
-  const expiryInput = document.getElementById("depositExpiry");
-  if (expiryInput) {
-    expiryInput.addEventListener("input", function (e) {
-      let value = e.target.value.replace(/\D/g, "");
-      if (value.length >= 2) {
-        value = value.slice(0, 2) + "/" + value.slice(2, 4);
-      }
-      e.target.value = value;
-    });
-  }
-
-  // 🔥 Conversion FCFA -> MZ
-  const depositAmountEl = document.getElementById("depositAmount");
-  if (depositAmountEl) {
-    depositAmountEl.addEventListener("input", function () {
-      const fcfa = parseFloat(this.value) || 0;
-      const mz = fcfa / 100;
-      const displayElement = document.getElementById("depositMZ");
-      if (displayElement) {
-        displayElement.textContent = mz.toFixed(2);
-      }
-    });
-  }
-}
-
-async function submitCardDeposit() {
-  const amount = parseFloat(document.getElementById("depositAmount").value);
-  const cardNumber = document
-    .getElementById("depositCardNumber")
-    .value.replace(/\s/g, ""); // ✅ Garde le numéro complet
-  const nom = document.getElementById("depositNom").value.trim();
-  const prenom = document.getElementById("depositPrenom").value.trim();
-  const email = document.getElementById("depositEmail").value.trim();
-  const expiry = document.getElementById("depositExpiry").value.trim();
-  const cvv = document.getElementById("depositCvv").value.trim();
-  const telephone =
-    document.getElementById("depositTelephone")?.value.trim() || "";
-
-  // 🔥 Validations
-  if (!amount || amount < 6600 || amount > 100000) {
-    showNotification(
-      "Montant invalide (Min: 6600 FCFA - Max: 100000 FCFA)",
-      "error"
-    );
-    return;
-  }
-
-  if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
-    showNotification("Numéro de carte invalide", "error");
-    return;
-  }
-
-  if (!nom || nom.length < 2) {
-    showNotification("Veuillez entrer le nom figurant sur la carte", "error");
-    return;
-  }
-
-  if (!prenom || prenom.length < 2) {
-    showNotification(
-      "Veuillez entrer le prénom figurant sur la carte",
-      "error"
-    );
-    return;
-  }
-
-  if (!email || !email.includes("@")) {
-    showNotification("Veuillez entrer un email valide", "error");
-    return;
-  }
-
-  if (!expiry || !expiry.match(/^\d{2}\/\d{2}$/)) {
-    showNotification("Date d'expiration invalide (format: MM/AA)", "error");
-    return;
-  }
-
-  if (!cvv || cvv.length < 3 || cvv.length > 4) {
-    showNotification("CVV/CVC invalide", "error");
-    return;
-  }
-
-  // 🔥 Vérifier que Mastercard a le téléphone
-  if (
-    selectedPaymentMethod === "mastercard" &&
-    (!telephone || telephone.length < 8)
-  ) {
-    showNotification("Numéro de téléphone requis pour Mastercard", "error");
-    return;
-  }
-
-  const mz = amount / 100;
-
-  try {
-    const response = await apiCall("/payment/deposit", "POST", {
-      amountFcfa: amount,
-      amountMz: mz,
-      paymentMethod: selectedPaymentMethod,
-      nom: nom,
-      prenom: prenom,
-      email: email,
-      telephone: telephone,
-      // ✅ CORRECTION : Envoyer le numéro complet (sera masqué par le backend)
-      cardNumber: cardNumber,
-      expiryDate: expiry,
-      cvv: cvv,
-    });
-
-    if (!response.success) {
-      showNotification(
-        response.message || "Erreur lors de la demande",
-        "error"
-      );
-      return;
-    }
-
-    console.log("✅ Demande de dépôt carte enregistrée:", response.data);
-
-    closeDepositFormModal();
-
-    showNotification(
-      `✅ Demande de dépôt enregistrée!\n\n` +
-        `Montant: ${amount} FCFA (${mz.toFixed(2)} MZ)\n` +
-        `Carte: ${selectedPaymentMethod.toUpperCase()} ****${cardNumber.slice(
-          -4
-        )}\n` +
-        `ID: #${response.data.depositId || "N/A"}\n\n` +
-        `📱 Votre demande sera validée sous 24h`,
-      "success"
-    );
-
-    selectedPaymentMethod = null;
-  } catch (error) {
-    console.error("❌ Erreur submitCardDeposit:", error);
-    showNotification(
-      "Erreur lors de la demande de dépôt: " + (error.message || error),
-      "error"
-    );
-  }
 }
 
 function closeDepositFormModal() {
@@ -2328,12 +2000,12 @@ async function submitDeposit() {
   const telephone = document.getElementById("depositTelephone").value.trim();
 
   if (!amount || amount < 500) {
-    showNotification("Dépôt minimum: 500 FCFA", "error");
+    showNotification("Dépà´t minimum: 500 FCFA", "error");
     return;
   }
 
   if (amount > 50000) {
-    showNotification("Dépôt maximum: 50000 FCFA", "error");
+    showNotification("Dépà´t maximum: 50000 FCFA", "error");
     return;
   }
 
@@ -2365,7 +2037,7 @@ async function submitDeposit() {
   const mz = amount / 100;
 
   try {
-    // 🔥 CORRECTION: Utiliser /payment/deposit au lieu de /manualpayment/deposit
+    // ðŸ”¥ CORRECTION: Utiliser /payment/deposit au lieu de /manualpayment/deposit
     const response = await apiCall("/payment/deposit", "POST", {
       amountFcfa: amount,
       amountMz: mz,
@@ -2384,12 +2056,12 @@ async function submitDeposit() {
       return;
     }
 
-    console.log("✅ Demande de dépôt enregistrée:", response.data);
+    console.log("✅ Demande de dépà´t enregistrée:", response.data);
 
     closeDepositFormModal();
 
     showNotification(
-      `✅ Demande de dépôt enregistrée!\n\n` +
+      `✅ Demande de dépà´t enregistrée!\n\n` +
         `Montant: ${amount} FCFA (${mz.toFixed(2)} MZ)\n` +
         `Moyen: ${
           selectedPaymentMethod === "airtel" ? "Airtel Money" : "Moov Money"
@@ -2403,7 +2075,7 @@ async function submitDeposit() {
   } catch (error) {
     console.error("❌ Erreur submitDeposit:", error);
     showNotification(
-      "Erreur lors de la demande de dépôt: " + (error.message || error),
+      "Erreur lors de la demande de dépà´t: " + (error.message || error),
       "error"
     );
   }
@@ -2427,7 +2099,7 @@ function showWithdrawModal() {
       withdrawStatusElement.innerHTML = `
         <div class="info-box bonus-unlocked">
           ✅ Tous les fonds sont retirables.<br>
-          <small>💡 Minimum: 20 MZ (2000 FCFA) | Balance: ${balance.toFixed(
+          <small>ðŸ’¡ Minimum: 20 MZ (2000 FCFA) | Balance: ${balance.toFixed(
             2
           )} MZ</small>
         </div>
@@ -2444,304 +2116,32 @@ function closeWithdrawModal() {
 function showWithdrawForm(method) {
   if (isNewPlayerBonusLocked) {
     showNotification(
-      "Retrait impossible. Le bonus d'inscription doit être joué.",
+      "Retrait impossible. Le bonus d'inscription doit être joué par une mise pour débloquer le retrait.",
       "error"
     );
     return;
   }
 
   selectedPaymentMethod = method;
+
   closeWithdrawModal();
 
   const title = document.getElementById("withdrawFormTitle");
-
-  // 🔥 Gérer les 4 moyens de paiement
   if (title) {
-    switch (method) {
-      case "airtel":
-        title.textContent = "💸 Retrait via Airtel Money";
-        break;
-      case "moov":
-        title.textContent = "💸 Retrait via Moov Money";
-        break;
-      case "visa":
-        title.textContent = "💳 Retrait via Visa";
-        break;
-      case "mastercard":
-        title.textContent = "💳 Retrait via Mastercard";
-        break;
-    }
+    title.textContent =
+      method === "airtel"
+        ? "💸 Retrait via Airtel Money"
+        : "💸 Retrait via Moov Money";
   }
 
-  // Pré-remplir l'email si disponible
   const userEmail = localStorage.getItem("userEmail") || "";
   if (userEmail) {
-    const withdrawEmailEl = document.getElementById("withdrawEmail");
-    if (withdrawEmailEl) withdrawEmailEl.value = userEmail;
-  }
-
-  // 🔥 Afficher le bon formulaire selon le moyen
-  if (method === "visa" || method === "mastercard") {
-    renderCardWithdrawForm(method);
-  } else {
-    renderMobileMoneyWithdrawForm();
+    const withdrawEmail = document.getElementById("withdrawEmail");
+    if (withdrawEmail) withdrawEmail.value = userEmail;
   }
 
   const modal = document.getElementById("withdrawFormModal");
   if (modal) modal.style.display = "flex";
-}
-
-function renderCardWithdrawForm(cardType) {
-  const modalBody = document.querySelector("#withdrawFormModal .modal-body");
-  if (!modalBody) return;
-
-  const isMastercard = cardType === "mastercard";
-
-  modalBody.innerHTML = `
-    <label for="withdrawAmount">Montant en MZ:</label>
-    <input
-      type="number"
-      id="withdrawAmount"
-      placeholder="Minimum 66 MZ (6600 FCFA)"
-      min="66"
-      step="0.01"
-    />
-
-    <p class="conversion-display">
-      = <span id="withdrawFcfa">0</span> FCFA
-    </p>
-
-    <hr style="margin: 20px 0; border-color: #444;">
-
-    <label for="withdrawCardNumber">Numéro de carte:</label>
-    <input 
-      type="text" 
-      id="withdrawCardNumber" 
-      placeholder="1234 5678 9012 3456" 
-      maxlength="19"
-      required 
-    />
-
-    <label for="withdrawNom">Nom (tel que figurant sur la carte):</label>
-    <input type="text" id="withdrawNom" placeholder="DUPONT" required />
-
-    <label for="withdrawPrenom">Prénom (tel que figurant sur la carte):</label>
-    <input type="text" id="withdrawPrenom" placeholder="Jean" required />
-
-    <label for="withdrawEmail">Email:</label>
-    <input type="email" id="withdrawEmail" placeholder="votre@email.com" required />
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <div>
-        <label for="withdrawExpiry">Date d'expiration:</label>
-        <input 
-          type="text" 
-          id="withdrawExpiry" 
-          placeholder="MM/AA" 
-          maxlength="5"
-          required 
-        />
-      </div>
-      <div>
-        <label for="withdrawCvv">CVV/CVC:</label>
-        <input 
-          type="text" 
-          id="withdrawCvv" 
-          placeholder="123" 
-          maxlength="4"
-          required 
-        />
-      </div>
-    </div>
-
-    ${
-      isMastercard
-        ? `
-      <label for="withdrawTelephone">Numéro de téléphone:</label>
-      <input type="tel" id="withdrawTelephone" placeholder="Ex: 066837517" required />
-    `
-        : ""
-    }
-
-    <p class="info-note">
-      🔒 <strong>Sécurisé:</strong> Vos données bancaires sont cryptées et sécurisées.
-    </p>
-
-    <button class="btn-primary" onclick="submitCardWithdraw()">
-      ✅ Valider le retrait
-    </button>
-
-    <button class="btn-secondary" onclick="closeWithdrawFormModal()">
-      Annuler
-    </button>
-  `;
-
-  // 🔥 Formatage automatique du numéro de carte
-  const cardNumberInput = document.getElementById("withdrawCardNumber");
-  if (cardNumberInput) {
-    cardNumberInput.addEventListener("input", function (e) {
-      let value = e.target.value.replace(/\s/g, "");
-      let formattedValue = value.match(/.{1,4}/g)?.join(" ") || value;
-      e.target.value = formattedValue;
-    });
-  }
-
-  // 🔥 Formatage automatique de la date d'expiration
-  const expiryInput = document.getElementById("withdrawExpiry");
-  if (expiryInput) {
-    expiryInput.addEventListener("input", function (e) {
-      let value = e.target.value.replace(/\D/g, "");
-      if (value.length >= 2) {
-        value = value.slice(0, 2) + "/" + value.slice(2, 4);
-      }
-      e.target.value = value;
-    });
-  }
-
-  // 🔥 Conversion MZ -> FCFA
-  const withdrawAmountEl = document.getElementById("withdrawAmount");
-  if (withdrawAmountEl) {
-    withdrawAmountEl.addEventListener("input", function () {
-      const mz = parseFloat(this.value) || 0;
-      const fcfa = mz * 100;
-      const displayElement = document.getElementById("withdrawFcfa");
-      if (displayElement) {
-        displayElement.textContent = fcfa.toFixed(0);
-      }
-    });
-  }
-}
-
-async function submitCardWithdraw() {
-  const amount = parseFloat(document.getElementById("withdrawAmount").value);
-  const cardNumber = document
-    .getElementById("withdrawCardNumber")
-    .value.replace(/\s/g, ""); // ✅ Garde le numéro complet
-  const nom = document.getElementById("withdrawNom").value.trim();
-  const prenom = document.getElementById("withdrawPrenom").value.trim();
-  const email = document.getElementById("withdrawEmail").value.trim();
-  const expiry = document.getElementById("withdrawExpiry").value.trim();
-  const cvv = document.getElementById("withdrawCvv").value.trim();
-  const telephone =
-    document.getElementById("withdrawTelephone")?.value.trim() || "";
-
-  const fcfa = amount * 100;
-
-  // 🔥 Validations
-  if (!amount || amount < 66) {
-    showNotification("Retrait minimum: 66 MZ (6600 FCFA)", "error");
-    return;
-  }
-
-  if (amount > balance) {
-    showNotification("Solde insuffisant", "error");
-    return;
-  }
-
-  if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
-    showNotification("Numéro de carte invalide", "error");
-    return;
-  }
-
-  if (!nom || nom.length < 2) {
-    showNotification("Veuillez entrer le nom figurant sur la carte", "error");
-    return;
-  }
-
-  if (!prenom || prenom.length < 2) {
-    showNotification(
-      "Veuillez entrer le prénom figurant sur la carte",
-      "error"
-    );
-    return;
-  }
-
-  if (!email || !email.includes("@")) {
-    showNotification("Veuillez entrer un email valide", "error");
-    return;
-  }
-
-  if (!expiry || !expiry.match(/^\d{2}\/\d{2}$/)) {
-    showNotification("Date d'expiration invalide (format: MM/AA)", "error");
-    return;
-  }
-
-  if (!cvv || cvv.length < 3 || cvv.length > 4) {
-    showNotification("CVV/CVC invalide", "error");
-    return;
-  }
-
-  // 🔥 Vérifier que Mastercard a le téléphone
-  if (
-    selectedPaymentMethod === "mastercard" &&
-    (!telephone || telephone.length < 8)
-  ) {
-    showNotification("Numéro de téléphone requis pour Mastercard", "error");
-    return;
-  }
-
-  if (isNewPlayerBonusLocked) {
-    showNotification(
-      "Retrait impossible. Le bonus d'inscription doit être joué.",
-      "error"
-    );
-    return;
-  }
-
-  try {
-    console.log("📤 Envoi demande de retrait carte:", {
-      amount,
-      paymentMethod: selectedPaymentMethod,
-      cardNumber: `****${cardNumber.slice(-4)}`,
-      nom,
-      prenom,
-      email,
-    });
-
-    const response = await apiCall("/payment/withdrawal", "POST", {
-      amountMz: amount,
-      paymentMethod: selectedPaymentMethod,
-      nom: nom,
-      prenom: prenom,
-      email: email,
-      telephone: telephone,
-      // ✅ CORRECTION : Envoyer le numéro complet
-      cardNumber: cardNumber,
-      expiryDate: expiry,
-      cvv: cvv,
-    });
-
-    console.log("✅ Réponse API retrait carte:", response);
-
-    if (!response.success) {
-      showNotification(
-        response.message || "Erreur lors de la demande",
-        "error"
-      );
-      return;
-    }
-
-    closeWithdrawFormModal();
-
-    showNotification(
-      `✅ Demande de retrait enregistrée!\n\n` +
-        `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
-        `Carte: ${selectedPaymentMethod.toUpperCase()} ****${cardNumber.slice(
-          -4
-        )}\n` +
-        `ID: #${response.data.withdrawalId || "N/A"}\n\n` +
-        `📱 Votre demande sera traitée sous 24h`,
-      "success"
-    );
-
-    selectedPaymentMethod = null;
-  } catch (error) {
-    console.error("❌ Erreur submitCardWithdraw:", error);
-    showNotification(
-      "Erreur lors de la demande de retrait: " + (error.message || error),
-      "error"
-    );
-  }
 }
 
 function closeWithdrawFormModal() {
@@ -2818,7 +2218,7 @@ async function submitWithdraw() {
   }
 
   try {
-    console.log("📤 Envoi demande de retrait:", {
+    console.log("ðŸ“¤ Envoi demande de retrait:", {
       amount,
       paymentMethod: selectedPaymentMethod,
       nom,
@@ -2827,7 +2227,7 @@ async function submitWithdraw() {
       telephone,
     });
 
-    // 🔥 CORRECTION: Utiliser /payment/withdrawal au lieu de /manualpayment/withdrawal
+    // ðŸ”¥ CORRECTION: Utiliser /payment/withdrawal au lieu de /manualpayment/withdrawal
     const response = await apiCall("/payment/withdrawal", "POST", {
       amountMz: amount,
       paymentMethod: selectedPaymentMethod,
@@ -2848,7 +2248,7 @@ async function submitWithdraw() {
     }
 
     // ⚠️ NE PAS déduire le montant immédiatement - attendre validation admin
-    // balance reste inchangé jusqu'à validation
+    // balance reste inchangé jusqu'à  validation
 
     closeWithdrawFormModal();
 
@@ -2894,7 +2294,7 @@ function showReferralModal() {
 
   // Demander les données au serveur
   if (socket && isConnectedToSocket) {
-    console.log("📡 Demande des infos de parrainage au serveur");
+    console.log("ðŸ“¡ Demande des infos de parrainage au serveur");
     socket.emit("referral:getInfo");
   }
 
@@ -2915,25 +2315,25 @@ function closeReferralModal() {
 }
 
 /**
- * Mettre à jour le contenu du modal de parrainage
+ * Mettre à  jour le contenu du modal de parrainage
  */
 function updateReferralModalContent() {
-  console.log("🔄 Mise à jour du modal de parrainage");
+  console.log("ðŸ”„ Mise à  jour du modal de parrainage");
 
-  // Mettre à jour le code
+  // Mettre à  jour le code
   const codeElement = document.getElementById("referralCode");
   if (codeElement) {
     codeElement.textContent = myReferralCode || "Chargement...";
   }
 
-  // Mettre à jour le lien
+  // Mettre à  jour le lien
   const linkElement = document.getElementById("referralLink");
   if (linkElement && myReferralCode) {
     const baseUrl = window.location.origin;
     linkElement.value = `${baseUrl}?ref=${myReferralCode}`;
   }
 
-  // Mettre à jour les statistiques
+  // Mettre à  jour les statistiques
   const statsElement = document.getElementById("referralStats");
   if (statsElement) {
     const totalAffiliates = affiliatedUsers.length || 0;
@@ -2955,7 +2355,7 @@ function updateReferralModalContent() {
     `;
   }
 
-  // Mettre à jour la liste des affiliés
+  // Mettre à  jour la liste des affiliés
   displayAffiliatedUsers();
 }
 
@@ -3027,7 +2427,7 @@ function displayAffiliatedUsers() {
   if (!affiliatedUsers || affiliatedUsers.length === 0) {
     container.innerHTML = `
       <div class="no-affiliates">
-        <p>🎯 Aucun filleul pour le moment</p>
+        <p>ðŸŽ¯ Aucun filleul pour le moment</p>
         <p class="help-text">Partagez votre code pour gagner des bonus!</p>
       </div>
     `;
@@ -3066,7 +2466,7 @@ function displayAffiliatedUsers() {
 
     html += `
       <div class="affiliate-item">
-        <div class="affiliate-icon">👤</div>
+        <div class="affiliate-icon">ðŸ‘¤</div>
         <div class="affiliate-info">
           <div class="affiliate-name">${userName}</div>
           <div class="affiliate-date">Inscrit le ${joinDate}</div>
@@ -3092,7 +2492,7 @@ function shareReferralCode() {
 
   const baseUrl = window.location.origin;
   const shareUrl = `${baseUrl}?ref=${myReferralCode}`;
-  const shareText = `🚀 Rejoins-moi sur Mars Runner et gagne ${newPlayerBonus} MZ à l'inscription! Utilise mon code: ${myReferralCode}`;
+  const shareText = `🚀 Rejoins-moi sur Mars Runner et gagne ${newPlayerBonus} MZ à  l'inscription! Utilise mon code: ${myReferralCode}`;
 
   // Vérifier si Web Share API est disponible
   if (navigator.share) {
@@ -3431,7 +2831,7 @@ function drawGame() {
 }
 
 /**
- * TOUCH GLOBAL: Permet de sauter en touchant n'importe où (déjà créé plus haut)
+ * TOUCH GLOBAL: Permet de sauter en touchant n'importe oà¹ (déjà  créé plus haut)
  */
 window.addEventListener(
   "touchstart",

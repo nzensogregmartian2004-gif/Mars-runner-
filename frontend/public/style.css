@@ -1,4 +1,4 @@
-/* style.css - Version optimisée mobile */
+/* style.css - Version optimisÃ©e mobile */
 
 * {
   margin: 0;
@@ -6,7 +6,7 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent; /* Enlever le highlight bleu sur mobile */
 }
-/* Classe pour masquer les éléments */
+/* Classe pour masquer les Ã©lÃ©ments */
 .hidden {
   display: none !important;
   visibility: hidden !important;
@@ -29,10 +29,10 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  touch-action: manipulation; /* Améliore la réactivité tactile */
+  touch-action: manipulation; /* AmÃ©liore la rÃ©activitÃ© tactile */
 }
 
-/* Animation des étoiles de fond */
+/* Animation des Ã©toiles de fond */
 @keyframes twinkle {
   0%,
   100% {
@@ -68,7 +68,7 @@ body {
   margin: 0 auto;
 }
 
-/* Écran d'authentification */
+/* Ã‰cran d'authentification */
 .auth-screen {
   display: flex;
   align-items: center;
@@ -366,7 +366,7 @@ button:active {
 .canvas-container {
   position: relative;
   margin-bottom: 1rem;
-  touch-action: none; /* Important pour le contrôle tactile */
+  touch-action: none; /* Important pour le contrÃ´le tactile */
 }
 
 canvas {
@@ -661,13 +661,13 @@ canvas {
 }
 
 .instructions li::before {
-  content: "🚀";
+  content: "ðŸš€";
   position: absolute;
   left: 0;
 }
 
 /* ========================================
-   RESPONSIVE MOBILE OPTIMISÉ
+   RESPONSIVE MOBILE OPTIMISÃ‰
 ======================================== */
 
 @media (max-width: 768px) {
@@ -690,7 +690,7 @@ canvas {
     margin-bottom: 1rem;
   }
 
-  /* 🎯 AUTH SCREEN - COMPACT */
+  /* ðŸŽ¯ AUTH SCREEN - COMPACT */
   .auth-box {
     padding: 1rem;
     margin: 0.5rem;
@@ -705,7 +705,7 @@ canvas {
   input {
     padding: 0.7rem;
     margin-bottom: 0.7rem;
-    font-size: 16px; /* Évite zoom iOS */
+    font-size: 16px; /* Ã‰vite zoom iOS */
   }
 
   button {
@@ -713,7 +713,7 @@ canvas {
     font-size: 0.95rem;
   }
 
-  /* 🎮 HEADER - ULTRA COMPACT */
+  /* ðŸŽ® HEADER - ULTRA COMPACT */
   .header {
     padding: 0.6rem;
     margin-bottom: 0.6rem;
@@ -763,7 +763,7 @@ canvas {
     min-width: 100px;
   }
 
-  /* 🎨 GAME AREA - CANVAS PRIORITAIRE */
+  /* ðŸŽ¨ GAME AREA - CANVAS PRIORITAIRE */
   .game-area {
     padding: 0.5rem;
   }
@@ -778,7 +778,7 @@ canvas {
     border-width: 2px;
   }
 
-  /* 📊 CONTROLS - 3 COLONNES COMPACTES */
+  /* ðŸ“Š CONTROLS - 3 COLONNES COMPACTES */
   .controls {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.4rem;
@@ -798,7 +798,7 @@ canvas {
     font-size: 1.1rem;
   }
 
-  /* 🎯 MULTIPLIER OVERLAY */
+  /* ðŸŽ¯ MULTIPLIER OVERLAY */
   .multiplier-overlay {
     padding: 0.4rem 0.8rem;
     top: 5px;
@@ -809,7 +809,7 @@ canvas {
     font-size: 1rem;
   }
 
-  /* 🎮 ACTION BUTTONS - HORIZONTAL */
+  /* ðŸŽ® ACTION BUTTONS - HORIZONTAL */
   .action-buttons {
     gap: 0.5rem;
     margin-bottom: 0.5rem;
@@ -821,7 +821,7 @@ canvas {
     min-height: 50px;
   }
 
-  /* 📈 STATS - COMPACT */
+  /* ðŸ“ˆ STATS - COMPACT */
   .stats {
     gap: 0.4rem;
   }
@@ -838,7 +838,7 @@ canvas {
     font-size: 1rem;
   }
 
-  /* 📱 MODAL */
+  /* ðŸ“± MODAL */
   .modal-content {
     padding: 1rem;
     margin: 0.5rem;
@@ -849,7 +849,7 @@ canvas {
     font-size: 1rem;
   }
 
-  /* 🔔 NOTIFICATIONS */
+  /* ðŸ”” NOTIFICATIONS */
   .notification-container {
     max-width: calc(100% - 1rem);
     right: 0.5rem;
@@ -862,7 +862,7 @@ canvas {
     padding: 10px;
   }
 
-  /* 📖 INSTRUCTIONS */
+  /* ðŸ“– INSTRUCTIONS */
   .instructions {
     padding: 0.8rem;
     margin-top: 0.8rem;
@@ -895,7 +895,7 @@ canvas {
     overflow-y: auto;
   }
 
-  /* 🎮 HEADER MINI */
+  /* ðŸŽ® HEADER MINI */
   .header {
     padding: 0.4rem;
     margin-bottom: 0.4rem;
@@ -921,7 +921,7 @@ canvas {
     min-width: 80px;
   }
 
-  /* 🎨 CANVAS MAXIMUM */
+  /* ðŸŽ¨ CANVAS MAXIMUM */
   .game-area {
     padding: 0.3rem;
   }
@@ -930,7 +930,7 @@ canvas {
     max-height: 50vh;
   }
 
-  /* 📊 CONTROLS EN LIGNE */
+  /* ðŸ“Š CONTROLS EN LIGNE */
   .controls {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.3rem;
@@ -949,7 +949,7 @@ canvas {
     font-size: 0.95rem;
   }
 
-  /* 🎮 ACTION BUTTONS COMPACTS */
+  /* ðŸŽ® ACTION BUTTONS COMPACTS */
   .action-buttons {
     gap: 0.3rem;
     margin-bottom: 0.3rem;
@@ -961,7 +961,7 @@ canvas {
     min-height: 45px;
   }
 
-  /* 📈 STATS MINI */
+  /* ðŸ“ˆ STATS MINI */
   .stats {
     gap: 0.3rem;
   }
@@ -974,14 +974,14 @@ canvas {
     font-size: 0.9rem;
   }
 
-  /* 📖 INSTRUCTIONS CACHÉES */
+  /* ðŸ“– INSTRUCTIONS CACHÃ‰ES */
   .instructions {
     display: none;
   }
 }
 
 /* ========================================
-   TRÈS PETITS ÉCRANS (iPhone SE)
+   TRÃˆS PETITS Ã‰CRANS (iPhone SE)
 ======================================== */
 
 @media (max-width: 375px) {
@@ -1007,9 +1007,9 @@ canvas {
   }
 }
 
-/* === Compactage paysage mobile: boutons fixés EN BAS pour ne plus recouvrir le canvas === */
+/* === Compactage paysage mobile: boutons fixÃ©s EN BAS pour ne plus recouvrir le canvas === */
 @media (max-width: 768px) and (orientation: landscape) {
-  /* Controls plus serrés */
+  /* Controls plus serrÃ©s */
   .controls {
     grid-template-columns: 1fr 0.75fr 1fr;
     gap: 0.2rem;
@@ -1046,7 +1046,7 @@ canvas {
     margin-top: 4px;
   }
 
-  /* Multiplier overlay plus petit et sous les boutons (z-index inférieur) */
+  /* Multiplier overlay plus petit et sous les boutons (z-index infÃ©rieur) */
   .multiplier-overlay {
     top: 8px;
     left: 8px;
@@ -1061,9 +1061,9 @@ canvas {
     font-weight: 700;
   }
 
-  /* Action buttons FIXÉS en bas de l'écran (accessible au pouce)
+  /* Action buttons FIXÃ‰S en bas de l'Ã©cran (accessible au pouce)
      - position: fixed pour qu'ils ne flottent pas au-dessus du canvas
-     - fond semi-transparent pour lisibilité; changeable si tu veux opaque
+     - fond semi-transparent pour lisibilitÃ©; changeable si tu veux opaque
   */
   .action-buttons {
     position: fixed !important;
@@ -1107,7 +1107,7 @@ canvas {
     pointer-events: auto;
   }
 
-  /* Statistiques réduites */
+  /* Statistiques rÃ©duites */
   .stat-box {
     padding: 0.35rem;
   }
@@ -1213,77 +1213,4 @@ canvas {
   margin: 0 auto;
   border-radius: 12px;
   background: #000;
-}
-
-.payment-methods {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.payment-method-btn {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  border: 2px solid #444;
-  border-radius: 15px;
-  padding: 2rem 1rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.payment-method-btn:hover {
-  border-color: #00ff88;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 255, 136, 0.2) 0%,
-    rgba(0, 255, 136, 0.1) 100%
-  );
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
-}
-
-.payment-icon {
-  font-size: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.payment-icon img {
-  width: 80px;
-  height: 50px;
-  object-fit: contain;
-}
-
-.payment-name {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
-}
-
-@media (max-width: 768px) {
-  .payment-methods {
-    grid-template-columns: 1fr;
-  }
-
-  .payment-method-btn {
-    padding: 1.5rem 1rem;
-  }
-
-  .payment-icon img {
-    width: 60px;
-    height: 40px;
-  }
-
-  .payment-name {
-    font-size: 1rem;
-  }
 }
