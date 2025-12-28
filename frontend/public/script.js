@@ -1950,25 +1950,353 @@ function closeDepositModal() {
 
 function showDepositForm(method) {
   selectedPaymentMethod = method;
-
   closeDepositModal();
 
   const title = document.getElementById("depositFormTitle");
+
+  // 🔥 Gérer les 4 moyens de paiement
   if (title) {
-    title.textContent =
-      method === "airtel"
-        ? "💰 Dépôt via Airtel Money"
-        : "💰 Dépôt via Moov Money";
+    switch (method) {
+      case "airtel":
+        title.textContent = "💰 Dépôt via Airtel Money";
+        break;
+      case "moov":
+        title.textContent = "💰 Dépôt via Moov Money";
+        break;
+      case "visa":
+        title.textContent = "💳 Dépôt via Visa";
+        break;
+      case "mastercard":
+        title.textContent = "💳 Dépôt via Mastercard";
+        break;
+    }
   }
 
+  // Pré-remplir l'email si disponible
   const userEmail = localStorage.getItem("userEmail") || "";
   if (userEmail) {
     const depositEmailEl = document.getElementById("depositEmail");
     if (depositEmailEl) depositEmailEl.value = userEmail;
   }
 
+  // 🔥 Afficher le bon formulaire selon le moyen
+  if (method === "visa" || method === "mastercard") {
+    renderCardDepositForm(method);
+  } else {
+    renderMobileMoneyDepositForm();
+  }
+
   const modal = document.getElementById("depositFormModal");
   if (modal) modal.style.display = "flex";
+}
+
+function renderMobileMoneyDepositForm() {
+  const modalBody = document.querySelector("#depositFormModal .modal-body");
+  if (!modalBody) return;
+
+  modalBody.innerHTML = `
+    <label for="depositAmount">Montant en FCFA:</label>
+    <input
+      type="number"
+      id="depositAmount"
+      placeholder="Min: 500 FCFA - Max: 50000 FCFA"
+      min="500"
+      max="50000"
+    />
+
+    <p class="conversion-display">
+      = <span id="depositMZ">0.00</span> MZ
+    </p>
+
+    <label for="depositNom">Nom:</label>
+    <input type="text" id="depositNom" placeholder="Votre nom" required />
+
+    <label for="depositPrenom">Prénom:</label>
+    <input
+      type="text"
+      id="depositPrenom"
+      placeholder="Votre prénom"
+      required
+    />
+
+    <label for="depositEmail">Email:</label>
+    <input
+      type="email"
+      id="depositEmail"
+      placeholder="votre@email.com"
+      required
+    />
+
+    <label for="depositTelephone">Numéro de téléphone:</label>
+    <input
+      type="tel"
+      id="depositTelephone"
+      placeholder="Ex: 066837517"
+      required
+    />
+
+    <p class="info-note">
+      ⚠️ <strong>Important:</strong> Vérifiez que toutes les informations
+      sont correctes.
+    </p>
+
+    <button class="btn-primary" onclick="submitDeposit()">
+      ✅ Valider le dépôt
+    </button>
+
+    <button class="btn-secondary" onclick="closeDepositFormModal()">
+      Annuler
+    </button>
+  `;
+
+  // Conversion FCFA -> MZ
+  const depositAmountEl = document.getElementById("depositAmount");
+  if (depositAmountEl) {
+    depositAmountEl.addEventListener("input", function () {
+      const fcfa = parseFloat(this.value) || 0;
+      const mz = fcfa / 100;
+      const displayElement = document.getElementById("depositMZ");
+      if (displayElement) {
+        displayElement.textContent = mz.toFixed(2);
+      }
+    });
+  }
+}
+
+// 🔥 ÉTAPE 3.3 : NOUVELLE FONCTION - Formulaire Carte Bancaire
+function renderCardDepositForm(cardType) {
+  const modalBody = document.querySelector("#depositFormModal .modal-body");
+  if (!modalBody) return;
+
+  const isMastercard = cardType === "mastercard";
+
+  modalBody.innerHTML = `
+    <label for="depositAmount">Montant en FCFA:</label>
+    <input
+      type="number"
+      id="depositAmount"
+      placeholder="Min: 6600 FCFA - Max: 100000 FCFA"
+      min="6600"
+      max="100000"
+    />
+
+    <p class="conversion-display">
+      = <span id="depositMZ">0.00</span> MZ
+    </p>
+
+    <hr style="margin: 20px 0; border-color: #444;">
+
+    <label for="depositCardNumber">Numéro de carte:</label>
+    <input 
+      type="text" 
+      id="depositCardNumber" 
+      placeholder="1234 5678 9012 3456" 
+      maxlength="19"
+      required 
+    />
+
+    <label for="depositNom">Nom (tel que figurant sur la carte):</label>
+    <input type="text" id="depositNom" placeholder="DUPONT" required />
+
+    <label for="depositPrenom">Prénom (tel que figurant sur la carte):</label>
+    <input type="text" id="depositPrenom" placeholder="Jean" required />
+
+    <label for="depositEmail">Email:</label>
+    <input type="email" id="depositEmail" placeholder="votre@email.com" required />
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div>
+        <label for="depositExpiry">Date d'expiration:</label>
+        <input 
+          type="text" 
+          id="depositExpiry" 
+          placeholder="MM/AA" 
+          maxlength="5"
+          required 
+        />
+      </div>
+      <div>
+        <label for="depositCvv">CVV/CVC:</label>
+        <input 
+          type="text" 
+          id="depositCvv" 
+          placeholder="123" 
+          maxlength="4"
+          required 
+        />
+      </div>
+    </div>
+
+    ${
+      isMastercard
+        ? `
+      <label for="depositTelephone">Numéro de téléphone:</label>
+      <input type="tel" id="depositTelephone" placeholder="Ex: 066837517" required />
+    `
+        : ""
+    }
+
+    <p class="info-note">
+      🔒 <strong>Sécurisé:</strong> Vos données bancaires sont cryptées et sécurisées.
+    </p>
+
+    <button class="btn-primary" onclick="submitCardDeposit()">
+      ✅ Valider le dépôt
+    </button>
+
+    <button class="btn-secondary" onclick="closeDepositFormModal()">
+      Annuler
+    </button>
+  `;
+
+  // 🔥 Formatage automatique du numéro de carte
+  const cardNumberInput = document.getElementById("depositCardNumber");
+  if (cardNumberInput) {
+    cardNumberInput.addEventListener("input", function (e) {
+      let value = e.target.value.replace(/\s/g, "");
+      let formattedValue = value.match(/.{1,4}/g)?.join(" ") || value;
+      e.target.value = formattedValue;
+    });
+  }
+
+  // 🔥 Formatage automatique de la date d'expiration
+  const expiryInput = document.getElementById("depositExpiry");
+  if (expiryInput) {
+    expiryInput.addEventListener("input", function (e) {
+      let value = e.target.value.replace(/\D/g, "");
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + "/" + value.slice(2, 4);
+      }
+      e.target.value = value;
+    });
+  }
+
+  // 🔥 Conversion FCFA -> MZ
+  const depositAmountEl = document.getElementById("depositAmount");
+  if (depositAmountEl) {
+    depositAmountEl.addEventListener("input", function () {
+      const fcfa = parseFloat(this.value) || 0;
+      const mz = fcfa / 100;
+      const displayElement = document.getElementById("depositMZ");
+      if (displayElement) {
+        displayElement.textContent = mz.toFixed(2);
+      }
+    });
+  }
+}
+
+async function submitCardDeposit() {
+  const amount = parseFloat(document.getElementById("depositAmount").value);
+  const cardNumber = document
+    .getElementById("depositCardNumber")
+    .value.replace(/\s/g, "");
+  const nom = document.getElementById("depositNom").value.trim();
+  const prenom = document.getElementById("depositPrenom").value.trim();
+  const email = document.getElementById("depositEmail").value.trim();
+  const expiry = document.getElementById("depositExpiry").value.trim();
+  const cvv = document.getElementById("depositCvv").value.trim();
+  const telephone =
+    document.getElementById("depositTelephone")?.value.trim() || "";
+
+  // 🔥 Validations
+  if (!amount || amount < 6600 || amount > 100000) {
+    showNotification(
+      "Montant invalide (Min: 6600 FCFA - Max: 100000 FCFA)",
+      "error"
+    );
+    return;
+  }
+
+  if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
+    showNotification("Numéro de carte invalide", "error");
+    return;
+  }
+
+  if (!nom || nom.length < 2) {
+    showNotification("Veuillez entrer le nom figurant sur la carte", "error");
+    return;
+  }
+
+  if (!prenom || prenom.length < 2) {
+    showNotification(
+      "Veuillez entrer le prénom figurant sur la carte",
+      "error"
+    );
+    return;
+  }
+
+  if (!email || !email.includes("@")) {
+    showNotification("Veuillez entrer un email valide", "error");
+    return;
+  }
+
+  if (!expiry || !expiry.match(/^\d{2}\/\d{2}$/)) {
+    showNotification("Date d'expiration invalide (format: MM/AA)", "error");
+    return;
+  }
+
+  if (!cvv || cvv.length < 3 || cvv.length > 4) {
+    showNotification("CVV/CVC invalide", "error");
+    return;
+  }
+
+  // 🔥 Vérifier que Mastercard a le téléphone
+  if (
+    selectedPaymentMethod === "mastercard" &&
+    (!telephone || telephone.length < 8)
+  ) {
+    showNotification("Numéro de téléphone requis pour Mastercard", "error");
+    return;
+  }
+
+  const mz = amount / 100;
+
+  try {
+    const response = await apiCall("/payment/deposit", "POST", {
+      amountFcfa: amount,
+      amountMz: mz,
+      paymentMethod: selectedPaymentMethod,
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      telephone: telephone,
+      // 🔥 Données carte (masquées côté serveur)
+      cardNumber: `****${cardNumber.slice(-4)}`, // Envoyer que les 4 derniers chiffres
+      expiryDate: expiry,
+      cvv: "***", // Ne jamais envoyer le CVV en clair
+    });
+
+    if (!response.success) {
+      showNotification(
+        response.message || "Erreur lors de la demande",
+        "error"
+      );
+      return;
+    }
+
+    console.log("✅ Demande de dépôt carte enregistrée:", response.data);
+
+    closeDepositFormModal();
+
+    showNotification(
+      `✅ Demande de dépôt enregistrée!\n\n` +
+        `Montant: ${amount} FCFA (${mz.toFixed(2)} MZ)\n` +
+        `Carte: ${selectedPaymentMethod.toUpperCase()} ****${cardNumber.slice(
+          -4
+        )}\n` +
+        `ID: #${response.data.depositId || "N/A"}\n\n` +
+        `📱 Votre demande sera validée sous 24h`,
+      "success"
+    );
+
+    selectedPaymentMethod = null;
+  } catch (error) {
+    console.error("❌ Erreur submitCardDeposit:", error);
+    showNotification(
+      "Erreur lors de la demande de dépôt: " + (error.message || error),
+      "error"
+    );
+  }
 }
 
 function closeDepositFormModal() {
@@ -2116,32 +2444,304 @@ function closeWithdrawModal() {
 function showWithdrawForm(method) {
   if (isNewPlayerBonusLocked) {
     showNotification(
-      "Retrait impossible. Le bonus d'inscription doit être joué par une mise pour débloquer le retrait.",
+      "Retrait impossible. Le bonus d'inscription doit être joué.",
       "error"
     );
     return;
   }
 
   selectedPaymentMethod = method;
-
   closeWithdrawModal();
 
   const title = document.getElementById("withdrawFormTitle");
+
+  // 🔥 Gérer les 4 moyens de paiement
   if (title) {
-    title.textContent =
-      method === "airtel"
-        ? "💸 Retrait via Airtel Money"
-        : "💸 Retrait via Moov Money";
+    switch (method) {
+      case "airtel":
+        title.textContent = "💸 Retrait via Airtel Money";
+        break;
+      case "moov":
+        title.textContent = "💸 Retrait via Moov Money";
+        break;
+      case "visa":
+        title.textContent = "💳 Retrait via Visa";
+        break;
+      case "mastercard":
+        title.textContent = "💳 Retrait via Mastercard";
+        break;
+    }
   }
 
+  // Pré-remplir l'email si disponible
   const userEmail = localStorage.getItem("userEmail") || "";
   if (userEmail) {
-    const withdrawEmail = document.getElementById("withdrawEmail");
-    if (withdrawEmail) withdrawEmail.value = userEmail;
+    const withdrawEmailEl = document.getElementById("withdrawEmail");
+    if (withdrawEmailEl) withdrawEmailEl.value = userEmail;
+  }
+
+  // 🔥 Afficher le bon formulaire selon le moyen
+  if (method === "visa" || method === "mastercard") {
+    renderCardWithdrawForm(method);
+  } else {
+    renderMobileMoneyWithdrawForm();
   }
 
   const modal = document.getElementById("withdrawFormModal");
   if (modal) modal.style.display = "flex";
+}
+
+function renderCardWithdrawForm(cardType) {
+  const modalBody = document.querySelector("#withdrawFormModal .modal-body");
+  if (!modalBody) return;
+
+  const isMastercard = cardType === "mastercard";
+
+  modalBody.innerHTML = `
+    <label for="withdrawAmount">Montant en MZ:</label>
+    <input
+      type="number"
+      id="withdrawAmount"
+      placeholder="Minimum 66 MZ (6600 FCFA)"
+      min="66"
+      step="0.01"
+    />
+
+    <p class="conversion-display">
+      = <span id="withdrawFcfa">0</span> FCFA
+    </p>
+
+    <hr style="margin: 20px 0; border-color: #444;">
+
+    <label for="withdrawCardNumber">Numéro de carte:</label>
+    <input 
+      type="text" 
+      id="withdrawCardNumber" 
+      placeholder="1234 5678 9012 3456" 
+      maxlength="19"
+      required 
+    />
+
+    <label for="withdrawNom">Nom (tel que figurant sur la carte):</label>
+    <input type="text" id="withdrawNom" placeholder="DUPONT" required />
+
+    <label for="withdrawPrenom">Prénom (tel que figurant sur la carte):</label>
+    <input type="text" id="withdrawPrenom" placeholder="Jean" required />
+
+    <label for="withdrawEmail">Email:</label>
+    <input type="email" id="withdrawEmail" placeholder="votre@email.com" required />
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div>
+        <label for="withdrawExpiry">Date d'expiration:</label>
+        <input 
+          type="text" 
+          id="withdrawExpiry" 
+          placeholder="MM/AA" 
+          maxlength="5"
+          required 
+        />
+      </div>
+      <div>
+        <label for="withdrawCvv">CVV/CVC:</label>
+        <input 
+          type="text" 
+          id="withdrawCvv" 
+          placeholder="123" 
+          maxlength="4"
+          required 
+        />
+      </div>
+    </div>
+
+    ${
+      isMastercard
+        ? `
+      <label for="withdrawTelephone">Numéro de téléphone:</label>
+      <input type="tel" id="withdrawTelephone" placeholder="Ex: 066837517" required />
+    `
+        : ""
+    }
+
+    <p class="info-note">
+      🔒 <strong>Sécurisé:</strong> Vos données bancaires sont cryptées et sécurisées.
+    </p>
+
+    <button class="btn-primary" onclick="submitCardWithdraw()">
+      ✅ Valider le retrait
+    </button>
+
+    <button class="btn-secondary" onclick="closeWithdrawFormModal()">
+      Annuler
+    </button>
+  `;
+
+  // 🔥 Formatage automatique du numéro de carte
+  const cardNumberInput = document.getElementById("withdrawCardNumber");
+  if (cardNumberInput) {
+    cardNumberInput.addEventListener("input", function (e) {
+      let value = e.target.value.replace(/\s/g, "");
+      let formattedValue = value.match(/.{1,4}/g)?.join(" ") || value;
+      e.target.value = formattedValue;
+    });
+  }
+
+  // 🔥 Formatage automatique de la date d'expiration
+  const expiryInput = document.getElementById("withdrawExpiry");
+  if (expiryInput) {
+    expiryInput.addEventListener("input", function (e) {
+      let value = e.target.value.replace(/\D/g, "");
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + "/" + value.slice(2, 4);
+      }
+      e.target.value = value;
+    });
+  }
+
+  // 🔥 Conversion MZ -> FCFA
+  const withdrawAmountEl = document.getElementById("withdrawAmount");
+  if (withdrawAmountEl) {
+    withdrawAmountEl.addEventListener("input", function () {
+      const mz = parseFloat(this.value) || 0;
+      const fcfa = mz * 100;
+      const displayElement = document.getElementById("withdrawFcfa");
+      if (displayElement) {
+        displayElement.textContent = fcfa.toFixed(0);
+      }
+    });
+  }
+}
+
+async function submitCardWithdraw() {
+  const amount = parseFloat(document.getElementById("withdrawAmount").value);
+  const cardNumber = document
+    .getElementById("withdrawCardNumber")
+    .value.replace(/\s/g, "");
+  const nom = document.getElementById("withdrawNom").value.trim();
+  const prenom = document.getElementById("withdrawPrenom").value.trim();
+  const email = document.getElementById("withdrawEmail").value.trim();
+  const expiry = document.getElementById("withdrawExpiry").value.trim();
+  const cvv = document.getElementById("withdrawCvv").value.trim();
+  const telephone =
+    document.getElementById("withdrawTelephone")?.value.trim() || "";
+
+  const fcfa = amount * 100;
+
+  // 🔥 Validations
+  if (!amount || amount < 66) {
+    showNotification("Retrait minimum: 66 MZ (6600 FCFA)", "error");
+    return;
+  }
+
+  if (amount > balance) {
+    showNotification("Solde insuffisant", "error");
+    return;
+  }
+
+  if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
+    showNotification("Numéro de carte invalide", "error");
+    return;
+  }
+
+  if (!nom || nom.length < 2) {
+    showNotification("Veuillez entrer le nom figurant sur la carte", "error");
+    return;
+  }
+
+  if (!prenom || prenom.length < 2) {
+    showNotification(
+      "Veuillez entrer le prénom figurant sur la carte",
+      "error"
+    );
+    return;
+  }
+
+  if (!email || !email.includes("@")) {
+    showNotification("Veuillez entrer un email valide", "error");
+    return;
+  }
+
+  if (!expiry || !expiry.match(/^\d{2}\/\d{2}$/)) {
+    showNotification("Date d'expiration invalide (format: MM/AA)", "error");
+    return;
+  }
+
+  if (!cvv || cvv.length < 3 || cvv.length > 4) {
+    showNotification("CVV/CVC invalide", "error");
+    return;
+  }
+
+  // 🔥 Vérifier que Mastercard a le téléphone
+  if (
+    selectedPaymentMethod === "mastercard" &&
+    (!telephone || telephone.length < 8)
+  ) {
+    showNotification("Numéro de téléphone requis pour Mastercard", "error");
+    return;
+  }
+
+  if (isNewPlayerBonusLocked) {
+    showNotification(
+      "Retrait impossible. Le bonus d'inscription doit être joué.",
+      "error"
+    );
+    return;
+  }
+
+  try {
+    console.log("📤 Envoi demande de retrait carte:", {
+      amount,
+      paymentMethod: selectedPaymentMethod,
+      cardNumber: `****${cardNumber.slice(-4)}`,
+      nom,
+      prenom,
+      email,
+    });
+
+    const response = await apiCall("/payment/withdrawal", "POST", {
+      amountMz: amount,
+      paymentMethod: selectedPaymentMethod,
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      telephone: telephone,
+      // 🔥 Données carte (masquées)
+      cardNumber: `****${cardNumber.slice(-4)}`,
+      expiryDate: expiry,
+      cvv: "***",
+    });
+
+    console.log("✅ Réponse API retrait carte:", response);
+
+    if (!response.success) {
+      showNotification(
+        response.message || "Erreur lors de la demande",
+        "error"
+      );
+      return;
+    }
+
+    closeWithdrawFormModal();
+
+    showNotification(
+      `✅ Demande de retrait enregistrée!\n\n` +
+        `Montant: ${amount} MZ (${fcfa} FCFA)\n` +
+        `Carte: ${selectedPaymentMethod.toUpperCase()} ****${cardNumber.slice(
+          -4
+        )}\n` +
+        `ID: #${response.data.withdrawalId || "N/A"}\n\n` +
+        `📱 Votre demande sera traitée sous 24h`,
+      "success"
+    );
+
+    selectedPaymentMethod = null;
+  } catch (error) {
+    console.error("❌ Erreur submitCardWithdraw:", error);
+    showNotification(
+      "Erreur lors de la demande de retrait: " + (error.message || error),
+      "error"
+    );
+  }
 }
 
 function closeWithdrawFormModal() {

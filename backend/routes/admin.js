@@ -93,4 +93,28 @@ router.get("/users", authenticateAdmin, AdminController.getUsers);
  */
 router.get("/games", authenticateAdmin, AdminController.getGames);
 
+router.get("/deposits", authenticateAdmin, AdminController.getDeposits);
+router.post(
+  "/deposits/:id/approve",
+  authenticateAdmin,
+  AdminController.approveDeposit
+);
+router.post(
+  "/deposits/:id/reject",
+  authenticateAdmin,
+  AdminController.rejectDeposit
+);
+
+router.get("/withdrawals", authenticateAdmin, AdminController.getWithdrawals);
+router.post(
+  "/withdrawals/:id/approve",
+  authenticateAdmin,
+  AdminController.approveWithdrawal
+);
+router.post(
+  "/withdrawals/:id/reject",
+  authenticateAdmin,
+  AdminController.rejectWithdrawal
+);
+
 module.exports = router;
